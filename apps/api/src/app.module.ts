@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
+import { CommonServicesModule } from './common/services/common-services.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { KycModule } from './modules/kyc/kyc.module';
 import { InsuranceModule } from './modules/insurance/insurance.module';
@@ -31,6 +32,7 @@ import appConfig from './config/app.config';
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     PrismaModule,
+    CommonServicesModule,
     AuthModule,
     KycModule,
     InsuranceModule,

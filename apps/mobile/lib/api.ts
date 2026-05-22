@@ -167,4 +167,87 @@ export const mediationApi = {
 
   escalate: (caseId: string) =>
     apiClient.post(`/mediation/cases/${caseId}/escalate`).then(r => r.data),
+
+  sendMessage: (caseId: string, content: string) =>
+    apiClient.post(`/mediation/cases/${caseId}/messages`, { content }).then(r => r.data),
+
+  getMessages: (caseId: string) =>
+    apiClient.get(`/mediation/cases/${caseId}/messages`).then(r => r.data),
+};
+
+// ─── KYC (extra) ─────────────────────────────────────────────────────────────
+
+export const kycApiExtra = {
+  validateWithRenaper: () =>
+    apiClient.post('/kyc/validate-renaper').then(r => r.data),
+};
+
+// ─── Deposits ────────────────────────────────────────────────────────────────
+
+export const depositsApi = {
+  getBalance: (contractId: string) =>
+    apiClient.get(`/deposits/${contractId}/balance`).then(r => r.data),
+
+  deposit: (contractId: string) =>
+    apiClient.post(`/deposits/${contractId}/deposit`).then(r => r.data),
+
+  requestRelease: (contractId: string) =>
+    apiClient.post(`/deposits/${contractId}/release`).then(r => r.data),
+
+  getLedger: (contractId: string) =>
+    apiClient.get(`/deposits/${contractId}/ledger`).then(r => r.data),
+};
+
+// ─── Services ────────────────────────────────────────────────────────────────
+
+export const servicesApi = {
+  searchProviders: (params: { category?: string; city?: string }) =>
+    apiClient.get('/services/providers', { params }).then(r => r.data),
+
+  getProvider: (id: string) =>
+    apiClient.get(`/services/providers/${id}`).then(r => r.data),
+
+  requestQuote: (providerId: string, dto: { description: string; address: string }) =>
+    apiClient.post(`/services/providers/${providerId}/quote`, dto).then(r => r.data),
+
+  getMyBookings: () =>
+    apiClient.get('/services/bookings').then(r => r.data),
+
+  acceptQuote: (bookingId: string) =>
+    apiClient.post(`/services/bookings/${bookingId}/accept`).then(r => r.data),
+
+  rejectQuote: (bookingId: string) =>
+    apiClient.post(`/services/bookings/${bookingId}/reject`).then(r => r.data),
+
+  submitReview: (bookingId: string, dto: { rating: number; comment: string }) =>
+    apiClient.post(`/services/bookings/${bookingId}/review`, dto).then(r => r.data),
+};
+
+// ─── Premium ─────────────────────────────────────────────────────────────────
+
+export const premiumApi = {
+  getPlans: () =>
+    apiClient.get('/premium/plans').then(r => r.data),
+
+  subscribe: () =>
+    apiClient.post('/premium/subscribe').then(r => r.data),
+
+  getSubscription: () =>
+    apiClient.get('/premium/subscription').then(r => r.data),
+
+  cancel: () =>
+    apiClient.post('/premium/cancel').then(r => r.data),
+};
+
+// ─── Listings ────────────────────────────────────────────────────────────────
+
+export const listingsApi = {
+  search: (params: { city?: string; rooms?: number; maxPrice?: number; currency?: string }) =>
+    apiClient.get('/listings', { params }).then(r => r.data),
+
+  getById: (id: string) =>
+    apiClient.get(`/listings/${id}`).then(r => r.data),
+
+  getMyProperties: () =>
+    apiClient.get('/listings/my-properties').then(r => r.data),
 };

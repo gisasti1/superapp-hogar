@@ -11,6 +11,8 @@ const NAV = [
   { href: '/payments', label: 'Pagos', icon: '💳' },
   { href: '/mediation', label: 'Mediación', icon: '⭐' },
   { href: '/insurance', label: 'Seguro', icon: '🛡️' },
+  { href: '/listings', label: 'Inmuebles', icon: '🏘️' },
+  { href: '/premium', label: 'Premium', icon: '👑' },
   { href: '/profile', label: 'Perfil', icon: '👤' },
 ];
 
