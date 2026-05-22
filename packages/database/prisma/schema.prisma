@@ -1,0 +1,559 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  TENANT
+  LANDLORD
+  REALTOR
+  PROVIDER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_PROGRESS
+  VERIFIED
+  REJECTED
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGNATURES
+  SIGNED
+  ACTIVE
+  TERMINATED
+  EXPIRED
+}
+
+enum DepositStatus {
+  HELD
+  PARTIALLY_RELEASED
+  RELEASED
+  DISPUTED
+}
+
+enum PolicyStatus {
+  QUOTED
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  CLAIMED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+  OVERDUE
+}
+
+enum PaymentType {
+  RENT
+  INSURANCE_PREMIUM
+  DEPOSIT
+  SERVICE
+  MEDIATION_FEE
+  SUBSCRIPTION
+}
+
+enum CaseCategory {
+  REPAIRS
+  DEPOSIT_RETURN
+  RENT_INCREASE
+  NOISE
+  EXPENSES
+  EARLY_TERMINATION
+  OTHER
+}
+
+enum CaseStatus {
+  OPENED
+  WAITING_RESPONSE
+  BOTH_STATED
+  AI_ANALYZING
+  PROPOSAL_READY
+  ACCEPTED
+  ESCALATED
+  RESOLVED
+  CLOSED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  REALTOR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  TRIALING
+}
+
+enum BookingStatus {
+  REQUESTED
+  QUOTED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  phone          String?
+  dni            String?  @unique
+  role           UserRole @default(TENANT)
+  isActive       Boolean  @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  verification   Verification?
+  subscription   Subscription?
+  sessions       Session[]
+
+  // Relaciones según rol
+  properties     Property[]       @relation("OwnerProperties")
+  tenantContracts Contract[]      @relation("TenantContracts")
+  landlordContracts Contract[]    @relation("LandlordContracts")
+  policies       Policy[]
+  deposits       Deposit[]
+  payments       Payment[]        @relation("PayerPayments")
+  receivedPayments Payment[]      @relation("ReceiverPayments")
+  openedCases    MediationCase[]  @relation("OpenedCases")
+  providerProfile Provider?
+  bookings       Booking[]        @relation("UserBookings")
+  reviews        Review[]         @relation("UserReviews")
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Verification {
+  id               String             @id @default(uuid())
+  userId           String             @unique
+  dni              String?
+  dniFrontUrl      String?
+  dniBackUrl       String?
+  selfieUrl        String?
+  renaperResult    Json?
+  facialMatchScore Float?
+  status           VerificationStatus @default(PENDING)
+  rejectedReason   String?
+  createdAt        DateTime           @default(now())
+  verifiedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verifications")
+}
+
+model Property {
+  id           String   @id @default(uuid())
+  ownerId      String
+  address      String
+  city         String
+  province     String   @default("Buenos Aires")
+  rooms        Int
+  bathrooms    Int
+  squareMeters Float
+  monthlyRent  Decimal  @db.Decimal(12, 2)
+  currency     String   @default("ARS")
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner     User       @relation("OwnerProperties", fields: [ownerId], references: [id])
+  contracts Contract[]
+  listing   Listing?
+  images    PropertyImage[]
+
+  @@map("properties")
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_images")
+}
+
+model Listing {
+  id          String   @id @default(uuid())
+  propertyId  String   @unique
+  title       String
+  isPublished Boolean  @default(false)
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("listings")
+}
+
+model Contract {
+  id            String         @id @default(uuid())
+  propertyId    String
+  tenantId      String
+  landlordId    String
+  startDate     DateTime
+  endDate       DateTime
+  monthlyAmount Decimal        @db.Decimal(12, 2)
+  depositAmount Decimal        @db.Decimal(12, 2)
+  currency      String         @default("ARS")
+  status        ContractStatus @default(DRAFT)
+  templateId    String?
+  signedAt      DateTime?
+  pdfUrl        String?
+  pdfHash       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  property Property        @relation(fields: [propertyId], references: [id])
+  tenant   User            @relation("TenantContracts", fields: [tenantId], references: [id])
+  landlord User            @relation("LandlordContracts", fields: [landlordId], references: [id])
+  policy   Policy?
+  deposit  Deposit?
+  payments Payment[]
+  cases    MediationCase[]
+  signatures ContractSignature[]
+
+  @@map("contracts")
+}
+
+model ContractSignature {
+  id         String   @id @default(uuid())
+  contractId String
+  userId     String
+  role       String   // 'TENANT' | 'LANDLORD'
+  signedAt   DateTime @default(now())
+  ipAddress  String?
+  docusignEnvelopeId String?
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, userId])
+  @@map("contract_signatures")
+}
+
+model Policy {
+  id            String       @id @default(uuid())
+  contractId    String       @unique
+  userId        String
+  providerId    String
+  policyNumber  String       @unique
+  status        PolicyStatus @default(ACTIVE)
+  monthlyPremium Decimal     @db.Decimal(12, 2)
+  coverageAmount Decimal     @db.Decimal(12, 2)
+  currency      String       @default("ARS")
+  startDate     DateTime
+  endDate       DateTime
+  pdfUrl        String?
+  externalId    String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  contract Contract @relation(fields: [contractId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  payments Payment[]
+
+  @@map("policies")
+}
+
+model Deposit {
+  id          String        @id @default(uuid())
+  contractId  String        @unique
+  userId      String
+  amount      Decimal       @db.Decimal(12, 2)
+  currency    String        @default("ARS")
+  status      DepositStatus @default(HELD)
+  yieldEarned Decimal       @db.Decimal(12, 2) @default(0)
+  depositedAt DateTime      @default(now())
+  releasedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  contract      Contract       @relation(fields: [contractId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  ledgerEntries LedgerEntry[]
+
+  @@map("deposits")
+}
+
+model LedgerEntry {
+  id          String   @id @default(uuid())
+  depositId   String
+  description String
+  debit       Decimal  @db.Decimal(12, 2) @default(0)
+  credit      Decimal  @db.Decimal(12, 2) @default(0)
+  balance     Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+
+  deposit Deposit @relation(fields: [depositId], references: [id], onDelete: Cascade)
+
+  @@map("ledger_entries")
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  contractId   String?
+  policyId     String?
+  payerId      String
+  receiverId   String?
+  amount       Decimal       @db.Decimal(12, 2)
+  currency     String        @default("ARS")
+  type         PaymentType
+  status       PaymentStatus @default(PENDING)
+  dueDate      DateTime
+  paidAt       DateTime?
+  mpPaymentId  String?       @unique
+  mpPreference String?
+  failReason   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  contract Contract? @relation(fields: [contractId], references: [id])
+  policy   Policy?   @relation(fields: [policyId], references: [id])
+  payer    User      @relation("PayerPayments", fields: [payerId], references: [id])
+  receiver User?     @relation("ReceiverPayments", fields: [receiverId], references: [id])
+
+  @@map("payments")
+}
+
+model MediationCase {
+  id          String       @id @default(uuid())
+  contractId  String
+  openedById  String
+  category    CaseCategory
+  status      CaseStatus   @default(OPENED)
+  summary     String
+  createdAt   DateTime     @default(now())
+  resolvedAt  DateTime?
+  updatedAt   DateTime     @updatedAt
+
+  contract   Contract        @relation(fields: [contractId], references: [id])
+  openedBy   User            @relation("OpenedCases", fields: [openedById], references: [id])
+  statements CaseStatement[]
+  evidence   CaseEvidence[]
+  proposals  Proposal[]
+  resolution Resolution?
+  messages   CaseMessage[]
+
+  @@map("mediation_cases")
+}
+
+model CaseStatement {
+  id        String   @id @default(uuid())
+  caseId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  case MediationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, userId])
+  @@map("case_statements")
+}
+
+model CaseEvidence {
+  id        String   @id @default(uuid())
+  caseId    String
+  userId    String
+  fileUrl   String
+  fileType  String
+  fileName  String
+  createdAt DateTime @default(now())
+
+  case MediationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_evidence")
+}
+
+model CaseMessage {
+  id        String   @id @default(uuid())
+  caseId    String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  case MediationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_messages")
+}
+
+model Proposal {
+  id             String   @id @default(uuid())
+  caseId         String
+  legalFramework String
+  analysis       String
+  suggestion     String
+  commitments    String[]
+  deadlineDays   Int      @default(15)
+  acceptedByTenant   Boolean @default(false)
+  acceptedByLandlord Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  case MediationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("proposals")
+}
+
+model Resolution {
+  id          String   @id @default(uuid())
+  caseId      String   @unique
+  description String
+  isHuman     Boolean  @default(false)
+  mediatorId  String?
+  resolvedAt  DateTime @default(now())
+
+  case MediationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("resolutions")
+}
+
+model Subscription {
+  id                  String             @id @default(uuid())
+  userId              String             @unique
+  plan                SubscriptionPlan   @default(FREE)
+  status              SubscriptionStatus @default(ACTIVE)
+  mpSubscriptionId    String?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelledAt         DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Provider {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  businessName String
+  category     String
+  description  String?
+  cities       String[]
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  isVerified   Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  bookings Booking[]
+  reviews  Review[]  @relation("ProviderReviews")
+
+  @@map("providers")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  userId      String
+  providerId  String
+  category    String
+  description String
+  address     String
+  status      BookingStatus @default(REQUESTED)
+  scheduledAt DateTime?
+  completedAt DateTime?
+  amount      Decimal?      @db.Decimal(12, 2)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user     User     @relation("UserBookings", fields: [userId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
+  review   Review?
+
+  @@map("bookings")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  bookingId  String   @unique
+  reviewerId String
+  providerId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+  reviewer User     @relation("UserReviews", fields: [reviewerId], references: [id])
+  provider Provider @relation("ProviderReviews", fields: [providerId], references: [id])
+
+  @@map("reviews")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  type      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  sentAt    DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  resource   String
+  resourceId String?
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, action])
+  @@index([resource, resourceId])
+  @@map("audit_logs")
+}

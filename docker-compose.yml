@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: superapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: superapp
+      POSTGRES_PASSWORD: superapp_dev
+      POSTGRES_DB: superapp_hogar
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U superapp -d superapp_hogar']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: superapp-redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis_dev
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'redis_dev', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Uncomment after Sprint 8 (Mediación IA)
+  # pinecone-local:
+  #   image: ghcr.io/chroma-core/chroma:latest
+  #   container_name: superapp-vectordb
+  #   ports:
+  #     - '8000:8000'
+
+volumes:
+  postgres_data:
+  redis_data:
