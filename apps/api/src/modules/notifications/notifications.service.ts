@@ -22,7 +22,7 @@ export class NotificationsService {
         title: dto.title,
         body: dto.body,
         type: dto.type,
-        data: dto.data ?? {},
+        data: (dto.data ?? {}) as object,
       },
     });
 

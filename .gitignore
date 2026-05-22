@@ -17,6 +17,17 @@ out
 # Turbo
 .turbo
 
+# TypeScript build artifacts
+*.tsbuildinfo
+packages/*/src/*.js
+packages/*/src/*.js.map
+packages/*/src/*.d.ts
+packages/*/src/*.d.ts.map
+packages/*/src/types/*.js
+packages/*/src/types/*.js.map
+packages/*/src/types/*.d.ts
+packages/*/src/types/*.d.ts.map
+
 # Coverage
 coverage
 

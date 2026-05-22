@@ -18,7 +18,7 @@ export default function ListingsScreen() {
 
   const { data: listings, isLoading } = useQuery({
     queryKey: ['listings', city, minRooms],
-    queryFn: () => listingsApi.search({ city: city || undefined, minRooms }),
+    queryFn: () => listingsApi.search({ city: city || undefined, rooms: minRooms }),
   });
 
   return (

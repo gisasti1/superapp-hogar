@@ -43,4 +43,4 @@ COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 USER nestjs
 EXPOSE 4000
 
-CMD ["node", "apps/api/dist/main"]
+CMD ["node", "apps/api/dist/apps/api/src/main"]
