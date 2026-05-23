@@ -12,10 +12,31 @@ export default function ListingsPage() {
   const user = useAuthStore(s => s.user);
   const [filters, setFilters] = useState({ city: '', minRooms: '', maxRent: '', currency: 'ARS' });
 
-  const { data: listings, isLoading } = useQuery({
+  const { data: listingsResponse, isLoading } = useQuery({
     queryKey: ['listings', filters],
-    queryFn: () => listingsApi.search(filters),
+    queryFn: () => {
+      // limpiar valores vacíos antes de mandar al backend (que valida tipos)
+      const clean: Record<string, string | number> = {};
+      if (filters.city) clean.city = filters.city;
+      if (filters.minRooms) clean.minRooms = Number(filters.minRooms);
+      if (filters.maxRent) clean.maxRent = Number(filters.maxRent);
+      if (filters.currency) clean.currency = filters.currency;
+      return listingsApi.search(clean);
+    },
   });
+
+  // El backend devuelve { data: Listing[], pagination }
+  // Cada Listing trae .property anidada con address, city, rooms, etc.
+  const listings = (listingsResponse?.data ?? []).map((l: any) => ({
+    id: l.id,
+    title: l.title,
+    address: l.property?.address ?? l.title,
+    city: l.property?.city,
+    rooms: l.property?.rooms,
+    squareMeters: l.property?.squareMeters,
+    monthlyRent: l.property?.monthlyRent,
+    currency: l.property?.currency,
+  }));
 
   const { data: myProperties } = useQuery({
     queryKey: ['my-properties'],

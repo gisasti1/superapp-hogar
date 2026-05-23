@@ -10,17 +10,23 @@ export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const user = useAuthStore(s => s.user);
 
-  const { data: property, isLoading } = useQuery({
+  const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
     queryFn: () => listingsApi.getById(id),
   });
 
   const { mutate: publish, isPending: isPublishing } = useMutation({
-    mutationFn: () => listingsApi.publish(id),
+    mutationFn: () => listingsApi.publish(listing?.propertyId ?? id),
   });
 
   if (isLoading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
-  if (!property) return <p className="text-gray-500">Inmueble no encontrado.</p>;
+  if (!listing) return <p className="text-gray-500">Inmueble no encontrado.</p>;
+
+  // El backend devuelve Listing con .property anidada
+  const property = {
+    ...listing.property,
+    listing: { id: listing.id, isPublished: listing.isPublished, views: listing.views },
+  };
 
   const isOwner = property.ownerId === user?.id;
 
