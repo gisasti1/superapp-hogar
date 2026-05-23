@@ -75,6 +75,12 @@ export default function LoginPage() {
             <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
               {isSubmitting ? 'Ingresando...' : 'Ingresar'}
             </button>
+
+            <p className="text-center text-sm">
+              <Link href="/forgot-password" className="text-gray-500 hover:text-brand-600 hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">

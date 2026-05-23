@@ -59,7 +59,7 @@ Todos con contraseña **`Password123!`**
 ## Qué tiene la app (12 sprints, todo implementado)
 
 **Backend (NestJS + Postgres):**
-- ✅ Auth con JWT (login, registro, refresh tokens, sesiones)
+- ✅ Auth con JWT (login, registro, refresh tokens, sesiones, **forgot/reset password**)
 - ✅ KYC con RENAPER (modo mock — siempre aprueba en local)
 - ✅ Seguros de caución (Finaer, mock)
 - ✅ Contratos digitales (DocuSign, mock)
@@ -72,7 +72,15 @@ Todos con contraseña **`Password123!`**
 - ✅ Audit log completo
 
 **Web (Next.js 15):**
-16 páginas — login, registro, dashboard, listings, contratos, pagos, seguros, mediación, premium, perfil.
+18 páginas — login, registro, recuperar/resetear contraseña, dashboard, listings (con filtros avanzados: mascotas, expensas, amenities), publicar inmueble, detalle con **galería de fotos** y **mapa OpenStreetMap**, contratos, pagos, seguros, mediación, premium, perfil.
+
+**Otras features clave:**
+- 📷 Upload de fotos de propiedades (multer + serve-static, max 5 MB c/u, hasta 10 por propiedad)
+- 🗺️ Mapa Leaflet con OpenStreetMap (sin API key, sin tracking)
+- 🐾 Filtros por mascotas permitidas
+- 🏊 Filtros por amenities (pileta, gimnasio, parrilla, cochera, etc.)
+- 💰 Filtros por expensas máximas
+- 🔑 Reset de contraseña con token + TTL 1h + invalidación de sesiones
 
 **Mobile (Expo / React Native):**
 App nativa iOS + Android con las mismas funciones (todavía no levantada en local, necesitás Expo Go o Xcode).

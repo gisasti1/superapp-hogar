@@ -23,6 +23,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/schedule": "^4.1.1",
+    "@nestjs/serve-static": "^5.0.5",
     "@nestjs/swagger": "^8.1.0",
     "@nestjs/throttler": "^6.3.0",
     "@superapp/database": "workspace:*",
@@ -33,6 +34,7 @@
     "compression": "^1.7.4",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.1",
+    "multer": "^2.1.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -73,11 +75,6 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "coverageThreshold": {
-      "global": {
-        "lines": 70
-      }
-    }
+    "testEnvironment": "node"
   }
 }

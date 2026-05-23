@@ -1,14 +1,39 @@
 'use client';
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { listingsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { PropertyMap } from '@/components/PropertyMap';
 import { useAuthStore } from '@/stores/auth.store';
+
+const AMENITY_LABELS: Record<string, string> = {
+  pool: '🏊 Pileta',
+  gym: '🏋️ Gimnasio',
+  bbq: '🍖 Parrilla',
+  parking: '🚗 Cochera',
+  doorman: '👔 Portería',
+  laundry: '🧺 Lavadero',
+  balcony: '🌅 Balcón',
+  garden: '🌿 Jardín',
+  elevator: '🛗 Ascensor',
+};
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+
+function imgUrl(u: string): string {
+  if (!u) return '';
+  if (u.startsWith('http')) return u;
+  if (u.startsWith('/uploads/')) return `${API_BASE}${u}`;
+  return u;
+}
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const user = useAuthStore(s => s.user);
+  const qc = useQueryClient();
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const { data: listing, isLoading } = useQuery({
     queryKey: ['listing', id],
@@ -17,30 +42,86 @@ export default function ListingDetailPage() {
 
   const { mutate: publish, isPending: isPublishing } = useMutation({
     mutationFn: () => listingsApi.publish(listing?.propertyId ?? id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['listing', id] }),
+  });
+
+  const { mutate: uploadImages, isPending: isUploading } = useMutation({
+    mutationFn: (files: File[]) => listingsApi.uploadImages(listing!.propertyId, files),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['listing', id] });
+      if (fileInput.current) fileInput.current.value = '';
+    },
+  });
+
+  const { mutate: deleteImage } = useMutation({
+    mutationFn: (imageId: string) => listingsApi.deleteImage(listing!.propertyId, imageId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['listing', id] }),
   });
 
   if (isLoading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
   if (!listing) return <p className="text-gray-500">Inmueble no encontrado.</p>;
 
-  // El backend devuelve Listing con .property anidada
   const property = {
     ...listing.property,
     listing: { id: listing.id, isPublished: listing.isPublished, views: listing.views },
   };
 
   const isOwner = property.ownerId === user?.id;
+  const images = property.images ?? [];
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length) uploadImages(files);
+  };
 
   return (
     <div className="space-y-6">
       {/* Galería */}
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {property.images?.length ? (
-          property.images.map((img: any, i: number) => (
-            <img key={i} src={img.url} alt="Foto del inmueble" className="h-52 w-80 object-cover rounded-xl flex-shrink-0" />
-          ))
-        ) : (
-          <div className="h-52 w-full bg-gradient-to-br from-brand-100 to-brand-200 rounded-xl flex items-center justify-center">
-            <span className="text-6xl">🏠</span>
+      <div>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {images.length ? (
+            images.map((img: any) => (
+              <div key={img.id} className="relative flex-shrink-0">
+                <img
+                  src={imgUrl(img.url)}
+                  alt="Foto del inmueble"
+                  className="h-52 w-80 object-cover rounded-xl"
+                />
+                {isOwner && (
+                  <button
+                    onClick={() => { if (confirm('¿Eliminar esta foto?')) deleteImage(img.id); }}
+                    className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full hover:bg-red-600 shadow"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="h-52 w-full bg-gradient-to-br from-brand-100 to-brand-200 rounded-xl flex items-center justify-center">
+              <span className="text-6xl">🏠</span>
+            </div>
+          )}
+        </div>
+
+        {isOwner && (
+          <div className="mt-3">
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              id="upload-images"
+            />
+            <label
+              htmlFor="upload-images"
+              className={`btn-secondary inline-flex items-center gap-2 cursor-pointer text-sm ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              📷 {isUploading ? 'Subiendo...' : 'Subir fotos'}
+            </label>
+            <span className="text-xs text-gray-400 ml-3">Hasta 10 fotos · JPG, PNG, WEBP (5 MB c/u)</span>
           </div>
         )}
       </div>
@@ -65,6 +146,36 @@ export default function ListingDetailPage() {
               <p className="text-gray-600 leading-relaxed">{property.description}</p>
             </div>
           )}
+
+          {(property.amenities?.length > 0 || property.petsAllowed) && (
+            <div className="card">
+              <h2 className="font-bold text-gray-900 mb-3">Amenities</h2>
+              <div className="flex flex-wrap gap-2">
+                {property.petsAllowed && (
+                  <span className="bg-brand-50 text-brand-700 text-sm font-medium px-3 py-1 rounded-full">
+                    🐾 Acepta mascotas
+                  </span>
+                )}
+                {property.amenities?.map((a: string) => (
+                  <span key={a} className="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                    {AMENITY_LABELS[a] ?? a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {property.latitude != null && property.longitude != null && (
+            <div className="card">
+              <h2 className="font-bold text-gray-900 mb-3">Ubicación</h2>
+              <PropertyMap
+                latitude={Number(property.latitude)}
+                longitude={Number(property.longitude)}
+                address={property.address}
+                height="320px"
+              />
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -74,6 +185,11 @@ export default function ListingDetailPage() {
               ${Number(property.monthlyRent).toLocaleString('es-AR')}
               <span className="text-sm font-normal text-gray-500"> {property.currency}/mes</span>
             </p>
+            {property.expenses != null && Number(property.expenses) > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                + ${Number(property.expenses).toLocaleString('es-AR')} {property.currency} de expensas
+              </p>
+            )}
 
             {!isOwner ? (
               <div className="space-y-2 mt-4">

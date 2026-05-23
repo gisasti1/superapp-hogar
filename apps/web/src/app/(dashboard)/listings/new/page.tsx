@@ -16,9 +16,21 @@ export default function NewPropertyPage() {
     bathrooms: '1',
     squareMeters: '',
     monthlyRent: '',
+    expenses: '',
     currency: 'ARS',
     description: '',
+    petsAllowed: false,
+    amenities: [] as string[],
+    latitude: '',
+    longitude: '',
   });
+
+  const toggleAmenity = (a: string) => {
+    setForm(f => ({
+      ...f,
+      amenities: f.amenities.includes(a) ? f.amenities.filter(x => x !== a) : [...f.amenities, a],
+    }));
+  };
   const [error, setError] = useState<string | null>(null);
 
   const { mutate: createProperty, isPending } = useMutation({
@@ -47,8 +59,13 @@ export default function NewPropertyPage() {
       bathrooms: Number(form.bathrooms),
       squareMeters: Number(form.squareMeters),
       monthlyRent: Number(form.monthlyRent),
+      expenses: form.expenses ? Number(form.expenses) : undefined,
       currency: form.currency,
       description: form.description || undefined,
+      petsAllowed: form.petsAllowed,
+      amenities: form.amenities,
+      latitude: form.latitude ? Number(form.latitude) : undefined,
+      longitude: form.longitude ? Number(form.longitude) : undefined,
     });
   };
 
@@ -129,7 +146,7 @@ export default function NewPropertyPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="label">Alquiler mensual *</label>
             <input
@@ -141,11 +158,90 @@ export default function NewPropertyPage() {
             />
           </div>
           <div>
+            <label className="label">Expensas</label>
+            <input
+              name="expenses" type="number" min="0"
+              className="input"
+              placeholder="35000"
+              value={form.expenses}
+              onChange={upd('expenses')}
+            />
+          </div>
+          <div>
             <label className="label">Moneda</label>
             <select name="currency" className="input" value={form.currency} onChange={upd('currency')}>
               <option value="ARS">ARS - Pesos</option>
               <option value="USD">USD - Dólares</option>
             </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="label">Latitud (opcional)</label>
+            <input
+              name="latitude" type="number" step="0.0001"
+              className="input"
+              placeholder="-34.6037"
+              value={form.latitude}
+              onChange={upd('latitude')}
+            />
+          </div>
+          <div>
+            <label className="label">Longitud (opcional)</label>
+            <input
+              name="longitude" type="number" step="0.0001"
+              className="input"
+              placeholder="-58.3816"
+              value={form.longitude}
+              onChange={upd('longitude')}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 -mt-3">
+          💡 Tip: las coordenadas son opcionales pero permiten mostrar el inmueble en el mapa.
+        </p>
+
+        <div>
+          <label className="label">¿Acepta mascotas?</label>
+          <label className="flex items-center gap-2 cursor-pointer mt-1">
+            <input
+              type="checkbox"
+              checked={form.petsAllowed}
+              onChange={e => setForm(f => ({ ...f, petsAllowed: e.target.checked }))}
+              className="w-4 h-4 accent-brand-600"
+            />
+            <span className="text-sm text-gray-700">🐾 Permite mascotas</span>
+          </label>
+        </div>
+
+        <div>
+          <label className="label">Amenities</label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {[
+              { id: 'pool', label: '🏊 Pileta' },
+              { id: 'gym', label: '🏋️ Gimnasio' },
+              { id: 'bbq', label: '🍖 Parrilla' },
+              { id: 'parking', label: '🚗 Cochera' },
+              { id: 'doorman', label: '👔 Portería' },
+              { id: 'laundry', label: '🧺 Lavadero' },
+              { id: 'balcony', label: '🌅 Balcón' },
+              { id: 'garden', label: '🌿 Jardín' },
+              { id: 'elevator', label: '🛗 Ascensor' },
+            ].map(a => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => toggleAmenity(a.id)}
+                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
+                  form.amenities.includes(a.id)
+                    ? 'bg-brand-600 text-white border-brand-600'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
           </div>
         </div>
 

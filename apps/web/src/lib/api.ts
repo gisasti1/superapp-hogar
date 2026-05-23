@@ -46,6 +46,12 @@ export const authApi = {
 
   logout: (refreshToken: string) =>
     apiClient.post('/auth/logout', { refreshToken }),
+
+  forgotPassword: (email: string) =>
+    apiClient.post('/auth/forgot-password', { email }).then(r => r.data),
+
+  resetPassword: (token: string, newPassword: string) =>
+    apiClient.post('/auth/reset-password', { token, newPassword }).then(r => r.data),
 };
 
 // ─── KYC ────────────────────────────────────────────────────────────────────
@@ -172,6 +178,19 @@ export const listingsApi = {
 
   publish: (id: string) =>
     apiClient.post(`/listings/properties/${id}/publish`).then(r => r.data),
+
+  uploadImages: (propertyId: string, files: File[]) => {
+    const fd = new FormData();
+    files.forEach(f => fd.append('files', f));
+    return apiClient
+      .post(`/listings/properties/${propertyId}/images`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(r => r.data);
+  },
+
+  deleteImage: (propertyId: string, imageId: string) =>
+    apiClient.delete(`/listings/properties/${propertyId}/images/${imageId}`).then(r => r.data),
 };
 
 // ─── Services ───────────────────────────────────────────────────────────────

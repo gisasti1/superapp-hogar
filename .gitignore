@@ -61,3 +61,6 @@ web-build/
 
 # Base de datos local embebida
 .local-db/
+
+# Uploads de propiedades (locales)
+.local-uploads/

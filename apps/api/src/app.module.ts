@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'node:path';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonServicesModule } from './common/services/common-services.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -31,6 +33,12 @@ import appConfig from './config/app.config';
     ]),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    ServeStaticModule.forRoot({
+      // /uploads/* sirve archivos guardados en .local-uploads/ (raíz del repo)
+      rootPath: join(process.cwd(), '..', '..', '.local-uploads'),
+      serveRoot: '/uploads',
+      serveStaticOptions: { fallthrough: true },
+    }),
     PrismaModule,
     CommonServicesModule,
     AuthModule,

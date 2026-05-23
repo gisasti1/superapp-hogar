@@ -19,16 +19,22 @@ export class ListingsService {
 
     const propertyWhere: {
       isActive: boolean;
-      city?: string;
+      city?: { contains: string; mode: 'insensitive' };
       rooms?: { gte: number };
       monthlyRent?: { lte: number };
+      expenses?: { lte: number };
       currency?: string;
+      petsAllowed?: boolean;
+      amenities?: { hasEvery: string[] };
     } = { isActive: true };
 
-    if (filters.city) propertyWhere.city = filters.city;
+    if (filters.city) propertyWhere.city = { contains: filters.city, mode: 'insensitive' };
     if (filters.minRooms !== undefined) propertyWhere.rooms = { gte: filters.minRooms };
     if (filters.maxRent !== undefined) propertyWhere.monthlyRent = { lte: filters.maxRent };
+    if (filters.maxExpenses !== undefined) propertyWhere.expenses = { lte: filters.maxExpenses };
     if (filters.currency) propertyWhere.currency = filters.currency;
+    if (filters.petsAllowed !== undefined) propertyWhere.petsAllowed = filters.petsAllowed;
+    if (filters.amenities?.length) propertyWhere.amenities = { hasEvery: filters.amenities };
 
     const [listings, total] = await Promise.all([
       this.prisma.listing.findMany({
@@ -96,8 +102,13 @@ export class ListingsService {
         bathrooms: dto.bathrooms,
         squareMeters: dto.squareMeters,
         monthlyRent: dto.monthlyRent,
+        expenses: dto.expenses,
         currency: dto.currency ?? 'ARS',
         description: dto.description,
+        petsAllowed: dto.petsAllowed ?? false,
+        amenities: dto.amenities ?? [],
+        latitude: dto.latitude,
+        longitude: dto.longitude,
       },
     });
   }
@@ -166,5 +177,37 @@ export class ListingsService {
       where: { id: listingId },
       data: { views: { increment: 1 } },
     });
+  }
+
+  async addImages(userId: string, propertyId: string, urls: string[]) {
+    const property = await this.prisma.property.findUnique({
+      where: { id: propertyId },
+      include: { images: { select: { order: true } } },
+    });
+    if (!property) throw new NotFoundException('Propiedad no encontrada.');
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('No podés editar esta propiedad.');
+    }
+
+    const startOrder = Math.max(0, ...property.images.map(i => i.order + 1));
+    const created = await this.prisma.$transaction(
+      urls.map((url, i) =>
+        this.prisma.propertyImage.create({
+          data: { propertyId, url, order: startOrder + i },
+        }),
+      ),
+    );
+    return { uploaded: created.length, images: created };
+  }
+
+  async deleteImage(userId: string, propertyId: string, imageId: string) {
+    const property = await this.prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) throw new NotFoundException('Propiedad no encontrada.');
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('No podés editar esta propiedad.');
+    }
+
+    await this.prisma.propertyImage.delete({ where: { id: imageId } });
+    return { deleted: true };
   }
 }

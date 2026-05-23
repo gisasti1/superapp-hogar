@@ -3,17 +3,29 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { extname, join } from 'node:path';
+import { mkdirSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ListingsService } from './listings.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { SearchListingsDto } from './dto/search-listings.dto';
+
+const UPLOADS_DIR = join(process.cwd(), '..', '..', '.local-uploads', 'properties');
+mkdirSync(UPLOADS_DIR, { recursive: true });
 
 interface AuthUser {
   id: string;
@@ -72,5 +84,49 @@ export class ListingsController {
   @ApiOperation({ summary: 'Publicar propiedad (crear o activar listing)' })
   async publish(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.listingsService.publishListing(user.id, id);
+  }
+
+  @Post('properties/:id/images')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Subir hasta 10 imágenes para una propiedad' })
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: UPLOADS_DIR,
+        filename: (_req, file, cb) => {
+          const ext = extname(file.originalname).toLowerCase();
+          const name = `${Date.now()}-${randomBytes(6).toString('hex')}${ext}`;
+          cb(null, name);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        const ok = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype);
+        cb(ok ? null : new BadRequestException('Solo se permiten imágenes JPG/PNG/WEBP/GIF'), ok);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    }),
+  )
+  async uploadImages(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    if (!files?.length) throw new BadRequestException('No se subió ningún archivo');
+    const urls = files.map(f => `/uploads/properties/${f.filename}`);
+    return this.listingsService.addImages(user.id, id, urls);
+  }
+
+  @Delete('properties/:propertyId/images/:imageId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Eliminar una imagen de la propiedad' })
+  async deleteImage(
+    @CurrentUser() user: AuthUser,
+    @Param('propertyId') propertyId: string,
+    @Param('imageId') imageId: string,
+  ) {
+    return this.listingsService.deleteImage(user.id, propertyId, imageId);
   }
 }

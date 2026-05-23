@@ -123,6 +123,8 @@ model User {
   role           UserRole @default(TENANT)
   isActive       Boolean  @default(true)
   lastLoginAt    DateTime?
+  resetToken     String?  @unique
+  resetTokenExp  DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -190,8 +192,13 @@ model Property {
   bathrooms    Int
   squareMeters Float
   monthlyRent  Decimal  @db.Decimal(12, 2)
+  expenses     Decimal? @db.Decimal(12, 2)
   currency     String   @default("ARS")
   description  String?
+  petsAllowed  Boolean  @default(false)
+  amenities    String[] @default([])
+  latitude     Float?
+  longitude    Float?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

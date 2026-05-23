@@ -3,21 +3,79 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { UserRole, VerificationStatus } from '@superapp/shared';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) {}
+
+  /**
+   * Genera un token de reset y lo persiste con TTL 1h.
+   * Devuelve siempre 200 (no revela si el email existe — anti-enumeration).
+   * En desarrollo loguea el link a la consola del API.
+   * En producción mandaría email vía Sendgrid.
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      const token = randomBytes(32).toString('hex');
+      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { resetToken: token, resetTokenExp: expires },
+      });
+
+      const webUrl = this.config.get<string>('app.webUrl') ?? 'http://localhost:3000';
+      const link = `${webUrl}/reset-password?token=${token}`;
+
+      // TODO: mandar email real vía Sendgrid cuando haya SENDGRID_API_KEY
+      this.logger.warn(`📧 Reset link para ${email}: ${link}`);
+    }
+
+    return {
+      message: 'Si el email está registrado, vas a recibir un link para resetear tu contraseña.',
+    };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { resetToken: token } });
+
+    if (!user || !user.resetTokenExp || user.resetTokenExp < new Date()) {
+      throw new UnauthorizedException('Token inválido o expirado');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExp: null,
+      },
+    });
+
+    // Invalidar todas las sesiones existentes por seguridad
+    await this.prisma.session.deleteMany({ where: { userId: user.id } });
+
+    return { message: 'Contraseña actualizada correctamente. Ya podés iniciar sesión.' };
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });

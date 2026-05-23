@@ -10,17 +10,34 @@ import { useAuthStore } from '@/stores/auth.store';
 
 export default function ListingsPage() {
   const user = useAuthStore(s => s.user);
-  const [filters, setFilters] = useState({ city: '', minRooms: '', maxRent: '', currency: 'ARS' });
+  const [filters, setFilters] = useState({
+    city: '',
+    minRooms: '',
+    maxRent: '',
+    maxExpenses: '',
+    currency: 'ARS',
+    petsAllowed: false,
+    amenities: [] as string[],
+  });
+
+  const toggleAmenity = (a: string) => {
+    setFilters(f => ({
+      ...f,
+      amenities: f.amenities.includes(a) ? f.amenities.filter(x => x !== a) : [...f.amenities, a],
+    }));
+  };
 
   const { data: listingsResponse, isLoading } = useQuery({
     queryKey: ['listings', filters],
     queryFn: () => {
-      // limpiar valores vacíos antes de mandar al backend (que valida tipos)
-      const clean: Record<string, string | number> = {};
+      const clean: Record<string, string | number | boolean | string[]> = {};
       if (filters.city) clean.city = filters.city;
       if (filters.minRooms) clean.minRooms = Number(filters.minRooms);
       if (filters.maxRent) clean.maxRent = Number(filters.maxRent);
+      if (filters.maxExpenses) clean.maxExpenses = Number(filters.maxExpenses);
       if (filters.currency) clean.currency = filters.currency;
+      if (filters.petsAllowed) clean.petsAllowed = true;
+      if (filters.amenities.length) clean.amenities = filters.amenities.join(',');
       return listingsApi.search(clean);
     },
   });
@@ -103,6 +120,59 @@ export default function ListingsPage() {
               <option value="ARS">ARS</option>
               <option value="USD">USD</option>
             </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+          <div>
+            <label className="label">Expensas máximas</label>
+            <input
+              className="input"
+              type="number"
+              placeholder="Sin límite"
+              value={filters.maxExpenses}
+              onChange={e => setFilters(f => ({ ...f, maxExpenses: e.target.value }))}
+            />
+          </div>
+          <div className="flex items-end">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filters.petsAllowed}
+                onChange={e => setFilters(f => ({ ...f, petsAllowed: e.target.checked }))}
+                className="w-4 h-4 accent-brand-600"
+              />
+              <span className="text-sm text-gray-700">🐾 Solo que acepten mascotas</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <label className="label">Amenities</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: 'pool', label: '🏊 Pileta' },
+              { id: 'gym', label: '🏋️ Gimnasio' },
+              { id: 'bbq', label: '🍖 Parrilla' },
+              { id: 'parking', label: '🚗 Cochera' },
+              { id: 'doorman', label: '👔 Portería' },
+              { id: 'laundry', label: '🧺 Lavadero' },
+              { id: 'balcony', label: '🌅 Balcón' },
+              { id: 'garden', label: '🌿 Jardín' },
+            ].map(a => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => toggleAmenity(a.id)}
+                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
+                  filters.amenities.includes(a.id)
+                    ? 'bg-brand-600 text-white border-brand-600'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
