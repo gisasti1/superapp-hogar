@@ -37,8 +37,15 @@ import { validateEnv } from './config/env.validation';
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
-      // /uploads/* sirve archivos guardados en .local-uploads/ (raíz del repo)
-      rootPath: join(process.cwd(), '..', '..', '.local-uploads'),
+      // /uploads/* sirve archivos guardados localmente. En dev local apunta
+      // a la raíz del repo; en producción usa /tmp (filesystem ephemeral).
+      // Para uploads persistentes en prod hay que migrar a S3/R2 (ya hay
+      // adapter S3Service listo en common/services/).
+      rootPath:
+        process.env.UPLOADS_ROOT_DIR ??
+        (process.env.NODE_ENV === 'production'
+          ? '/tmp/superapp-uploads'
+          : join(process.cwd(), '..', '..', '.local-uploads')),
       serveRoot: '/uploads',
       serveStaticOptions: { fallthrough: true },
     }),

@@ -24,8 +24,22 @@ import { ListingsService } from './listings.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { SearchListingsDto } from './dto/search-listings.dto';
 
-const UPLOADS_DIR = join(process.cwd(), '..', '..', '.local-uploads', 'properties');
-mkdirSync(UPLOADS_DIR, { recursive: true });
+// Path para uploads. En local apuntamos a la raíz del repo, en producción
+// usamos /tmp (siempre writable). Se puede overridear con UPLOADS_DIR env var.
+const UPLOADS_DIR =
+  process.env.UPLOADS_DIR ??
+  (process.env.NODE_ENV === 'production'
+    ? '/tmp/superapp-uploads/properties'
+    : join(process.cwd(), '..', '..', '.local-uploads', 'properties'));
+
+try {
+  mkdirSync(UPLOADS_DIR, { recursive: true });
+} catch (err) {
+  // No abortar el bootstrap si no podemos crear la carpeta — el endpoint
+  // de upload va a fallar con un error claro cuando lo intenten usar.
+  // eslint-disable-next-line no-console
+  console.warn(`[uploads] No se pudo crear ${UPLOADS_DIR}:`, (err as Error).message);
+}
 
 interface AuthUser {
   id: string;
