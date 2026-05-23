@@ -1,0 +1,27 @@
+# Render Blueprint para SuperApp Hogar
+# Render detecta este archivo y arma la infra sola.
+# Setealo apuntando "Repo Root" al root del repo.
+
+services:
+  - type: web
+    name: superapp-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true   # Render genera uno aleatorio único
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false           # lo setea el usuario manualmente (apuntando a Neon)
+      - key: ALLOWED_ORIGINS
+        sync: false           # se setea cuando la web esté deployada
