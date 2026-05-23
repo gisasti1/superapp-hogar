@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
-    "start": "node dist/apps/api/src/main",
+    "start": "node dist/main",
     "lint": "eslint src/",
     "test": "jest",
     "test:watch": "jest --watch",

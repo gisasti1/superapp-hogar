@@ -27,6 +27,10 @@ packages/*/src/types/*.js
 packages/*/src/types/*.js.map
 packages/*/src/types/*.d.ts
 packages/*/src/types/*.d.ts.map
+packages/*/prisma/*.js
+packages/*/prisma/*.js.map
+packages/*/prisma/*.d.ts
+packages/*/prisma/*.d.ts.map
 
 # Coverage
 coverage
