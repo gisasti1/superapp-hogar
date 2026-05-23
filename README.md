@@ -72,7 +72,13 @@ Todos con contraseña **`Password123!`**
 - ✅ Audit log completo
 
 **Web (Next.js 15):**
-18 páginas — login, registro, recuperar/resetear contraseña, dashboard, listings (con filtros avanzados: mascotas, expensas, amenities), publicar inmueble, detalle con **galería de fotos** y **mapa OpenStreetMap**, contratos, pagos, seguros, mediación, premium, perfil.
+19 páginas — login, registro (con selector Inquilino/Propietario), recuperar/resetear contraseña, **verificación de identidad (KYC)**, dashboard, listings (con filtros avanzados: mascotas, expensas, amenities), publicar inmueble, detalle con **galería de fotos** y **mapa OpenStreetMap**, contratos, pagos, seguros, mediación, premium, perfil.
+
+**Registro y verificación:**
+- Al registrarte elegís si sos **Inquilino** o **Propietario**
+- Usuario nuevo arranca con verificación PENDING y banner en el dashboard
+- Página `/kyc` con verificación rápida (modo demo): ingresás DNI → quedás verificado
+- En producción reemplaza por flujo completo: subir foto del DNI + selfie + validar contra RENAPER
 
 **Otras features clave:**
 - 📷 Upload de fotos de propiedades (multer + serve-static, max 5 MB c/u, hasta 10 por propiedad)

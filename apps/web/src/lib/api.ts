@@ -62,8 +62,24 @@ export const kycApi = {
   startVerification: () =>
     apiClient.post('/kyc/start').then(r => r.data),
 
-  submitDocuments: (dto: object) =>
-    apiClient.post('/kyc/documents', dto).then(r => r.data),
+  quickVerify: (dni: string) =>
+    apiClient.post('/kyc/quick-verify', { dni }).then(r => r.data),
+
+  uploadDni: (front: File, back: File) => {
+    const fd = new FormData();
+    fd.append('front', front);
+    fd.append('back', back);
+    return apiClient.post('/kyc/upload-dni', fd).then(r => r.data);
+  },
+
+  uploadSelfie: (selfie: File) => {
+    const fd = new FormData();
+    fd.append('selfie', selfie);
+    return apiClient.post('/kyc/selfie', fd).then(r => r.data);
+  },
+
+  validateRenaper: () =>
+    apiClient.post('/kyc/validate-renaper').then(r => r.data),
 };
 
 // ─── Contracts ──────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Body,
   UseGuards,
   UseInterceptors,
   UploadedFiles,
@@ -10,7 +11,14 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
+import { IsString, Matches } from 'class-validator';
 import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
+
+class QuickVerifyDto {
+  @IsString()
+  @Matches(/^\d{7,9}$/, { message: 'DNI debe tener entre 7 y 9 dígitos' })
+  dni: string;
+}
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -108,5 +116,14 @@ export class KycController {
   @ApiOperation({ summary: 'Obtener estado de verificación KYC' })
   async getStatus(@CurrentUser() user: AuthUser) {
     return this.kycService.getStatus(user.id);
+  }
+
+  @Post('quick-verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verificación rápida (modo demo, deshabilitado en producción con RENAPER real)',
+  })
+  async quickVerify(@CurrentUser() user: AuthUser, @Body() dto: QuickVerifyDto) {
+    return this.kycService.quickVerify(user.id, dto.dni);
   }
 }
