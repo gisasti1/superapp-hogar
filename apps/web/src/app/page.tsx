@@ -80,8 +80,12 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-gray-400">
-          © 2026 SuperApp Hogar. Todos los derechos reservados.
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-gray-400">
+          <span>© 2026 SuperApp Hogar. Todos los derechos reservados.</span>
+          <div className="flex gap-5">
+            <Link href="/privacy" className="hover:text-gray-600">Privacidad</Link>
+            <Link href="/terms" className="hover:text-gray-600">Términos</Link>
+          </div>
         </div>
       </footer>
     </main>

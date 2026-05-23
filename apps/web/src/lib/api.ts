@@ -195,6 +195,15 @@ export const listingsApi = {
   publish: (id: string) =>
     apiClient.post(`/listings/properties/${id}/publish`).then(r => r.data),
 
+  unpublish: (id: string) =>
+    apiClient.post(`/listings/properties/${id}/unpublish`).then(r => r.data),
+
+  updateProperty: (id: string, dto: object) =>
+    apiClient.patch(`/listings/properties/${id}`, dto).then(r => r.data),
+
+  deleteProperty: (id: string) =>
+    apiClient.delete(`/listings/properties/${id}`).then(r => r.data),
+
   uploadImages: (propertyId: string, files: File[]) => {
     const fd = new FormData();
     files.forEach(f => fd.append('files', f));

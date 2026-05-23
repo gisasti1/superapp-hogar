@@ -179,6 +179,52 @@ export class ListingsService {
     });
   }
 
+  async unpublishListing(userId: string, propertyId: string) {
+    const property = await this.prisma.property.findUnique({
+      where: { id: propertyId },
+      include: { listing: true },
+    });
+    if (!property) throw new NotFoundException('Propiedad no encontrada.');
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('No podés despublicar esta propiedad.');
+    }
+    if (!property.listing) {
+      return { isPublished: false };
+    }
+    return this.prisma.listing.update({
+      where: { id: property.listing.id },
+      data: { isPublished: false },
+    });
+  }
+
+  async deleteProperty(userId: string, propertyId: string) {
+    const property = await this.prisma.property.findUnique({
+      where: { id: propertyId },
+      include: { contracts: { where: { status: { in: ['ACTIVE', 'PENDING_SIGNATURES', 'SIGNED'] } } } },
+    });
+    if (!property) throw new NotFoundException('Propiedad no encontrada.');
+    if (property.ownerId !== userId) {
+      throw new ForbiddenException('No podés eliminar esta propiedad.');
+    }
+    if (property.contracts.length > 0) {
+      throw new ForbiddenException(
+        'No podés eliminar una propiedad con contratos activos. Primero finalizá los contratos.',
+      );
+    }
+    // Soft delete: marca isActive=false y despublica el listing
+    await this.prisma.$transaction([
+      this.prisma.property.update({
+        where: { id: propertyId },
+        data: { isActive: false },
+      }),
+      this.prisma.listing.updateMany({
+        where: { propertyId },
+        data: { isPublished: false },
+      }),
+    ]);
+    return { deleted: true };
+  }
+
   async addImages(userId: string, propertyId: string, urls: string[]) {
     const property = await this.prisma.property.findUnique({
       where: { id: propertyId },

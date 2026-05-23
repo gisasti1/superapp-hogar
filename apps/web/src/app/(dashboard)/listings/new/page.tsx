@@ -32,6 +32,35 @@ export default function NewPropertyPage() {
     }));
   };
   const [error, setError] = useState<string | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  // Geocoding con OpenStreetMap Nominatim — sin API key. Política: 1 req/seg, User-Agent obligatorio.
+  // Docs: https://nominatim.org/release-docs/develop/api/Search/
+  const geocode = async () => {
+    setGeocodeError(null);
+    setGeocoding(true);
+    try {
+      const q = `${form.address}, ${form.city}${form.province ? `, ${form.province}` : ''}, Argentina`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      if (!res.ok) throw new Error('No pudimos consultar el mapa. Probá de nuevo.');
+      const data = await res.json();
+      if (!data.length) {
+        setGeocodeError('No encontramos esa dirección. Verificá la calle y ciudad, o ingresá lat/lng a mano.');
+      } else {
+        setForm(f => ({
+          ...f,
+          latitude: Number(data[0].lat).toFixed(6),
+          longitude: Number(data[0].lon).toFixed(6),
+        }));
+      }
+    } catch (e: any) {
+      setGeocodeError(e?.message ?? 'Error al buscar la dirección');
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   const { mutate: createProperty, isPending } = useMutation({
     mutationFn: (dto: object) => listingsApi.createProperty(dto),
@@ -176,31 +205,48 @@ export default function NewPropertyPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Latitud (opcional)</label>
-            <input
-              name="latitude" type="number" step="0.0001"
-              className="input"
-              placeholder="-34.6037"
-              value={form.latitude}
-              onChange={upd('latitude')}
-            />
+        <div className="space-y-2">
+          <div className="flex items-end gap-2">
+            <button
+              type="button"
+              onClick={geocode}
+              disabled={geocoding || !form.address || !form.city}
+              className="btn-secondary text-sm"
+            >
+              {geocoding ? '📍 Buscando...' : '📍 Buscar en mapa'}
+            </button>
+            <p className="text-xs text-gray-400 pb-2">
+              Auto-completá lat/lng desde la dirección + ciudad
+            </p>
           </div>
-          <div>
-            <label className="label">Longitud (opcional)</label>
-            <input
-              name="longitude" type="number" step="0.0001"
-              className="input"
-              placeholder="-58.3816"
-              value={form.longitude}
-              onChange={upd('longitude')}
-            />
+          {geocodeError && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg p-2">
+              {geocodeError}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Latitud (opcional)</label>
+              <input
+                name="latitude" type="number" step="0.000001"
+                className="input"
+                placeholder="-34.6037"
+                value={form.latitude}
+                onChange={upd('latitude')}
+              />
+            </div>
+            <div>
+              <label className="label">Longitud (opcional)</label>
+              <input
+                name="longitude" type="number" step="0.000001"
+                className="input"
+                placeholder="-58.3816"
+                value={form.longitude}
+                onChange={upd('longitude')}
+              />
+            </div>
           </div>
         </div>
-        <p className="text-xs text-gray-400 -mt-3">
-          💡 Tip: las coordenadas son opcionales pero permiten mostrar el inmueble en el mapa.
-        </p>
 
         <div>
           <label className="label">¿Acepta mascotas?</label>

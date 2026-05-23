@@ -86,6 +86,22 @@ export class ListingsController {
     return this.listingsService.publishListing(user.id, id);
   }
 
+  @Post('properties/:id/unpublish')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Despublicar inmueble (el listing queda en isPublished=false)' })
+  async unpublish(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.listingsService.unpublishListing(user.id, id);
+  }
+
+  @Delete('properties/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Eliminar inmueble (soft delete via isActive=false)' })
+  async deleteProperty(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.listingsService.deleteProperty(user.id, id);
+  }
+
   @Post('properties/:id/images')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

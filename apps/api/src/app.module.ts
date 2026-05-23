@@ -18,7 +18,9 @@ import { ServicesModule } from './modules/services/services.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { PremiumModule } from './modules/premium/premium.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { HealthModule } from './modules/health/health.module';
 import appConfig from './config/app.config';
+import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import appConfig from './config/app.config';
       isGlobal: true,
       load: [appConfig],
       envFilePath: ['.env.local', '.env'],
+      validate: validateEnv,
     }),
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 60000, limit: 100 },
@@ -52,6 +55,7 @@ import appConfig from './config/app.config';
     ListingsModule,
     PremiumModule,
     NotificationsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

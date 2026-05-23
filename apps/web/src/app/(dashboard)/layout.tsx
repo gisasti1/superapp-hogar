@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { NotificationsBell } from '@/components/NotificationsBell';
 import { clsx } from 'clsx';
 
 const NAV = [
@@ -61,9 +62,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-4xl mx-auto">{children}</div>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-end px-6 gap-2">
+          <NotificationsBell />
+        </header>
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-4xl mx-auto">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

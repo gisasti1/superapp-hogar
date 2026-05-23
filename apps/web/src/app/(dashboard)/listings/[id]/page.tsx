@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { listingsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PropertyMap } from '@/components/PropertyMap';
@@ -31,6 +31,7 @@ function imgUrl(u: string): string {
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const user = useAuthStore(s => s.user);
   const qc = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -43,6 +44,23 @@ export default function ListingDetailPage() {
   const { mutate: publish, isPending: isPublishing } = useMutation({
     mutationFn: () => listingsApi.publish(listing?.propertyId ?? id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['listing', id] }),
+  });
+
+  const { mutate: unpublish, isPending: isUnpublishing } = useMutation({
+    mutationFn: () => listingsApi.unpublish(listing!.propertyId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['listing', id] }),
+  });
+
+  const { mutate: deleteProperty, isPending: isDeleting } = useMutation({
+    mutationFn: () => listingsApi.deleteProperty(listing!.propertyId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['listings'] });
+      qc.invalidateQueries({ queryKey: ['my-properties'] });
+      router.push('/listings');
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message ?? 'No se pudo eliminar el inmueble');
+    },
   });
 
   const { mutate: uploadImages, isPending: isUploading } = useMutation({
@@ -206,9 +224,17 @@ export default function ListingDetailPage() {
             ) : (
               <div className="space-y-2 mt-4">
                 <div className={`text-center text-sm font-semibold py-2 px-3 rounded-lg ${property.listing?.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                  {property.listing?.isPublished ? '✅ Publicado' : 'Sin publicar'}
+                  {property.listing?.isPublished ? '✅ Publicado' : '🚫 Sin publicar'}
                 </div>
-                {!property.listing?.isPublished && (
+                {property.listing?.isPublished ? (
+                  <button
+                    onClick={() => unpublish()}
+                    disabled={isUnpublishing}
+                    className="btn-secondary w-full"
+                  >
+                    {isUnpublishing ? 'Despublicando...' : 'Despublicar'}
+                  </button>
+                ) : (
                   <button
                     onClick={() => publish()}
                     disabled={isPublishing}
@@ -222,6 +248,17 @@ export default function ListingDetailPage() {
                     {property.listing.views} visitas
                   </p>
                 )}
+                <button
+                  onClick={() => {
+                    if (confirm('¿Eliminar este inmueble? Esta acción no se puede deshacer.\nNo se puede eliminar si hay contratos activos.')) {
+                      deleteProperty();
+                    }
+                  }}
+                  disabled={isDeleting}
+                  className="w-full text-xs text-red-600 hover:text-red-700 py-1.5"
+                >
+                  {isDeleting ? 'Eliminando...' : '🗑 Eliminar inmueble'}
+                </button>
               </div>
             )}
           </div>

@@ -83,10 +83,26 @@ Todos con contraseña **`Password123!`**
 **Otras features clave:**
 - 📷 Upload de fotos de propiedades (multer + serve-static, max 5 MB c/u, hasta 10 por propiedad)
 - 🗺️ Mapa Leaflet con OpenStreetMap (sin API key, sin tracking)
+- 📍 Geocoder Nominatim — auto-completa lat/lng desde la dirección
 - 🐾 Filtros por mascotas permitidas
 - 🏊 Filtros por amenities (pileta, gimnasio, parrilla, cochera, etc.)
 - 💰 Filtros por expensas máximas
 - 🔑 Reset de contraseña con token + TTL 1h + invalidación de sesiones
+- 🔔 Notificaciones en tiempo real con campanita en el header (poll cada 30s)
+- ✏️ Editar/despublicar/eliminar propiedades propias (con guards de ownership y contratos activos)
+
+**Production-ready:**
+- ✅ Health check endpoint `GET /api/health` con check de DB y uptime
+- ✅ Validación de env vars al arranque con Zod (falla rápido si falta algo)
+- ✅ Helmet con CSP estricto en producción, CORS configurable
+- ✅ Swagger sólo en non-prod, graceful shutdown
+- ✅ 36 tests unitarios (Auth, Listings, Contracts, Payments)
+- ✅ Página 404 personalizada + páginas de Privacidad y Términos
+- ✅ Dockerfile multi-stage para API y Web (output standalone)
+- ✅ `docker-compose.prod.yml` para deploy single-host con un comando
+- ✅ Migraciones Prisma versionadas + seed dedicado para producción
+- ✅ CI con typecheck + tests + build + Docker images (GitHub Actions)
+- ✅ Guía completa de deploy en [DEPLOY.md](./DEPLOY.md)
 
 **Mobile (Expo / React Native):**
 App nativa iOS + Android con las mismas funciones (todavía no levantada en local, necesitás Expo Go o Xcode).
