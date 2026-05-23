@@ -23,7 +23,7 @@ export default function LoginScreen() {
     try {
       const res = await authApi.login(data.email, data.password);
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch {
       Alert.alert('Error', 'Email o contraseña incorrectos');
     }
@@ -77,7 +77,7 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
-      <Link href="/(auth)/register" style={styles.link}>
+      <Link href="/register" style={styles.link}>
         ¿No tenés cuenta? Registrate
       </Link>
     </View>

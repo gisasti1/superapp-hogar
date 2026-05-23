@@ -116,7 +116,7 @@ export default function PremiumPage() {
             </span>
           ) : (
             <button
-              onClick={() => subscribe()}
+              onClick={() => subscribe('PREMIUM')}
               disabled={isPending}
               className="btn-primary w-full"
             >

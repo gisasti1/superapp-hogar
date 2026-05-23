@@ -83,8 +83,11 @@ export const paymentsApi = {
   list: () =>
     apiClient.get('/payments').then(r => r.data),
 
+  get: (id: string) =>
+    apiClient.get(`/payments/${id}`).then(r => r.data),
+
   initPayment: (id: string) =>
-    apiClient.post(`/payments/${id}/init`).then(r => r.data),
+    apiClient.post(`/payments/${id}/pay`).then(r => r.data),
 };
 
 // ─── Mediation ──────────────────────────────────────────────────────────────
@@ -120,19 +123,19 @@ export const insuranceApi = {
     apiClient.get('/insurance/policies').then(r => r.data),
 
   quote: (dto: object) =>
-    apiClient.post('/insurance/quotes', dto).then(r => r.data),
+    apiClient.post('/insurance/quote', dto).then(r => r.data),
 
   selectQuote: (quoteId: string, providerId: string) =>
-    apiClient.post(`/insurance/quotes/${quoteId}/select`, { providerId }).then(r => r.data),
+    apiClient.post(`/insurance/quote/${quoteId}/select`, { providerId }).then(r => r.data),
 
   payPolicy: (policyId: string) =>
-    apiClient.post(`/insurance/policies/${policyId}/pay`).then(r => r.data),
+    apiClient.post(`/insurance/policy/${policyId}/pay`).then(r => r.data),
 };
 
 // ─── Deposits ───────────────────────────────────────────────────────────────
 export const depositsApi = {
   getByContract: (contractId: string) =>
-    apiClient.get(`/deposits?contractId=${contractId}`).then(r => r.data),
+    apiClient.get(`/deposits/${contractId}`).then(r => r.data),
 
   requestRelease: (depositId: string, reason: string) =>
     apiClient.post(`/deposits/${depositId}/release`, { reason }).then(r => r.data),
@@ -143,14 +146,14 @@ export const premiumApi = {
   getPlans: () =>
     apiClient.get('/premium/plans').then(r => r.data),
 
-  subscribe: () =>
-    apiClient.post('/premium/subscribe').then(r => r.data),
+  subscribe: (plan: 'FREE' | 'PREMIUM') =>
+    apiClient.post('/premium/subscribe', { plan }).then(r => r.data),
 
   getSubscription: () =>
     apiClient.get('/premium/subscription').then(r => r.data),
 
   cancel: () =>
-    apiClient.post('/premium/cancel').then(r => r.data),
+    apiClient.delete('/premium/subscription').then(r => r.data),
 };
 
 // ─── Listings ───────────────────────────────────────────────────────────────
@@ -162,13 +165,13 @@ export const listingsApi = {
     apiClient.get(`/listings/${id}`).then(r => r.data),
 
   getMyProperties: () =>
-    apiClient.get('/listings/mine').then(r => r.data),
+    apiClient.get('/listings/my-properties').then(r => r.data),
 
   createProperty: (dto: object) =>
-    apiClient.post('/listings', dto).then(r => r.data),
+    apiClient.post('/listings/properties', dto).then(r => r.data),
 
   publish: (id: string) =>
-    apiClient.post(`/listings/${id}/publish`).then(r => r.data),
+    apiClient.post(`/listings/properties/${id}/publish`).then(r => r.data),
 };
 
 // ─── Services ───────────────────────────────────────────────────────────────
@@ -179,8 +182,20 @@ export const servicesApi = {
   getProvider: (id: string) =>
     apiClient.get(`/services/providers/${id}`).then(r => r.data),
 
-  requestQuote: (dto: object) =>
-    apiClient.post('/services/quotes', dto).then(r => r.data),
+  createBooking: (dto: object) =>
+    apiClient.post('/services/bookings', dto).then(r => r.data),
+
+  quoteBooking: (id: string, dto: object) =>
+    apiClient.post(`/services/bookings/${id}/quote`, dto).then(r => r.data),
+
+  acceptBooking: (id: string) =>
+    apiClient.post(`/services/bookings/${id}/accept`).then(r => r.data),
+
+  completeBooking: (id: string) =>
+    apiClient.post(`/services/bookings/${id}/complete`).then(r => r.data),
+
+  reviewBooking: (id: string, dto: object) =>
+    apiClient.post(`/services/bookings/${id}/review`, dto).then(r => r.data),
 
   getMyBookings: () =>
     apiClient.get('/services/bookings').then(r => r.data),

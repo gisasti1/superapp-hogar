@@ -17,10 +17,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <span className="text-xl font-bold text-brand-600">SuperApp Hogar</span>
           <div className="flex items-center gap-4">
-            <Link href="/(auth)/login" className="text-sm text-gray-600 hover:text-gray-900">
+            <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">
               Ingresar
             </Link>
-            <Link href="/(auth)/register" className="btn-primary text-sm">
+            <Link href="/register" className="btn-primary text-sm">
               Registrarse
             </Link>
           </div>
@@ -38,7 +38,7 @@ export default function LandingPage() {
           Para inquilinos, propietarios e inmobiliarias.
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
-          <Link href="/(auth)/register" className="btn-primary px-8 py-3 text-base">
+          <Link href="/register" className="btn-primary px-8 py-3 text-base">
             Empezar gratis
           </Link>
           <a href="#features" className="btn-secondary px-8 py-3 text-base">
@@ -72,7 +72,7 @@ export default function LandingPage() {
           <p className="text-brand-100 mb-8">
             Creá tu cuenta en 2 minutos y accedé a seguro de caución, contrato digital y más.
           </p>
-          <Link href="/(auth)/register" className="bg-white text-brand-600 font-bold px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+          <Link href="/register" className="bg-white text-brand-600 font-bold px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors">
             Crear cuenta gratis
           </Link>
         </div>

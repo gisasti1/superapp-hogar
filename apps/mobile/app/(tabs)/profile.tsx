@@ -27,7 +27,7 @@ export default function ProfileScreen() {
         style: 'destructive',
         onPress: async () => {
           await clearAuth();
-          router.replace('/(auth)/login');
+          router.replace('/login');
         },
       },
     ]);

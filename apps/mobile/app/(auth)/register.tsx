@@ -29,7 +29,7 @@ export default function RegisterScreen() {
     try {
       const res = await authApi.register(data);
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo registrar');
     }
@@ -104,7 +104,7 @@ export default function RegisterScreen() {
         {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Registrarme</Text>}
       </TouchableOpacity>
 
-      <Link href="/(auth)/login" style={styles.link}>¿Ya tenés cuenta? Ingresá</Link>
+      <Link href="/login" style={styles.link}>¿Ya tenés cuenta? Ingresá</Link>
     </ScrollView>
   );
 }
