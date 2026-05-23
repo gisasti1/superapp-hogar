@@ -17,12 +17,14 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@prisma/client": "^6.1.0"
+    "@prisma/client": "^6.1.0",
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^5.1.1"
   },
   "devDependencies": {
+    "@types/node": "^22.10.5",
     "prisma": "^6.1.0",
-    "typescript": "^5.7.3",
     "ts-node": "^10.9.2",
-    "@types/node": "^22.10.5"
+    "typescript": "^5.7.3"
   }
 }

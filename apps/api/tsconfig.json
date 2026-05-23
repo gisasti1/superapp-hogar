@@ -7,7 +7,6 @@
     "rootDir": "./src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "incremental": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "strictPropertyInitialization": false,

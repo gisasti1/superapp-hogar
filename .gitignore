@@ -58,3 +58,6 @@ pnpm-debug.log*
 *.mobileprovision
 *.orig.*
 web-build/
+
+# Base de datos local embebida
+.local-db/
