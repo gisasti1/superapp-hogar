@@ -176,6 +176,10 @@ model User {
   auditLogs      AuditLog[]
   favorites      Favorite[]
   reportedIssues Issue[]          @relation("ReportedIssues")
+  rentalRequestsAsTenant   RentalRequest[]  @relation("RequestsAsTenant")
+  rentalRequestsAsLandlord RentalRequest[]  @relation("RequestsAsLandlord")
+  authoredContractReviews  ContractReview[] @relation("AuthoredReviews")
+  receivedContractReviews  ContractReview[] @relation("ReceivedReviews")
 
   @@map("users")
 }
@@ -240,6 +244,7 @@ model Property {
   images    PropertyImage[]
   favorites Favorite[]
   issues    Issue[]
+  rentalRequests RentalRequest[]
 
   @@map("properties")
 }
@@ -296,6 +301,8 @@ model Contract {
   payments Payment[]
   cases    MediationCase[]
   signatures ContractSignature[]
+  reviews    ContractReview[] @relation("ContractReviews")
+  rentalRequest RentalRequest? @relation("OriginatingRequest")
 
   @@map("contracts")
 }
@@ -645,4 +652,69 @@ model Issue {
   @@index([propertyId, status])
   @@index([reportedById])
   @@map("issues")
+}
+
+// ─── Bloque 2: Solicitar alquiler + reseñas mutuas ───────────────────────────
+
+enum RentalRequestStatus {
+  PENDING      // recién enviada
+  APPROVED     // el propietario aceptó, hay que generar el contrato
+  REJECTED     // el propietario rechazó
+  CANCELLED    // el inquilino canceló su propia solicitud
+  EXPIRED      // pasaron N días sin respuesta
+  CONVERTED    // se convirtió en contrato
+}
+
+model RentalRequest {
+  id          String              @id @default(uuid())
+  propertyId  String
+  tenantId    String
+  landlordId  String
+  message     String              @db.Text
+  // El inquilino propone fechas tentativas; el propietario las confirma al aprobar.
+  proposedStartDate DateTime?
+  proposedMonths    Int?          // duración propuesta en meses
+  status      RentalRequestStatus @default(PENDING)
+  // Respuesta del propietario al aprobar o rechazar
+  response    String?             @db.Text
+  respondedAt DateTime?
+  // Si se generó un contrato a partir de esta solicitud
+  contractId  String?             @unique
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant   User      @relation("RequestsAsTenant", fields: [tenantId], references: [id])
+  landlord User      @relation("RequestsAsLandlord", fields: [landlordId], references: [id])
+  contract Contract? @relation("OriginatingRequest", fields: [contractId], references: [id])
+
+  @@index([propertyId, status])
+  @@index([tenantId])
+  @@index([landlordId])
+  @@map("rental_requests")
+}
+
+model ContractReview {
+  id           String   @id @default(uuid())
+  contractId   String
+  // Quien escribe la reseña
+  authorId     String
+  // A quién se le evalúa
+  targetId     String
+  // Rol del target en el contrato — útil para listar "como propietario soy 4.6"
+  targetRole   String   // 'TENANT' | 'LANDLORD'
+  rating       Int      // 1..5
+  comment      String?  @db.Text
+  // Sub-ratings opcionales (cuidado del inmueble, puntualidad de pagos, comunicación, etc.)
+  ratingDetails Json?
+  createdAt    DateTime @default(now())
+
+  contract Contract @relation("ContractReviews", fields: [contractId], references: [id], onDelete: Cascade)
+  author   User     @relation("AuthoredReviews", fields: [authorId], references: [id])
+  target   User     @relation("ReceivedReviews", fields: [targetId], references: [id])
+
+  // Cada parte sólo puede escribir UNA reseña por contrato
+  @@unique([contractId, authorId])
+  @@index([targetId])
+  @@map("contract_reviews")
 }

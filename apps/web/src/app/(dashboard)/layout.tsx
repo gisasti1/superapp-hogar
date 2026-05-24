@@ -11,6 +11,7 @@ const NAV = [
   { href: '/dashboard', label: 'Inicio', icon: '🏠' },
   { href: '/listings', label: 'Inmuebles', icon: '🏘️' },
   { href: '/favorites', label: 'Favoritos', icon: '❤️' },
+  { href: '/rental-requests', label: 'Solicitudes', icon: '📨' },
   { href: '/contracts', label: 'Contratos', icon: '📄' },
   { href: '/payments', label: 'Pagos', icon: '💳' },
   { href: '/issues', label: 'Desperfectos', icon: '🛠' },

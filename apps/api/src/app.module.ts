@@ -21,6 +21,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { HealthModule } from './modules/health/health.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { IssuesModule } from './modules/issues/issues.module';
+import { RentalRequestsModule } from './modules/rental-requests/rental-requests.module';
+import { ContractReviewsModule } from './modules/contract-reviews/contract-reviews.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -67,6 +69,8 @@ import { validateEnv } from './config/env.validation';
     HealthModule,
     FavoritesModule,
     IssuesModule,
+    RentalRequestsModule,
+    ContractReviewsModule,
   ],
 })
 export class AppModule {}

@@ -3,11 +3,12 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { listingsApi, favoritesApi } from '@/lib/api';
+import { listingsApi, favoritesApi, rentalRequestsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PropertyMap } from '@/components/PropertyMap';
 import { useAuthStore } from '@/stores/auth.store';
 import Link from 'next/link';
+import { useState } from 'react';
 
 const AMENITY_LABELS: Record<string, string> = {
   pool: '🏊 Pileta',
@@ -74,6 +75,23 @@ export default function ListingDetailPage() {
   const { mutate: toggleFavorite, isPending: isFavoriting } = useMutation({
     mutationFn: () => favoritesApi.toggle(listing!.propertyId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['favorites-ids'] }),
+  });
+
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [requestSent, setRequestSent] = useState(false);
+
+  const { mutate: sendRequest, isPending: isRequesting } = useMutation({
+    mutationFn: () =>
+      rentalRequestsApi.create(listing!.propertyId, { message: requestMessage }),
+    onSuccess: () => {
+      setRequestSent(true);
+      setShowRequestForm(false);
+      qc.invalidateQueries({ queryKey: ['rental-requests'] });
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message ?? 'No se pudo enviar la solicitud');
+    },
   });
 
   const { mutate: uploadImages, isPending: isUploading } = useMutation({
@@ -225,11 +243,55 @@ export default function ListingDetailPage() {
 
             {!isOwner ? (
               <div className="space-y-2 mt-4">
+                {requestSent ? (
+                  <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg p-3 text-center">
+                    ✓ Solicitud enviada. Te avisamos cuando el propietario responda.
+                    <Link href="/rental-requests" className="block underline mt-1">
+                      Ver mis solicitudes
+                    </Link>
+                  </div>
+                ) : !showRequestForm ? (
+                  <button
+                    onClick={() => setShowRequestForm(true)}
+                    className="btn-primary w-full"
+                  >
+                    📨 Solicitar alquiler
+                  </button>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                    <p className="text-xs text-amber-900 font-medium">
+                      Mensaje al propietario:
+                    </p>
+                    <textarea
+                      className="input text-sm min-h-[80px]"
+                      placeholder="Hola, me interesa el inmueble. Soy [tu situación: trabajo, familia, mascotas, fecha de mudanza...]"
+                      value={requestMessage}
+                      onChange={e => setRequestMessage(e.target.value)}
+                      maxLength={2000}
+                      minLength={20}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => sendRequest()}
+                        disabled={isRequesting || requestMessage.length < 20}
+                        className="btn-primary flex-1 text-sm"
+                      >
+                        {isRequesting ? 'Enviando...' : 'Enviar solicitud'}
+                      </button>
+                      <button
+                        onClick={() => setShowRequestForm(false)}
+                        className="btn-secondary text-sm"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <a
                   href={`mailto:?subject=Consulta por inmueble en ${property.address}`}
-                  className="btn-primary w-full text-center block"
+                  className="btn-secondary w-full text-center block text-sm"
                 >
-                  Contactar propietario
+                  Contactar por email
                 </a>
                 <button
                   onClick={() => toggleFavorite()}

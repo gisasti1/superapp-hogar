@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { ContractStatus } from '@superapp/shared';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ContractReviews } from '@/components/ContractReviews';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Borrador',
@@ -212,6 +213,8 @@ export default function ContractDetailPage() {
           )}
 
           {/* Deposit card */}
+          <ContractReviews contractId={contract.id} contractStatus={contract.status} />
+
           {deposit && (
             <div className="card space-y-2">
               <h2 className="font-bold text-gray-900 text-sm">Depósito en garantía</h2>

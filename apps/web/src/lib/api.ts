@@ -240,6 +240,30 @@ export const favoritesApi = {
     apiClient.delete(`/favorites/${propertyId}`).then(r => r.data),
 };
 
+// ─── Rental Requests (solicitar alquiler) ─────────────────────────────────
+export const rentalRequestsApi = {
+  list: () => apiClient.get('/rental-requests').then(r => r.data),
+  get: (id: string) => apiClient.get(`/rental-requests/${id}`).then(r => r.data),
+  create: (propertyId: string, dto: { message: string; proposedStartDate?: string; proposedMonths?: number }) =>
+    apiClient.post(`/rental-requests/property/${propertyId}`, dto).then(r => r.data),
+  approve: (id: string, response?: string) =>
+    apiClient.post(`/rental-requests/${id}/approve`, { response }).then(r => r.data),
+  reject: (id: string, response?: string) =>
+    apiClient.post(`/rental-requests/${id}/reject`, { response }).then(r => r.data),
+  cancel: (id: string) =>
+    apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
+};
+
+// ─── Contract Reviews (reseñas mutuas) ─────────────────────────────────────
+export const contractReviewsApi = {
+  create: (contractId: string, dto: { rating: number; comment?: string; ratingDetails?: Record<string, number> }) =>
+    apiClient.post(`/contract-reviews/contract/${contractId}`, dto).then(r => r.data),
+  listByContract: (contractId: string) =>
+    apiClient.get(`/contract-reviews/contract/${contractId}`).then(r => r.data),
+  listForUser: (userId: string): Promise<{ reviews: any[]; total: number; averageRating: number }> =>
+    apiClient.get(`/contract-reviews/user/${userId}`).then(r => r.data),
+};
+
 // ─── Issues (reportar desperfectos) ────────────────────────────────────────
 export const issuesApi = {
   list: () => apiClient.get('/issues').then(r => r.data),
