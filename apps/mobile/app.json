@@ -41,7 +41,7 @@
       "eas": {
         "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
       },
-      "apiUrl": "http://localhost:4000"
+      "apiUrl": "https://superapp-api-5bjr.onrender.com"
     }
   }
 }
