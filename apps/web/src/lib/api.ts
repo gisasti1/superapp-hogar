@@ -110,6 +110,18 @@ export const paymentsApi = {
 
   initPayment: (id: string) =>
     apiClient.post(`/payments/${id}/pay`).then(r => r.data),
+
+  // Comprobante manual (transferencia bancaria, depósito, etc.)
+  uploadReceipt: (paymentId: string, file: File, note?: string) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (note) fd.append('note', note);
+    return apiClient.post(`/payments/${paymentId}/receipt`, fd).then(r => r.data);
+  },
+  approveReceipt: (paymentId: string) =>
+    apiClient.post(`/payments/${paymentId}/receipt/approve`).then(r => r.data),
+  rejectReceipt: (paymentId: string, note: string) =>
+    apiClient.post(`/payments/${paymentId}/receipt/reject`, { note }).then(r => r.data),
 };
 
 // ─── Mediation ──────────────────────────────────────────────────────────────
@@ -217,6 +229,32 @@ export const listingsApi = {
   deleteImage: (propertyId: string, imageId: string) =>
     apiClient.delete(`/listings/properties/${propertyId}/images/${imageId}`).then(r => r.data),
 };
+
+// ─── Favorites ──────────────────────────────────────────────────────────────
+export const favoritesApi = {
+  list: () => apiClient.get('/favorites').then(r => r.data),
+  listIds: (): Promise<string[]> => apiClient.get('/favorites/ids').then(r => r.data),
+  toggle: (propertyId: string): Promise<{ favorited: boolean }> =>
+    apiClient.post(`/favorites/${propertyId}/toggle`).then(r => r.data),
+  remove: (propertyId: string) =>
+    apiClient.delete(`/favorites/${propertyId}`).then(r => r.data),
+};
+
+// ─── Issues (reportar desperfectos) ────────────────────────────────────────
+export const issuesApi = {
+  list: () => apiClient.get('/issues').then(r => r.data),
+  get: (id: string) => apiClient.get(`/issues/${id}`).then(r => r.data),
+  create: (propertyId: string, dto: object) =>
+    apiClient.post(`/issues/property/${propertyId}`, dto).then(r => r.data),
+  updateStatus: (id: string, dto: { status: string; resolutionNote?: string }) =>
+    apiClient.patch(`/issues/${id}/status`, dto).then(r => r.data),
+  uploadPhotos: (files: File[]): Promise<{ urls: string[] }> => {
+    const fd = new FormData();
+    files.forEach(f => fd.append('files', f));
+    return apiClient.post('/issues/upload-photos', fd).then(r => r.data);
+  },
+};
+
 
 // ─── Services ───────────────────────────────────────────────────────────────
 export const servicesApi = {

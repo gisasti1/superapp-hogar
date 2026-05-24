@@ -3,10 +3,11 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { listingsApi } from '@/lib/api';
+import { listingsApi, favoritesApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PropertyMap } from '@/components/PropertyMap';
 import { useAuthStore } from '@/stores/auth.store';
+import Link from 'next/link';
 
 const AMENITY_LABELS: Record<string, string> = {
   pool: '🏊 Pileta',
@@ -63,6 +64,18 @@ export default function ListingDetailPage() {
     },
   });
 
+  // Favorito (corazón): leer IDs y togglear
+  const { data: favoriteIds = [] } = useQuery({
+    queryKey: ['favorites-ids'],
+    queryFn: favoritesApi.listIds,
+    enabled: !!user,
+  });
+
+  const { mutate: toggleFavorite, isPending: isFavoriting } = useMutation({
+    mutationFn: () => favoritesApi.toggle(listing!.propertyId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['favorites-ids'] }),
+  });
+
   const { mutate: uploadImages, isPending: isUploading } = useMutation({
     mutationFn: (files: File[]) => listingsApi.uploadImages(listing!.propertyId, files),
     onSuccess: () => {
@@ -86,6 +99,7 @@ export default function ListingDetailPage() {
 
   const isOwner = property.ownerId === user?.id;
   const images = property.images ?? [];
+  const isFavorited = favoriteIds.includes(property.id);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -217,9 +231,23 @@ export default function ListingDetailPage() {
                 >
                   Contactar propietario
                 </a>
-                <button className="btn-secondary w-full">
-                  ♡ Guardar en favoritos
+                <button
+                  onClick={() => toggleFavorite()}
+                  disabled={isFavoriting}
+                  className={`w-full transition-colors ${
+                    isFavorited
+                      ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                      : 'btn-secondary'
+                  } rounded-lg px-4 py-2 text-sm font-medium`}
+                >
+                  {isFavorited ? '❤️ En favoritos' : '🤍 Guardar en favoritos'}
                 </button>
+                <Link
+                  href={`/issues/new?propertyId=${property.id}`}
+                  className="block w-full text-center text-xs text-gray-500 hover:text-gray-700 py-1.5"
+                >
+                  🛠 Reportar un desperfecto
+                </Link>
               </div>
             ) : (
               <div className="space-y-2 mt-4">

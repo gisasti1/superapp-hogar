@@ -9,11 +9,13 @@ import { clsx } from 'clsx';
 
 const NAV = [
   { href: '/dashboard', label: 'Inicio', icon: '🏠' },
+  { href: '/listings', label: 'Inmuebles', icon: '🏘️' },
+  { href: '/favorites', label: 'Favoritos', icon: '❤️' },
   { href: '/contracts', label: 'Contratos', icon: '📄' },
   { href: '/payments', label: 'Pagos', icon: '💳' },
+  { href: '/issues', label: 'Desperfectos', icon: '🛠' },
   { href: '/mediation', label: 'Mediación', icon: '⭐' },
   { href: '/insurance', label: 'Seguro', icon: '🛡️' },
-  { href: '/listings', label: 'Inmuebles', icon: '🏘️' },
   { href: '/premium', label: 'Premium', icon: '👑' },
   { href: '/profile', label: 'Perfil', icon: '👤' },
 ];

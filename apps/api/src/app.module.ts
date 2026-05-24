@@ -19,6 +19,8 @@ import { ListingsModule } from './modules/listings/listings.module';
 import { PremiumModule } from './modules/premium/premium.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './modules/health/health.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
+import { IssuesModule } from './modules/issues/issues.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -63,6 +65,8 @@ import { validateEnv } from './config/env.validation';
     PremiumModule,
     NotificationsModule,
     HealthModule,
+    FavoritesModule,
+    IssuesModule,
   ],
 })
 export class AppModule {}

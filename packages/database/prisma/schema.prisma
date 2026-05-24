@@ -55,6 +55,35 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   OVERDUE
+  // El usuario subió un comprobante de pago manual (transferencia bancaria, etc.)
+  // que el propietario o admin tiene que revisar y aprobar.
+  RECEIPT_REVIEW
+}
+
+enum IssueStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IssueCategory {
+  PLUMBING       // plomería
+  ELECTRICAL     // eléctrica
+  APPLIANCES     // electrodomésticos
+  STRUCTURAL     // estructura / paredes / techos
+  PEST           // plagas
+  HEATING_COOLING // calefacción / aire
+  COMMON_AREAS   // espacios comunes
+  OTHER
 }
 
 enum PaymentType {
@@ -145,6 +174,8 @@ model User {
   bookings       Booking[]        @relation("UserBookings")
   reviews        Review[]         @relation("UserReviews")
   auditLogs      AuditLog[]
+  favorites      Favorite[]
+  reportedIssues Issue[]          @relation("ReportedIssues")
 
   @@map("users")
 }
@@ -207,6 +238,8 @@ model Property {
   contracts Contract[]
   listing   Listing?
   images    PropertyImage[]
+  favorites Favorite[]
+  issues    Issue[]
 
   @@map("properties")
 }
@@ -355,6 +388,13 @@ model Payment {
   mpPaymentId  String?       @unique
   mpPreference String?
   failReason   String?
+  // Comprobante manual subido por el inquilino (transferencia bancaria, etc.)
+  receiptUrl   String?
+  receiptNote  String?
+  receiptUploadedAt DateTime?
+  approvedById String?
+  approvedAt   DateTime?
+  rejectedReason String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -563,4 +603,46 @@ model AuditLog {
   @@index([userId, action])
   @@index([resource, resourceId])
   @@map("audit_logs")
+}
+
+// ─── Bloque 1: Favoritos + Issues ────────────────────────────────────────────
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  // Un usuario no puede favoritear la misma propiedad dos veces
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model Issue {
+  id           String         @id @default(uuid())
+  propertyId   String
+  contractId   String?
+  reportedById String
+  category     IssueCategory  @default(OTHER)
+  priority     IssuePriority  @default(MEDIUM)
+  status       IssueStatus    @default(OPEN)
+  title        String
+  description  String
+  photos       String[]       @default([])
+  // Notas del propietario / técnico sobre la resolución
+  resolutionNote String?
+  resolvedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  reportedBy User     @relation("ReportedIssues", fields: [reportedById], references: [id])
+
+  @@index([propertyId, status])
+  @@index([reportedById])
+  @@map("issues")
 }

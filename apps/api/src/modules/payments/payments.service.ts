@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
@@ -153,6 +154,83 @@ export class PaymentsService {
 
     this.logger.log(`Generated ${created} monthly invoices`);
     return { created };
+  }
+
+  // ─── Comprobante manual ──────────────────────────────────────────────────
+
+  /**
+   * El inquilino sube un comprobante (foto de transferencia / depósito bancario).
+   * El pago queda en RECEIPT_REVIEW hasta que el propietario o admin lo confirma.
+   */
+  async uploadReceipt(userId: string, paymentId: string, receiptUrl: string, note?: string) {
+    const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment) throw new NotFoundException('Pago no encontrado');
+    if (payment.payerId !== userId) {
+      throw new ForbiddenException('Sólo el pagador puede subir un comprobante.');
+    }
+    if (payment.status === 'PAID') {
+      throw new BadRequestException('El pago ya está marcado como pagado.');
+    }
+
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        receiptUrl,
+        receiptNote: note,
+        receiptUploadedAt: new Date(),
+        status: 'RECEIPT_REVIEW',
+        rejectedReason: null,
+      },
+    });
+  }
+
+  async approveReceipt(reviewerId: string, paymentId: string) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { contract: { select: { landlordId: true } } },
+    });
+    if (!payment) throw new NotFoundException('Pago no encontrado');
+    if (payment.status !== 'RECEIPT_REVIEW') {
+      throw new BadRequestException('Sólo se pueden aprobar pagos en RECEIPT_REVIEW.');
+    }
+    const isAuthorizedReviewer =
+      payment.receiverId === reviewerId ||
+      payment.contract?.landlordId === reviewerId;
+    if (!isAuthorizedReviewer) {
+      throw new ForbiddenException('Sólo el propietario receptor puede aprobar el comprobante.');
+    }
+
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'PAID',
+        paidAt: new Date(),
+        approvedById: reviewerId,
+        approvedAt: new Date(),
+      },
+    });
+  }
+
+  async rejectReceipt(reviewerId: string, paymentId: string, reason: string) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { contract: { select: { landlordId: true } } },
+    });
+    if (!payment) throw new NotFoundException('Pago no encontrado');
+    if (payment.status !== 'RECEIPT_REVIEW') {
+      throw new BadRequestException('Sólo se pueden rechazar pagos en RECEIPT_REVIEW.');
+    }
+    if (payment.receiverId !== reviewerId && payment.contract?.landlordId !== reviewerId) {
+      throw new ForbiddenException('Sólo el propietario receptor puede rechazar el comprobante.');
+    }
+
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: 'PENDING',  // vuelve a pendiente, el inquilino puede resubir
+        rejectedReason: reason,
+      },
+    });
   }
 
   private mapMpStatus(mpStatus: string): 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'OVERDUE' {
