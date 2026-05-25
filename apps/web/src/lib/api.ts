@@ -254,6 +254,45 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
 };
 
+// ─── Admin (role=ADMIN only) ───────────────────────────────────────────────
+export const adminApi = {
+  stats: () => apiClient.get('/admin/stats').then(r => r.data),
+
+  // Users
+  listUsers: (params: { search?: string; role?: string; activeOnly?: boolean } = {}) =>
+    apiClient.get('/admin/users', { params }).then(r => r.data),
+  setUserActive: (id: string, isActive: boolean) =>
+    apiClient.post(`/admin/users/${id}/active`, { isActive }).then(r => r.data),
+  changeUserRole: (id: string, role: string) =>
+    apiClient.post(`/admin/users/${id}/role`, { role }).then(r => r.data),
+  deleteUser: (id: string) =>
+    apiClient.delete(`/admin/users/${id}`).then(r => r.data),
+
+  // Properties
+  listProperties: (params: { search?: string } = {}) =>
+    apiClient.get('/admin/properties', { params }).then(r => r.data),
+  forceUnpublishProperty: (id: string) =>
+    apiClient.post(`/admin/properties/${id}/force-unpublish`).then(r => r.data),
+  deleteProperty: (id: string) =>
+    apiClient.delete(`/admin/properties/${id}`).then(r => r.data),
+
+  // Providers
+  listProviders: () =>
+    apiClient.get('/admin/providers').then(r => r.data),
+  verifyProvider: (id: string, isVerified: boolean) =>
+    apiClient.post(`/admin/providers/${id}/verify`, { isVerified }).then(r => r.data),
+  setProviderActive: (id: string, isActive: boolean) =>
+    apiClient.post(`/admin/providers/${id}/active`, { isActive }).then(r => r.data),
+  deleteProvider: (id: string) =>
+    apiClient.delete(`/admin/providers/${id}`).then(r => r.data),
+
+  // Issues
+  listIssues: () =>
+    apiClient.get('/admin/issues').then(r => r.data),
+  forceCloseIssue: (id: string, note?: string) =>
+    apiClient.post(`/admin/issues/${id}/force-close`, { note }).then(r => r.data),
+};
+
 // ─── External Listings (MercadoLibre y otras plataformas) ─────────────────
 export const externalListingsApi = {
   searchMercadoLibre: (params: { q?: string; city?: string; maxPrice?: number; limit?: number }) =>

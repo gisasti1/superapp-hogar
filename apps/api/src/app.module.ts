@@ -26,6 +26,7 @@ import { ContractReviewsModule } from './modules/contract-reviews/contract-revie
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { RentAdjustmentsModule } from './modules/rent-adjustments/rent-adjustments.module';
 import { ExternalListingsModule } from './modules/external-listings/external-listings.module';
+import { AdminModule } from './modules/admin/admin.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -77,6 +78,7 @@ import { validateEnv } from './config/env.validation';
     ConversationsModule,
     RentAdjustmentsModule,
     ExternalListingsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

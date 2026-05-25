@@ -23,10 +23,17 @@ const NAV = [
   { href: '/profile', label: 'Perfil', icon: '👤' },
 ];
 
+// Items visibles sólo para ADMIN — se renderizan al final del nav
+const ADMIN_NAV = [
+  { href: '/admin', label: 'Panel Admin', icon: '🛡️' },
+];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const clearAuth = useAuthStore(s => s.clearAuth);
+  const user = useAuthStore(s => s.user);
+  const isAdmin = user?.role === 'ADMIN';
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Cerrar el menú al cambiar de ruta (UX en mobile)
@@ -71,6 +78,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {item.label}
           </Link>
         ))}
+        {isAdmin && (
+          <>
+            <div className="border-t border-gray-100 my-2" />
+            {ADMIN_NAV.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={clsx(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  pathname.startsWith(item.href)
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                )}
+              >
+                <span className="text-base">{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+          </>
+        )}
       </nav>
       <div className="p-4 border-t border-gray-100">
         <button

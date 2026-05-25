@@ -57,15 +57,20 @@ export default function ServicesMarketplacePage() {
             Plomeros, electricistas, gasistas y más — verificados y con reseñas.
           </p>
         </div>
-        {myProfile ? (
-          <Link href="/provider" className="btn-secondary text-center">
-            Editar mi perfil de prestador
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link href="/services/bookings" className="btn-secondary text-center text-sm">
+            📋 Mis reservas
           </Link>
-        ) : (
-          <Link href="/provider" className="btn-primary text-center">
-            🛠 Ofrecer mis servicios
-          </Link>
-        )}
+          {myProfile ? (
+            <Link href="/provider" className="btn-secondary text-center text-sm">
+              ⚙️ Editar perfil
+            </Link>
+          ) : (
+            <Link href="/provider" className="btn-primary text-center text-sm">
+              🛠 Ofrecer mis servicios
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}
