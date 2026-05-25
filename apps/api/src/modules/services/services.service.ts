@@ -245,4 +245,69 @@ export class ServicesService {
       },
     });
   }
+
+  // ─── Provider Profile (registrarse como prestador) ──────────────────────
+
+  /**
+   * Mi perfil de Provider (si existe). Si no, devuelve null.
+   * El front lo usa para saber si mostrar "Registrate como prestador" o
+   * "Editar mi perfil de prestador".
+   */
+  async getMyProviderProfile(userId: string) {
+    return this.prisma.provider.findUnique({
+      where: { userId },
+    });
+  }
+
+  /**
+   * Crear o actualizar el perfil de Provider. Al crear, eleva el rol del
+   * usuario a PROVIDER (igual que cuando publica un inmueble lo elevamos
+   * a LANDLORD). Mantenemos role=LANDLORD si ya lo era para no perder
+   * permisos de propietario.
+   */
+  async upsertMyProviderProfile(
+    userId: string,
+    dto: {
+      businessName: string;
+      category: string;
+      description?: string;
+      cities: string[];
+      isActive?: boolean;
+    },
+  ) {
+    const provider = await this.prisma.provider.upsert({
+      where: { userId },
+      update: {
+        businessName: dto.businessName,
+        category: dto.category,
+        description: dto.description,
+        cities: dto.cities,
+        isActive: dto.isActive ?? true,
+      },
+      create: {
+        userId,
+        businessName: dto.businessName,
+        category: dto.category,
+        description: dto.description,
+        cities: dto.cities,
+        isActive: true,
+      },
+    });
+
+    // Elevar a PROVIDER si era TENANT. Si era LANDLORD lo dejamos como está
+    // — un mismo usuario puede ser propietario Y prestador (caso de un
+    // arquitecto que alquila propiedades y también ofrece reformas).
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (user?.role === 'TENANT') {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { role: 'PROVIDER' },
+      });
+    }
+
+    return provider;
+  }
 }

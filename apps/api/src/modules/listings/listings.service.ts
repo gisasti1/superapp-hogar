@@ -92,6 +92,20 @@ export class ListingsService {
   }
 
   async createProperty(userId: string, dto: CreatePropertyDto) {
+    // Si el usuario es TENANT y está creando su primera propiedad, lo elevamos
+    // a LANDLORD automáticamente. La idea es que una sola cuenta sirva para
+    // alquilar Y publicar — no obligamos a registrarse 2 veces.
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (user?.role === 'TENANT') {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { role: 'LANDLORD' },
+      });
+    }
+
     return this.prisma.property.create({
       data: {
         ownerId: userId,

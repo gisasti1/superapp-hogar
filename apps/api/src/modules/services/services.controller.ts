@@ -16,6 +16,7 @@ import { ServicesService } from './services.service';
 import { RequestQuoteDto } from './dto/request-quote.dto';
 import { SubmitQuoteDto } from './dto/submit-quote.dto';
 import { SubmitReviewDto } from './dto/submit-review.dto';
+import { UpsertProviderProfileDto } from './dto/provider-profile.dto';
 
 interface AuthUser {
   id: string;
@@ -94,5 +95,23 @@ export class ServicesController {
   @ApiOperation({ summary: 'Listar mis reservas' })
   async getMyBookings(@CurrentUser() user: AuthUser) {
     return this.servicesService.getMyBookings(user.id);
+  }
+
+  // ─── Provider Profile (perfil del prestador) ───────────────────────────
+
+  @Get('provider/me')
+  @ApiOperation({ summary: 'Mi perfil de prestador (null si todavía no me registré)' })
+  async getMyProviderProfile(@CurrentUser() user: AuthUser) {
+    return this.servicesService.getMyProviderProfile(user.id);
+  }
+
+  @Post('provider/me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Crear o actualizar mi perfil de prestador (eleva rol a PROVIDER)' })
+  async upsertMyProviderProfile(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpsertProviderProfileDto,
+  ) {
+    return this.servicesService.upsertMyProviderProfile(user.id, dto);
   }
 }

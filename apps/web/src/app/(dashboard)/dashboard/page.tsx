@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { authApi, contractsApi, paymentsApi } from '@/lib/api';
+import { authApi, contractsApi, paymentsApi, listingsApi, servicesApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { ContractStatus, PaymentStatus } from '@superapp/shared';
 
@@ -11,11 +12,21 @@ export default function DashboardPage() {
   const { data: profile } = useQuery({ queryKey: ['me'], queryFn: authApi.me });
   const { data: contracts } = useQuery({ queryKey: ['contracts'], queryFn: contractsApi.list });
   const { data: payments } = useQuery({ queryKey: ['payments'], queryFn: paymentsApi.list });
+  const { data: myProperties } = useQuery({
+    queryKey: ['my-properties'],
+    queryFn: listingsApi.getMyProperties,
+  });
+  const { data: myProviderProfile } = useQuery({
+    queryKey: ['my-provider-profile'],
+    queryFn: servicesApi.getMyProviderProfile,
+  });
 
   const activeContracts = contracts?.filter((c: any) => c.status === ContractStatus.ACTIVE) ?? [];
   const pendingPayments = payments?.filter((p: any) => p.status === PaymentStatus.PENDING) ?? [];
 
   const isVerified = profile?.verification?.status === 'VERIFIED';
+  const hasProperties = (myProperties?.length ?? 0) > 0;
+  const isProvider = !!myProviderProfile;
 
   return (
     <div className="space-y-6">
@@ -45,6 +56,26 @@ export default function DashboardPage() {
         <StatCard label="Contratos activos" value={activeContracts.length} icon="📄" />
         <StatCard label="Pagos pendientes" value={pendingPayments.length} icon="💳" highlight={pendingPayments.length > 0} />
         <StatCard label="Plan" value={profile?.subscription?.plan ?? 'FREE'} icon="⭐" />
+      </div>
+
+      {/* CTAs principales — siempre visibles, accionables */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CTACard
+          icon="🏘️"
+          title={hasProperties ? 'Publicar otro inmueble' : '¿Tenés un inmueble?'}
+          description={hasProperties ? 'Sumá una propiedad nueva al marketplace.' : 'Publicalo gratis y empezá a recibir solicitudes de alquiler.'}
+          href="/listings/new"
+          ctaLabel={hasProperties ? '+ Nuevo inmueble' : '🏠 Publicar inmueble'}
+          color="brand"
+        />
+        <CTACard
+          icon="🛠"
+          title={isProvider ? 'Mi perfil de prestador' : '¿Ofrecés servicios del hogar?'}
+          description={isProvider ? 'Editá tu perfil, zonas o rubro.' : 'Sumate como gasista, plomero, electricista, pintor y recibí pedidos.'}
+          href="/provider"
+          ctaLabel={isProvider ? '⚙️ Editar perfil' : '🛠 Ofrecer mis servicios'}
+          color="indigo"
+        />
       </div>
 
       {pendingPayments.length > 0 && (
@@ -80,5 +111,32 @@ function StatCard({ label, value, icon, highlight }: {
       <p className="text-3xl font-bold text-gray-900 mt-3">{value}</p>
       <p className="text-sm text-gray-500 mt-1">{label}</p>
     </div>
+  );
+}
+
+function CTACard({ icon, title, description, href, ctaLabel, color }: {
+  icon: string;
+  title: string;
+  description: string;
+  href: string;
+  ctaLabel: string;
+  color: 'brand' | 'indigo';
+}) {
+  const colorClasses = color === 'brand'
+    ? 'border-brand-200 bg-brand-50 hover:bg-brand-100'
+    : 'border-indigo-200 bg-indigo-50 hover:bg-indigo-100';
+  const btnClasses = color === 'brand'
+    ? 'bg-brand-600 hover:bg-brand-700 text-white'
+    : 'bg-indigo-600 hover:bg-indigo-700 text-white';
+
+  return (
+    <Link href={href} className={`card transition-colors ${colorClasses} block`}>
+      <span className="text-3xl">{icon}</span>
+      <p className="font-bold text-gray-900 mt-2 text-base">{title}</p>
+      <p className="text-sm text-gray-600 mt-1">{description}</p>
+      <span className={`inline-block mt-3 px-4 py-2 rounded-lg text-sm font-medium ${btnClasses}`}>
+        {ctaLabel}
+      </span>
+    </Link>
   );
 }

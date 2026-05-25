@@ -345,4 +345,15 @@ export const servicesApi = {
 
   getMyBookings: () =>
     apiClient.get('/services/bookings').then(r => r.data),
+
+  // Perfil de prestador (yo registrándome como gasista/plomero/etc)
+  getMyProviderProfile: () =>
+    apiClient.get('/services/provider/me').then(r => r.data),
+  upsertMyProviderProfile: (dto: {
+    businessName: string;
+    category: string;
+    description?: string;
+    cities: string[];
+    isActive?: boolean;
+  }) => apiClient.post('/services/provider/me', dto).then(r => r.data),
 };

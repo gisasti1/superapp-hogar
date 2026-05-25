@@ -65,7 +65,9 @@ export default function ListingsPage() {
   const { data: myProperties } = useQuery({
     queryKey: ['my-properties'],
     queryFn: listingsApi.getMyProperties,
-    enabled: user?.role === 'LANDLORD' || user?.role === 'REALTOR',
+    // Cargamos siempre — el endpoint devuelve vacío si no tiene propiedades.
+    // Antes filtrábamos por role pero ahora cualquiera puede publicar.
+    enabled: !!user,
   });
 
   // MercadoLibre: sólo se dispara cuando el usuario abre el tab para ahorrar requests
@@ -88,9 +90,11 @@ export default function ListingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Inmuebles</h1>
           <p className="text-gray-500 mt-1">Encontrá tu próximo hogar</p>
         </div>
-        {(user?.role === 'LANDLORD' || user?.role === 'REALTOR') && (
-          <Link href="/listings/new" className="btn-primary">
-            + Publicar inmueble
+        {/* Botón disponible para todos los logueados — al publicar la primera
+            propiedad el backend eleva el rol a LANDLORD automáticamente */}
+        {user && (
+          <Link href="/listings/new" className="btn-primary text-center">
+            🏠 Publicar inmueble
           </Link>
         )}
       </div>
