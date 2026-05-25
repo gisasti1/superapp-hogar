@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { listingsApi } from '@/lib/api';
+import { listingsApi, externalListingsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/auth.store';
@@ -11,7 +11,7 @@ import { ListingsMap } from '@/components/ListingsMap';
 
 export default function ListingsPage() {
   const user = useAuthStore(s => s.user);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map' | 'meli'>('list');
   const [filters, setFilters] = useState({
     city: '',
     minRooms: '',
@@ -66,6 +66,19 @@ export default function ListingsPage() {
     queryKey: ['my-properties'],
     queryFn: listingsApi.getMyProperties,
     enabled: user?.role === 'LANDLORD' || user?.role === 'REALTOR',
+  });
+
+  // MercadoLibre: sólo se dispara cuando el usuario abre el tab para ahorrar requests
+  const { data: meliResults = [], isLoading: loadingMeli } = useQuery({
+    queryKey: ['meli-search', filters.city, filters.maxRent],
+    queryFn: () =>
+      externalListingsApi.searchMercadoLibre({
+        city: filters.city || undefined,
+        maxPrice: filters.maxRent ? Number(filters.maxRent) : undefined,
+        limit: 30,
+      }),
+    enabled: viewMode === 'meli',
+    staleTime: 10 * 60 * 1000, // 10min — el backend ya tiene cache de 30min
   });
 
   return (
@@ -184,39 +197,111 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      {/* Toggle Lista / Mapa */}
-      {!isLoading && listings.length > 0 && (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
-              viewMode === 'list'
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-            }`}
-          >
-            📋 Lista
-          </button>
-          <button
-            onClick={() => setViewMode('map')}
-            disabled={listingsWithCoords.length === 0}
-            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
-              viewMode === 'map'
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed'
-            }`}
-            title={listingsWithCoords.length === 0 ? 'Ninguna propiedad tiene ubicación cargada' : ''}
-          >
-            🗺️ Mapa ({listingsWithCoords.length})
-          </button>
-          <span className="text-xs text-gray-400 ml-auto">
-            {listings.length} {listings.length === 1 ? 'resultado' : 'resultados'}
-          </span>
-        </div>
-      )}
+      {/* Toggle Lista / Mapa / Mercado Libre */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          onClick={() => setViewMode('list')}
+          className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+            viewMode === 'list'
+              ? 'bg-brand-600 text-white border-brand-600'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+          }`}
+        >
+          📋 Lista{listings.length > 0 ? ` (${listings.length})` : ''}
+        </button>
+        <button
+          onClick={() => setViewMode('map')}
+          disabled={listingsWithCoords.length === 0}
+          className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+            viewMode === 'map'
+              ? 'bg-brand-600 text-white border-brand-600'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed'
+          }`}
+          title={listingsWithCoords.length === 0 ? 'Ninguna propiedad tiene ubicación cargada' : ''}
+        >
+          🗺️ Mapa
+        </button>
+        <button
+          onClick={() => setViewMode('meli')}
+          className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+            viewMode === 'meli'
+              ? 'bg-yellow-400 text-gray-900 border-yellow-500'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-yellow-400'
+          }`}
+        >
+          🟡 Mercado Libre
+        </button>
+      </div>
 
       {/* Resultados */}
-      {isLoading ? (
+      {viewMode === 'meli' ? (
+        loadingMeli ? (
+          <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
+        ) : meliResults.length === 0 ? (
+          <EmptyState
+            icon="🟡"
+            title="Sin resultados en Mercado Libre"
+            description="Probá con otra ciudad o ajustá el precio máximo."
+          />
+        ) : (
+          <div>
+            {meliResults.some((r: any) => r.isMock) && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-lg p-3 mb-4">
+                ⚠️ <strong>Modo demo</strong>: estos resultados son sintéticos.
+                Para mostrar inmuebles reales de Mercado Libre, registrá una app en{' '}
+                <a href="https://developers.mercadolibre.com.ar/devcenter" target="_blank" rel="noopener" className="underline font-medium">
+                  developers.mercadolibre.com.ar
+                </a>{' '}
+                y configurá <code>MELI_CLIENT_ID</code> + <code>MELI_CLIENT_SECRET</code> en Render.
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {meliResults.map((r: any) => (
+                <a
+                  key={r.id}
+                  href={r.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card hover:shadow-md transition-shadow group relative"
+                >
+                  <span className="absolute top-3 right-3 bg-yellow-400 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    🟡 Mercado Libre
+                  </span>
+                  {r.thumbnail ? (
+                    <img
+                      src={r.thumbnail}
+                      alt={r.title}
+                      className="h-40 w-full object-cover rounded-lg mb-4"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="h-40 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-5xl">🏠</span>
+                    </div>
+                  )}
+                  <p className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-2 text-sm">
+                    {r.title}
+                  </p>
+                  {r.city && <p className="text-xs text-gray-500 mt-1">{r.city}</p>}
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-base font-bold text-brand-600">
+                      ${Number(r.price).toLocaleString('es-AR')}{' '}
+                      <span className="text-[10px] font-normal text-gray-500">{r.currency}</span>
+                    </p>
+                    <div className="flex gap-2 text-[11px] text-gray-500">
+                      {r.rooms != null && <span>{r.rooms} amb</span>}
+                      {r.squareMeters != null && <span>{r.squareMeters}m²</span>}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2 text-center">
+                    Ver en Mercado Libre ↗
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      ) : isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
       ) : !listings?.length ? (
         <EmptyState

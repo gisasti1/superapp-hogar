@@ -254,6 +254,12 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
 };
 
+// ─── External Listings (MercadoLibre y otras plataformas) ─────────────────
+export const externalListingsApi = {
+  searchMercadoLibre: (params: { q?: string; city?: string; maxPrice?: number; limit?: number }) =>
+    apiClient.get('/external-listings/mercadolibre/search', { params }).then(r => r.data),
+};
+
 // ─── Rent Adjustments (ICL / IPC) ──────────────────────────────────────────
 export const rentAdjustmentsApi = {
   listByContract: (contractId: string) =>
