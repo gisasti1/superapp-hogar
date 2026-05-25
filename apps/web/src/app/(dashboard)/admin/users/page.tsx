@@ -96,7 +96,13 @@ export default function AdminUsersPage() {
                         {isMe && <span className="text-xs text-blue-600 ml-2">(vos)</span>}
                       </p>
                       <p className="text-xs text-gray-500">{u.email}</p>
-                      {u.phone && <p className="text-[10px] text-gray-400">{u.phone}</p>}
+                      {u.phone && <p className="text-[10px] text-gray-400">📞 {u.phone}</p>}
+                      {u.address && (
+                        <p className="text-[10px] text-gray-400">
+                          📍 {u.address}{u.city ? `, ${u.city}` : ''}
+                        </p>
+                      )}
+                      {u.dni && <p className="text-[10px] text-gray-400">DNI: {u.dni}</p>}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <select

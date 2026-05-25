@@ -7,6 +7,7 @@ type PrismaMock = {
   listing: { findMany: jest.Mock; findUnique: jest.Mock; count: jest.Mock; update: jest.Mock; upsert: jest.Mock };
   property: { create: jest.Mock; findMany: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
   propertyImage: { create: jest.Mock; delete: jest.Mock };
+  user: { findUnique: jest.Mock; update: jest.Mock };
   $transaction: jest.Mock;
 };
 
@@ -14,6 +15,9 @@ const prismaMock = (): PrismaMock => ({
   listing: { findMany: jest.fn(), findUnique: jest.fn(), count: jest.fn(), update: jest.fn(), upsert: jest.fn() },
   property: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
   propertyImage: { create: jest.fn(), delete: jest.fn() },
+  // createProperty consulta el rol del usuario para auto-elevar TENANT→LANDLORD.
+  // Devolvemos role LANDLORD por defecto para que no intente actualizar.
+  user: { findUnique: jest.fn().mockResolvedValue({ role: 'LANDLORD' }), update: jest.fn() },
   $transaction: jest.fn(),
 });
 

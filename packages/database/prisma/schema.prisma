@@ -149,6 +149,11 @@ model User {
   lastName       String
   phone          String?
   dni            String?  @unique
+  // Dirección particular del usuario (no del inmueble que publica, sino su domicilio)
+  // Útil para envío de notificaciones legales, facturación, etc.
+  address        String?
+  city           String?
+  province       String?
   role           UserRole @default(TENANT)
   isActive       Boolean  @default(true)
   lastLoginAt    DateTime?

@@ -73,6 +73,9 @@ describe('AuthService', () => {
           password: 'Password123!',
           firstName: 'Test',
           lastName: 'User',
+          phone: '+5491100000000',
+          address: 'Calle Falsa 123',
+          city: 'Buenos Aires',
           role: 'TENANT' as any,
         }),
       ).rejects.toThrow(ConflictException);
@@ -95,6 +98,9 @@ describe('AuthService', () => {
         password: 'Password123!',
         firstName: 'Nuevo',
         lastName: 'Test',
+        phone: '+5491100000000',
+        address: 'Calle Falsa 123',
+        city: 'Buenos Aires',
         role: 'TENANT' as any,
       });
 
