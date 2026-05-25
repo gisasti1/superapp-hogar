@@ -27,6 +27,17 @@ const schema = z
     address: z.string().min(5, 'Dirección requerida (mínimo 5 caracteres)'),
     city: z.string().min(2, 'Ciudad requerida'),
     province: z.string().optional(),
+    dateOfBirth: z.string().min(10, 'Fecha de nacimiento requerida').refine(
+      v => {
+        const d = new Date(v);
+        if (Number.isNaN(d.getTime())) return false;
+        const age = (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        return age >= 18 && age <= 120;
+      },
+      { message: 'Tenés que ser mayor de 18 años' },
+    ),
+    nationality: z.string().min(2, 'Nacionalidad requerida'),
+    occupation: z.string().min(2, 'Ocupación / profesión requerida'),
     role: z.nativeEnum(UserRole),
   })
   .refine(d => d.password === d.confirmPassword, {
@@ -69,7 +80,7 @@ export default function RegisterPage() {
     setError,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { role: UserRole.TENANT, province: 'Buenos Aires' },
+    defaultValues: { role: UserRole.TENANT, province: 'Buenos Aires', nationality: 'Argentina' },
     mode: 'onBlur',
   });
 
@@ -328,6 +339,51 @@ export default function RegisterPage() {
                   autoComplete="address-level1"
                 />
               </div>
+            </div>
+
+            {/* Datos personales adicionales */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Fecha de nacimiento *</label>
+                <input
+                  {...register('dateOfBirth')}
+                  type="date"
+                  className="input"
+                  autoComplete="bday"
+                  max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+                />
+                {errors.dateOfBirth && (
+                  <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="label">Nacionalidad *</label>
+                <input
+                  {...register('nationality')}
+                  type="text"
+                  className="input"
+                  placeholder="Argentina"
+                />
+                {errors.nationality && (
+                  <p className="text-red-500 text-xs mt-1">{errors.nationality.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="label">Ocupación / profesión *</label>
+              <input
+                {...register('occupation')}
+                type="text"
+                className="input"
+                placeholder="Ej: Programador, Médica, Estudiante, Comerciante..."
+              />
+              {errors.occupation && (
+                <p className="text-red-500 text-xs mt-1">{errors.occupation.message}</p>
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                Te ayuda a los propietarios a conocerte. Más datos podés completar después en tu perfil.
+              </p>
             </div>
 
             {errors.root && (

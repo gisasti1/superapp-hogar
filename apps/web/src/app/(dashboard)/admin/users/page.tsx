@@ -103,6 +103,22 @@ export default function AdminUsersPage() {
                         </p>
                       )}
                       {u.dni && <p className="text-[10px] text-gray-400">DNI: {u.dni}</p>}
+                      {u.occupation && (
+                        <p className="text-[10px] text-gray-400">💼 {u.occupation}{u.employer ? ` · ${u.employer}` : ''}</p>
+                      )}
+                      {u.nationality && (
+                        <p className="text-[10px] text-gray-400">🌎 {u.nationality}</p>
+                      )}
+                      {u.dateOfBirth && (
+                        <p className="text-[10px] text-gray-400">
+                          🎂 {new Date(u.dateOfBirth).toLocaleDateString('es-AR')}
+                        </p>
+                      )}
+                      {u.monthlyIncome != null && Number(u.monthlyIncome) > 0 && (
+                        <p className="text-[10px] text-gray-400">
+                          💰 ${Number(u.monthlyIncome).toLocaleString('es-AR')}/mes
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <select

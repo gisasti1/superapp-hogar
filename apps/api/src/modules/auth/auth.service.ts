@@ -93,6 +93,9 @@ export class AuthService {
         address: dto.address,
         city: dto.city,
         province: dto.province,
+        dateOfBirth: new Date(dto.dateOfBirth),
+        nationality: dto.nationality,
+        occupation: dto.occupation,
         role: dto.role as unknown as import('@superapp/database').UserRole,
         verification: {
           create: { status: 'PENDING' },
@@ -110,6 +113,9 @@ export class AuthService {
         address: true,
         city: true,
         province: true,
+        dateOfBirth: true,
+        nationality: true,
+        occupation: true,
         role: true,
         createdAt: true,
       },
@@ -227,6 +233,22 @@ export class AuthService {
         firstName: true,
         lastName: true,
         phone: true,
+        dni: true,
+        address: true,
+        city: true,
+        province: true,
+        dateOfBirth: true,
+        nationality: true,
+        occupation: true,
+        employmentType: true,
+        employer: true,
+        monthlyIncome: true,
+        maritalStatus: true,
+        hasPets: true,
+        smoker: true,
+        bio: true,
+        emergencyContactName: true,
+        emergencyContactPhone: true,
         role: true,
         createdAt: true,
         verification: { select: { status: true, verifiedAt: true } },
@@ -236,6 +258,34 @@ export class AuthService {
 
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
+  }
+
+  /**
+   * Update parcial del perfil — PATCH. Sólo aplica los campos que vienen
+   * en el DTO (los undefined se ignoran). El usuario sólo puede modificar
+   * SU propio perfil (el JWT garantiza el userId).
+   */
+  async updateProfile(userId: string, dto: import('./dto/update-profile.dto').UpdateProfileDto) {
+    // Construyo el objeto data filtrando undefined para que Prisma no toque
+    // campos que no vinieron en el request.
+    const data: Record<string, unknown> = {};
+    const fields: Array<keyof typeof dto> = [
+      'firstName', 'lastName', 'phone', 'address', 'city', 'province',
+      'nationality', 'dni', 'occupation', 'employer', 'bio',
+      'emergencyContactName', 'emergencyContactPhone',
+    ];
+    for (const f of fields) {
+      if (dto[f] !== undefined) data[f] = dto[f];
+    }
+    if (dto.dateOfBirth !== undefined) data.dateOfBirth = new Date(dto.dateOfBirth);
+    if (dto.employmentType !== undefined) data.employmentType = dto.employmentType;
+    if (dto.maritalStatus !== undefined) data.maritalStatus = dto.maritalStatus;
+    if (dto.monthlyIncome !== undefined) data.monthlyIncome = dto.monthlyIncome;
+    if (dto.hasPets !== undefined) data.hasPets = dto.hasPets;
+    if (dto.smoker !== undefined) data.smoker = dto.smoker;
+
+    await this.prisma.user.update({ where: { id: userId }, data });
+    return this.me(userId);
   }
 
   private async generateTokens(userId: string, email: string, role: UserRole) {

@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches, IsDateString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '@superapp/shared';
 
@@ -51,6 +51,25 @@ export class RegisterDto {
   @IsOptional()
   @MaxLength(80)
   province?: string;
+
+  @ApiProperty({ example: '1990-05-15', description: 'Fecha de nacimiento (ISO YYYY-MM-DD)' })
+  @IsDateString({}, { message: 'Fecha de nacimiento inválida' })
+  @IsNotEmpty({ message: 'La fecha de nacimiento es obligatoria' })
+  dateOfBirth: string;
+
+  @ApiProperty({ example: 'Argentina' })
+  @IsString()
+  @IsNotEmpty({ message: 'La nacionalidad es obligatoria' })
+  @MinLength(2)
+  @MaxLength(60)
+  nationality: string;
+
+  @ApiProperty({ example: 'Programador', description: 'Ocupación o profesión' })
+  @IsString()
+  @IsNotEmpty({ message: 'La ocupación es obligatoria' })
+  @MinLength(2)
+  @MaxLength(100)
+  occupation: string;
 
   @ApiProperty({ enum: UserRole, default: UserRole.TENANT })
   @IsEnum(UserRole)

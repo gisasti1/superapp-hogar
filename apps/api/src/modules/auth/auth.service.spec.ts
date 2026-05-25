@@ -76,6 +76,9 @@ describe('AuthService', () => {
           phone: '+5491100000000',
           address: 'Calle Falsa 123',
           city: 'Buenos Aires',
+          dateOfBirth: '1990-01-01',
+          nationality: 'Argentina',
+          occupation: 'Test',
           role: 'TENANT' as any,
         }),
       ).rejects.toThrow(ConflictException);
@@ -101,6 +104,9 @@ describe('AuthService', () => {
         phone: '+5491100000000',
         address: 'Calle Falsa 123',
         city: 'Buenos Aires',
+        dateOfBirth: '1990-01-01',
+        nationality: 'Argentina',
+        occupation: 'Test',
         role: 'TENANT' as any,
       });
 

@@ -139,6 +139,26 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum EmploymentType {
+  EMPLOYEE          // Relación de dependencia
+  SELF_EMPLOYED     // Monotributista / autónomo
+  FREELANCER        // Freelancer
+  BUSINESS_OWNER    // Empresario / dueño de negocio
+  STUDENT           // Estudiante
+  RETIRED           // Jubilado / pensionado
+  UNEMPLOYED        // Desempleado / busca trabajo
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE            // Soltero/a
+  IN_RELATIONSHIP   // En pareja
+  MARRIED           // Casado/a
+  DIVORCED          // Divorciado/a
+  WIDOWED           // Viudo/a
+  PREFER_NOT_TO_SAY
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -154,6 +174,25 @@ model User {
   address        String?
   city           String?
   province       String?
+
+  // ─── Datos personales extendidos ──────────────────────────────────────
+  dateOfBirth    DateTime?
+  nationality    String?
+  // ─── Datos profesionales / económicos ─────────────────────────────────
+  // Importantes para que un propietario evalúe si el inquilino puede pagar.
+  occupation     String?        // "Programador", "Médica", "Profesor", etc.
+  employmentType EmploymentType?
+  employer       String?        // "Telecom", "Hospital Italiano", "Independiente"
+  monthlyIncome  Decimal?       @db.Decimal(12, 2)
+  // ─── Datos personales sociales ────────────────────────────────────────
+  maritalStatus  MaritalStatus?
+  hasPets        Boolean        @default(false)
+  smoker         Boolean        @default(false)
+  // Bio libre — "me presento" estilo Roomie / OkCupid serio para inquilinos
+  bio            String?
+  // ─── Contacto de emergencia (opcional pero útil para garantías) ───────
+  emergencyContactName  String?
+  emergencyContactPhone String?
   role           UserRole @default(TENANT)
   isActive       Boolean  @default(true)
   lastLoginAt    DateTime?

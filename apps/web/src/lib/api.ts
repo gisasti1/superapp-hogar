@@ -52,6 +52,10 @@ export const authApi = {
 
   resetPassword: (token: string, newPassword: string) =>
     apiClient.post('/auth/reset-password', { token, newPassword }).then(r => r.data),
+
+  // PATCH parcial — solo se actualizan los campos enviados.
+  updateProfile: (dto: Record<string, unknown>) =>
+    apiClient.patch('/auth/me', dto).then(r => r.data),
 };
 
 // ─── KYC ────────────────────────────────────────────────────────────────────

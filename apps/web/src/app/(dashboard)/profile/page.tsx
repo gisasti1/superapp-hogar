@@ -1,10 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { VerificationStatus } from '@superapp/shared';
@@ -26,48 +22,12 @@ const KYC_LABELS: Record<string, string> = {
   [VerificationStatus.REJECTED]: 'Rechazado',
 };
 
-const editSchema = z.object({
-  firstName: z.string().min(2, 'Mínimo 2 caracteres'),
-  lastName: z.string().min(2, 'Mínimo 2 caracteres'),
-  phone: z.string().optional(),
-});
-type EditFormData = z.infer<typeof editSchema>;
-
 export default function ProfilePage() {
   const user = useAuthStore(s => s.user);
-  const setAuth = useAuthStore(s => s.setAuth);
-  const [editing, setEditing] = useState(false);
-  const qc = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: authApi.me,
-  });
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<EditFormData>({
-    resolver: zodResolver(editSchema),
-    values: {
-      firstName: profile?.firstName ?? '',
-      lastName: profile?.lastName ?? '',
-      phone: profile?.phone ?? '',
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (dto: object) =>
-      authApi.me().then(() => dto), // replace with actual update endpoint when available
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['me'] });
-      setEditing(false);
-    },
-    onError: () => {
-      setError('root', { message: 'Error al guardar los cambios.' });
-    },
   });
 
   const initials = profile
@@ -156,100 +116,117 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Edit form */}
+          {/* Datos personales (read-only) — la edición vive en /profile/edit */}
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-gray-900">Datos personales</h2>
-              {!editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="text-sm text-brand-600 font-medium hover:underline"
-                >
-                  Editar
-                </button>
-              )}
+              <Link href="/profile/edit" className="text-sm text-brand-600 font-medium hover:underline">
+                Editar →
+              </Link>
             </div>
+            <dl className="grid grid-cols-2 gap-4">
+              <Field label="Nombre" value={profile?.firstName} />
+              <Field label="Apellido" value={profile?.lastName} />
+              <Field label="Email" value={profile?.email} />
+              <Field label="Teléfono" value={profile?.phone} />
+              <Field label="DNI" value={profile?.dni} />
+              <Field label="Nacionalidad" value={profile?.nationality} />
+              <Field
+                label="Fecha de nacimiento"
+                value={profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('es-AR') : null}
+              />
+              <Field label="Rol" value={profile?.role} />
+              <Field label="Dirección" value={profile?.address} colSpan={2} />
+              <Field label="Ciudad" value={profile?.city} />
+              <Field label="Provincia" value={profile?.province} />
+              <Field
+                label="Miembro desde"
+                value={profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('es-AR') : '—'}
+              />
+            </dl>
+          </div>
 
-            {editing ? (
-              <form
-                onSubmit={handleSubmit(d => updateMutation.mutate(d))}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">Nombre</label>
-                    <input {...register('firstName')} type="text" className="input" />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="label">Apellido</label>
-                    <input {...register('lastName')} type="text" className="input" />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="label">Teléfono</label>
-                  <input {...register('phone')} type="tel" className="input" placeholder="+54 11 ..." />
-                </div>
-                {errors.root && (
-                  <p className="text-red-500 text-xs">{errors.root.message}</p>
-                )}
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(false)}
-                    className="btn-secondary flex-1"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || updateMutation.isPending}
-                    className="btn-primary flex-1"
-                  >
-                    {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Nombre</dt>
-                  <dd className="mt-1 text-sm font-medium text-gray-900">{profile?.firstName}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Apellido</dt>
-                  <dd className="mt-1 text-sm font-medium text-gray-900">{profile?.lastName}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Email</dt>
-                  <dd className="mt-1 text-sm text-gray-700">{profile?.email}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Teléfono</dt>
-                  <dd className="mt-1 text-sm text-gray-700">{profile?.phone ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Rol</dt>
-                  <dd className="mt-1 text-sm text-gray-700">{profile?.role}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Miembro desde</dt>
-                  <dd className="mt-1 text-sm text-gray-700">
-                    {profile?.createdAt
-                      ? new Date(profile.createdAt).toLocaleDateString('es-AR')
-                      : '—'}
-                  </dd>
-                </div>
-              </dl>
+          {/* Datos profesionales */}
+          <div className="card space-y-4">
+            <h2 className="font-bold text-gray-900">Trabajo e ingresos</h2>
+            <dl className="grid grid-cols-2 gap-4">
+              <Field label="Ocupación" value={profile?.occupation} />
+              <Field label="Tipo de empleo" value={profile?.employmentType ? EMPLOYMENT_LABEL[profile.employmentType] ?? profile.employmentType : null} />
+              <Field label="Empresa" value={profile?.employer} />
+              <Field
+                label="Ingresos mensuales"
+                value={profile?.monthlyIncome ? `$${Number(profile.monthlyIncome).toLocaleString('es-AR')} ARS` : null}
+              />
+            </dl>
+            {!profile?.occupation && !profile?.employmentType && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                ⚠ Te conviene completar estos datos: aceleran la aprobación de solicitudes de alquiler.
+              </p>
             )}
           </div>
+
+          {/* Estilo de vida */}
+          <div className="card space-y-4">
+            <h2 className="font-bold text-gray-900">Estilo de vida</h2>
+            <dl className="grid grid-cols-2 gap-4">
+              <Field
+                label="Estado civil"
+                value={profile?.maritalStatus ? MARITAL_LABEL[profile.maritalStatus] ?? profile.maritalStatus : null}
+              />
+              <Field label="Mascotas" value={profile?.hasPets ? '🐾 Sí' : 'No'} />
+              <Field label="Fuma" value={profile?.smoker ? '🚬 Sí' : 'No'} />
+            </dl>
+            {profile?.bio && (
+              <div>
+                <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">Sobre mí</dt>
+                <dd className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">{profile.bio}</dd>
+              </div>
+            )}
+          </div>
+
+          {/* Contacto de emergencia */}
+          {(profile?.emergencyContactName || profile?.emergencyContactPhone) && (
+            <div className="card space-y-2">
+              <h2 className="font-bold text-gray-900">Contacto de emergencia</h2>
+              <dl className="grid grid-cols-2 gap-4">
+                <Field label="Nombre" value={profile?.emergencyContactName} />
+                <Field label="Teléfono" value={profile?.emergencyContactPhone} />
+              </dl>
+            </div>
+          )}
         </>
       )}
+    </div>
+  );
+}
+
+const EMPLOYMENT_LABEL: Record<string, string> = {
+  EMPLOYEE: 'Empleado',
+  SELF_EMPLOYED: 'Monotributista / autónomo',
+  FREELANCER: 'Freelancer',
+  BUSINESS_OWNER: 'Empresario',
+  STUDENT: 'Estudiante',
+  RETIRED: 'Jubilado',
+  UNEMPLOYED: 'Desempleado',
+  OTHER: 'Otro',
+};
+
+const MARITAL_LABEL: Record<string, string> = {
+  SINGLE: 'Soltero/a',
+  IN_RELATIONSHIP: 'En pareja',
+  MARRIED: 'Casado/a',
+  DIVORCED: 'Divorciado/a',
+  WIDOWED: 'Viudo/a',
+  PREFER_NOT_TO_SAY: 'Prefiere no decir',
+};
+
+function Field({ label, value, colSpan }: { label: string; value?: string | null; colSpan?: number }) {
+  return (
+    <div className={colSpan === 2 ? 'col-span-2' : ''}>
+      <dt className="text-xs text-gray-400 uppercase tracking-wide font-medium">{label}</dt>
+      <dd className={`mt-1 text-sm ${value ? 'text-gray-900 font-medium' : 'text-gray-400 italic'}`}>
+        {value || 'Sin cargar'}
+      </dd>
     </div>
   );
 }
