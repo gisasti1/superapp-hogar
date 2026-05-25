@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ContractReviews } from '@/components/ContractReviews';
 import { ChatButton } from '@/components/ChatButton';
+import { RentAdjuster } from '@/components/RentAdjuster';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Borrador',
@@ -226,6 +227,15 @@ export default function ContractDetailPage() {
           )}
 
           {/* Deposit card */}
+          {['ACTIVE', 'SIGNED'].includes(contract.status) && (
+            <RentAdjuster
+              contractId={contract.id}
+              landlordId={contract.landlordId}
+              currentAmount={Number(contract.monthlyAmount)}
+              currency={contract.currency}
+            />
+          )}
+
           <ContractReviews contractId={contract.id} contractStatus={contract.status} />
 
           {deposit && (

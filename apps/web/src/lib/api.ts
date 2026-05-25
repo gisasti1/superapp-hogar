@@ -254,6 +254,26 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
 };
 
+// ─── Rent Adjustments (ICL / IPC) ──────────────────────────────────────────
+export const rentAdjustmentsApi = {
+  listByContract: (contractId: string) =>
+    apiClient.get(`/rent-adjustments/contract/${contractId}`).then(r => r.data),
+  preview: (contractId: string, index: 'ICL' | 'IPC' | 'ICL_IPC_MIX', fromDate?: string) =>
+    apiClient.get(`/rent-adjustments/contract/${contractId}/preview`, {
+      params: { index, ...(fromDate ? { fromDate } : {}) },
+    }).then(r => r.data),
+  apply: (
+    contractId: string,
+    dto: {
+      index: 'ICL' | 'IPC' | 'ICL_IPC_MIX' | 'CUSTOM';
+      fromDate?: string;
+      effectiveFrom?: string;
+      multiplier?: number;
+      periodLabel?: string;
+    },
+  ) => apiClient.post(`/rent-adjustments/contract/${contractId}/apply`, dto).then(r => r.data),
+};
+
 // ─── Conversations (chat 1:1) ──────────────────────────────────────────────
 export const conversationsApi = {
   list: () => apiClient.get('/conversations').then(r => r.data),

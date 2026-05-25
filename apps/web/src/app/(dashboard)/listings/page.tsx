@@ -7,9 +7,11 @@ import { listingsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/auth.store';
+import { ListingsMap } from '@/components/ListingsMap';
 
 export default function ListingsPage() {
   const user = useAuthStore(s => s.user);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [filters, setFilters] = useState({
     city: '',
     minRooms: '',
@@ -47,13 +49,18 @@ export default function ListingsPage() {
   const listings = (listingsResponse?.data ?? []).map((l: any) => ({
     id: l.id,
     title: l.title,
+    propertyId: l.propertyId,
     address: l.property?.address ?? l.title,
     city: l.property?.city,
     rooms: l.property?.rooms,
     squareMeters: l.property?.squareMeters,
     monthlyRent: l.property?.monthlyRent,
     currency: l.property?.currency,
+    latitude: l.property?.latitude,
+    longitude: l.property?.longitude,
   }));
+
+  const listingsWithCoords = listings.filter((l: any) => l.latitude != null && l.longitude != null);
 
   const { data: myProperties } = useQuery({
     queryKey: ['my-properties'],
@@ -177,6 +184,37 @@ export default function ListingsPage() {
         </div>
       </div>
 
+      {/* Toggle Lista / Mapa */}
+      {!isLoading && listings.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+              viewMode === 'list'
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+            }`}
+          >
+            📋 Lista
+          </button>
+          <button
+            onClick={() => setViewMode('map')}
+            disabled={listingsWithCoords.length === 0}
+            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+              viewMode === 'map'
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed'
+            }`}
+            title={listingsWithCoords.length === 0 ? 'Ninguna propiedad tiene ubicación cargada' : ''}
+          >
+            🗺️ Mapa ({listingsWithCoords.length})
+          </button>
+          <span className="text-xs text-gray-400 ml-auto">
+            {listings.length} {listings.length === 1 ? 'resultado' : 'resultados'}
+          </span>
+        </div>
+      )}
+
       {/* Resultados */}
       {isLoading ? (
         <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>
@@ -186,6 +224,8 @@ export default function ListingsPage() {
           title="No hay inmuebles disponibles"
           description="No encontramos propiedades con esos filtros. Probá ajustando la búsqueda."
         />
+      ) : viewMode === 'map' ? (
+        <ListingsMap listings={listingsWithCoords} height="500px" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((p: any) => (

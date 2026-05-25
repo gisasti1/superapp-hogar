@@ -24,6 +24,7 @@ import { IssuesModule } from './modules/issues/issues.module';
 import { RentalRequestsModule } from './modules/rental-requests/rental-requests.module';
 import { ContractReviewsModule } from './modules/contract-reviews/contract-reviews.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
+import { RentAdjustmentsModule } from './modules/rent-adjustments/rent-adjustments.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -73,6 +74,7 @@ import { validateEnv } from './config/env.validation';
     RentalRequestsModule,
     ContractReviewsModule,
     ConversationsModule,
+    RentAdjustmentsModule,
   ],
 })
 export class AppModule {}

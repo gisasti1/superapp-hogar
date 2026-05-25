@@ -307,6 +307,7 @@ model Contract {
   reviews    ContractReview[] @relation("ContractReviews")
   rentalRequest RentalRequest? @relation("OriginatingRequest")
   conversations Conversation[] @relation("ContractConversations")
+  rentAdjustments RentAdjustment[]
 
   @@map("contracts")
 }
@@ -769,4 +770,45 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@map("messages")
+}
+
+// ─── Bloque 4: Actualización de alquiler (ICL / IPC) ──────────────────────────
+
+/**
+ * Ajustes periódicos del alquiler según índices oficiales argentinos.
+ * - ICL (Índice de Contratos de Locación) = lo que indica la Ley de Alquileres
+ *   antes de la DNU 70/2023. Combina IPC + RIPTE.
+ * - IPC = Índice de Precios al Consumidor del INDEC (usado tras DNU 70/2023).
+ * - CUSTOM = el contrato define una fórmula propia (ej: dólar oficial).
+ *
+ * Cada ajuste deja registro: monto previo, monto nuevo, índice aplicado,
+ * fecha de vigencia. Histórico inmutable para auditoría legal.
+ */
+enum RentAdjustmentIndex {
+  ICL
+  IPC
+  ICL_IPC_MIX   // 50/50 (algunos contratos lo usan)
+  CUSTOM
+}
+
+model RentAdjustment {
+  id           String              @id @default(uuid())
+  contractId   String
+  index        RentAdjustmentIndex
+  // El multiplicador aplicado (ej: 1.85 = +85% anual)
+  multiplier   Decimal             @db.Decimal(8, 4)
+  previousAmount Decimal           @db.Decimal(12, 2)
+  newAmount    Decimal             @db.Decimal(12, 2)
+  // Período de referencia del índice (ej: "abr2025-abr2026")
+  periodLabel  String
+  // Fecha desde la cual rige el nuevo monto
+  effectiveFrom DateTime
+  // Snapshot del valor del índice usado (para auditoría)
+  indexSnapshot Json?
+  appliedAt    DateTime            @default(now())
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId, effectiveFrom])
+  @@map("rent_adjustments")
 }
