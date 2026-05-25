@@ -12,6 +12,7 @@ const ADMIN_NAV = [
   { href: '/admin/properties', label: 'Propiedades', icon: '🏘️' },
   { href: '/admin/providers', label: 'Prestadores', icon: '🛠' },
   { href: '/admin/issues', label: 'Desperfectos', icon: '🚨' },
+  { href: '/admin/marketing', label: 'Marketing', icon: '📈' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

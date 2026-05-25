@@ -90,6 +90,9 @@ export class AdminService {
         maritalStatus: true,
         hasPets: true,
         smoker: true,
+        marketingEmailConsent: true,
+        marketingSmsConsent: true,
+        referralSource: true,
         createdAt: true,
         lastLoginAt: true,
         verification: { select: { status: true } },
@@ -294,5 +297,93 @@ export class AdminService {
         resolutionNote: note ?? 'Cerrado por administrador',
       },
     });
+  }
+
+  // ─── Export CSV de usuarios para campañas / Mailchimp / Meta Ads ──────
+
+  /**
+   * Genera CSV con todos los campos relevantes para marketing.
+   * Por defecto solo incluye usuarios con consentimiento de email Y activos —
+   * para no exportar gente que no opt-ineó.
+   *
+   * El opt-in se respeta SIEMPRE — no hay manera de exportar usuarios sin
+   * consentimiento por compliance (Ley AR 25.326).
+   */
+  async exportUsersCsv(opts: {
+    onlyEmailConsent?: boolean;
+    onlySmsConsent?: boolean;
+    role?: string;
+    city?: string;
+  } = {}): Promise<string> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        ...(opts.onlyEmailConsent ? { marketingEmailConsent: true } : {}),
+        ...(opts.onlySmsConsent ? { marketingSmsConsent: true } : {}),
+        ...(opts.role ? { role: opts.role as any } : {}),
+        ...(opts.city ? { city: { contains: opts.city, mode: 'insensitive' } } : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Headers compatibles con Mailchimp/Meta Audiences
+    const headers = [
+      'email', 'firstName', 'lastName', 'phone', 'role',
+      'city', 'province', 'nationality', 'occupation', 'employmentType',
+      'monthlyIncome', 'maritalStatus', 'hasPets', 'smoker',
+      'marketingEmailConsent', 'marketingSmsConsent', 'referralSource',
+      'createdAt', 'lastLoginAt',
+    ];
+
+    const escape = (v: unknown): string => {
+      if (v == null) return '';
+      const s = String(v);
+      // RFC 4180 — comillas dobles si tiene coma, comilla o newline
+      if (/[,"\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+
+    const rows = users.map(u => headers.map(h => escape((u as any)[h])).join(','));
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  /**
+   * Resumen rápido de consentimientos para el dashboard.
+   * "Cuántos usuarios puedo contactar por email/SMS hoy".
+   */
+  async getMarketingStats() {
+    const [totalActive, withEmail, withSms, withBoth] = await Promise.all([
+      this.prisma.user.count({ where: { isActive: true } }),
+      this.prisma.user.count({ where: { isActive: true, marketingEmailConsent: true } }),
+      this.prisma.user.count({ where: { isActive: true, marketingSmsConsent: true } }),
+      this.prisma.user.count({
+        where: { isActive: true, marketingEmailConsent: true, marketingSmsConsent: true },
+      }),
+    ]);
+
+    // Referral sources con count
+    const referralRaw = await this.prisma.user.groupBy({
+      by: ['referralSource'],
+      where: { isActive: true, referralSource: { not: null } },
+      _count: { _all: true },
+      orderBy: { _count: { referralSource: 'desc' } },
+      take: 10,
+    });
+    const referrals = referralRaw.map(r => ({
+      source: r.referralSource,
+      count: r._count._all,
+    }));
+
+    return {
+      totalActive,
+      consents: {
+        email: withEmail,
+        sms: withSms,
+        both: withBoth,
+        emailPercent: totalActive > 0 ? Math.round((withEmail / totalActive) * 100) : 0,
+        smsPercent: totalActive > 0 ? Math.round((withSms / totalActive) * 100) : 0,
+      },
+      referrals,
+    };
   }
 }

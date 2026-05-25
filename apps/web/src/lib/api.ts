@@ -295,6 +295,27 @@ export const adminApi = {
     apiClient.get('/admin/issues').then(r => r.data),
   forceCloseIssue: (id: string, note?: string) =>
     apiClient.post(`/admin/issues/${id}/force-close`, { note }).then(r => r.data),
+
+  // Marketing
+  marketingStats: () =>
+    apiClient.get('/admin/marketing/stats').then(r => r.data),
+
+  /**
+   * Descarga el CSV usando el JWT del store (no se puede con <a href> porque
+   * Axios necesita inyectar Authorization). Crea un blob y dispara la descarga.
+   */
+  downloadCsv: async (params: { onlyEmailConsent?: boolean; onlySmsConsent?: boolean; role?: string; city?: string } = {}) => {
+    const res = await apiClient.get('/admin/marketing/export.csv', { params, responseType: 'blob' });
+    const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `superapp-users-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // ─── External Listings (MercadoLibre y otras plataformas) ─────────────────

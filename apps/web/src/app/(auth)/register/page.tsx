@@ -39,6 +39,9 @@ const schema = z
     nationality: z.string().min(2, 'Nacionalidad requerida'),
     occupation: z.string().min(2, 'Ocupación / profesión requerida'),
     role: z.nativeEnum(UserRole),
+    marketingEmailConsent: z.boolean().optional().default(false),
+    marketingSmsConsent: z.boolean().optional().default(false),
+    referralSource: z.string().optional(),
   })
   .refine(d => d.password === d.confirmPassword, {
     path: ['confirmPassword'],
@@ -383,6 +386,49 @@ export default function RegisterPage() {
               )}
               <p className="text-xs text-gray-400 mt-1">
                 Te ayuda a los propietarios a conocerte. Más datos podés completar después en tu perfil.
+              </p>
+            </div>
+
+            {/* ─── Cómo te enteraste + consentimientos de marketing ─── */}
+            <div>
+              <label className="label">¿Cómo te enteraste? <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <select {...register('referralSource')} className="input">
+                <option value="">Elegí una opción</option>
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="google">Google</option>
+                <option value="amigo">Un amigo o familiar</option>
+                <option value="tv">TV / radio</option>
+                <option value="diario">Diario / revista</option>
+                <option value="cartel">Cartel en la calle</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4 space-y-2">
+              <p className="text-xs text-gray-500 font-medium">Comunicaciones (podés cambiarlo después)</p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  {...register('marketingEmailConsent')}
+                  className="mt-0.5 w-4 h-4 accent-brand-600"
+                />
+                <span className="text-xs text-gray-600">
+                  📧 Quiero recibir <strong>novedades, tips y promociones por email</strong> sobre alquileres, seguros y servicios del hogar.
+                </span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  {...register('marketingSmsConsent')}
+                  className="mt-0.5 w-4 h-4 accent-brand-600"
+                />
+                <span className="text-xs text-gray-600">
+                  📱 Quiero recibir <strong>alertas importantes por SMS</strong> (pagos próximos, ofertas, recordatorios).
+                </span>
+              </label>
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Tus datos se tratan según la Ley AR 25.326. Podés revocar tu consentimiento en cualquier momento desde tu perfil.
               </p>
             </div>
 

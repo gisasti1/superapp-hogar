@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches, IsDateString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches, IsDateString, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '@superapp/shared';
 
@@ -74,4 +74,22 @@ export class RegisterDto {
   @ApiProperty({ enum: UserRole, default: UserRole.TENANT })
   @IsEnum(UserRole)
   role: UserRole;
+
+  // ─── Consentimientos opcionales (default false si no vienen) ──────────
+
+  @ApiPropertyOptional({ description: 'Acepto recibir novedades y promociones por email' })
+  @IsBoolean()
+  @IsOptional()
+  marketingEmailConsent?: boolean;
+
+  @ApiPropertyOptional({ description: 'Acepto recibir alertas y promociones por SMS' })
+  @IsBoolean()
+  @IsOptional()
+  marketingSmsConsent?: boolean;
+
+  @ApiPropertyOptional({ example: 'instagram', description: '¿Cómo te enteraste de la app?' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(60)
+  referralSource?: string;
 }

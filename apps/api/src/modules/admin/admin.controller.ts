@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus,
+  Controller, Get, Post, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res, Header,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { IsBoolean, IsString, IsOptional, MaxLength } from 'class-validator';
 import { UserRole } from '@superapp/shared';
@@ -156,5 +157,38 @@ export class AdminController {
   @ApiOperation({ summary: 'Forzar cierre del issue (cuando no se resolvió bien)' })
   forceCloseIssue(@Param('id') id: string, @Body() dto: ForceCloseDto) {
     return this.admin.forceCloseIssue(id, dto.note);
+  }
+
+  // ─── Marketing / Campaigns ─────────────────────────────────────────────
+
+  @Get('marketing/stats')
+  @ApiOperation({ summary: 'Estadísticas de consentimientos para campañas' })
+  marketingStats() {
+    return this.admin.getMarketingStats();
+  }
+
+  @Get('marketing/export.csv')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="superapp-users.csv"')
+  @ApiOperation({ summary: 'Export usuarios a CSV (Mailchimp/Meta Ads). Respeta consentimientos.' })
+  @ApiQuery({ name: 'onlyEmailConsent', required: false, type: Boolean })
+  @ApiQuery({ name: 'onlySmsConsent', required: false, type: Boolean })
+  @ApiQuery({ name: 'role', required: false })
+  @ApiQuery({ name: 'city', required: false })
+  async exportCsv(
+    @Res() res: Response,
+    @Query('onlyEmailConsent') onlyEmailConsent?: string,
+    @Query('onlySmsConsent') onlySmsConsent?: string,
+    @Query('role') role?: string,
+    @Query('city') city?: string,
+  ) {
+    const csv = await this.admin.exportUsersCsv({
+      onlyEmailConsent: onlyEmailConsent === 'true',
+      onlySmsConsent: onlySmsConsent === 'true',
+      role,
+      city,
+    });
+    // BOM UTF-8 para que Excel abra acentos bien en Windows
+    res.send('﻿' + csv);
   }
 }

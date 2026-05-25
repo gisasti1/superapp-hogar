@@ -193,6 +193,16 @@ model User {
   // ─── Contacto de emergencia (opcional pero útil para garantías) ───────
   emergencyContactName  String?
   emergencyContactPhone String?
+
+  // ─── Consentimientos para marketing (Ley AR 25.326 + GDPR-style) ──────
+  // El usuario tilda explícitamente. Guardamos también la fecha para auditoría.
+  // Sin estos consentimientos, NO se le puede mandar email/SMS de marketing.
+  marketingEmailConsent Boolean   @default(false)
+  marketingSmsConsent   Boolean   @default(false)
+  // Cómo se enteró de la app — útil para medir efectividad de canales
+  referralSource        String?   // 'instagram', 'amigo', 'google', 'tv', etc.
+  // Última vez que aceptó/cambió consentimientos
+  consentUpdatedAt      DateTime?
   role           UserRole @default(TENANT)
   isActive       Boolean  @default(true)
   lastLoginAt    DateTime?

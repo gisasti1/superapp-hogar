@@ -83,6 +83,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    const hasAnyConsent = dto.marketingEmailConsent || dto.marketingSmsConsent;
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -97,6 +98,10 @@ export class AuthService {
         nationality: dto.nationality,
         occupation: dto.occupation,
         role: dto.role as unknown as import('@superapp/database').UserRole,
+        marketingEmailConsent: dto.marketingEmailConsent ?? false,
+        marketingSmsConsent: dto.marketingSmsConsent ?? false,
+        referralSource: dto.referralSource,
+        consentUpdatedAt: hasAnyConsent ? new Date() : null,
         verification: {
           create: { status: 'PENDING' },
         },
