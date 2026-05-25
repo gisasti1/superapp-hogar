@@ -180,6 +180,9 @@ model User {
   rentalRequestsAsLandlord RentalRequest[]  @relation("RequestsAsLandlord")
   authoredContractReviews  ContractReview[] @relation("AuthoredReviews")
   receivedContractReviews  ContractReview[] @relation("ReceivedReviews")
+  conversationsAsP1        Conversation[]   @relation("Participant1")
+  conversationsAsP2        Conversation[]   @relation("Participant2")
+  sentMessages             Message[]
 
   @@map("users")
 }
@@ -303,6 +306,7 @@ model Contract {
   signatures ContractSignature[]
   reviews    ContractReview[] @relation("ContractReviews")
   rentalRequest RentalRequest? @relation("OriginatingRequest")
+  conversations Conversation[] @relation("ContractConversations")
 
   @@map("contracts")
 }
@@ -717,4 +721,52 @@ model ContractReview {
   @@unique([contractId, authorId])
   @@index([targetId])
   @@map("contract_reviews")
+}
+
+// ─── Bloque 3: Chat entre las partes ─────────────────────────────────────────
+
+/**
+ * Una conversación es entre 2 usuarios (1:1). En MVP no soportamos grupos.
+ * Puede estar opcionalmente vinculada a un contrato o una solicitud de alquiler
+ * para contextualizar de qué se habla.
+ */
+model Conversation {
+  id             String   @id @default(uuid())
+  participant1Id String
+  participant2Id String
+  // Vinculaciones opcionales (contexto)
+  contractId     String?
+  rentalRequestId String?
+  // Snapshot del último mensaje — evita un join extra al listar conversaciones
+  lastMessageAt  DateTime @default(now())
+  lastMessagePreview String? @db.VarChar(140)
+  createdAt      DateTime @default(now())
+
+  participant1 User      @relation("Participant1", fields: [participant1Id], references: [id])
+  participant2 User      @relation("Participant2", fields: [participant2Id], references: [id])
+  contract     Contract? @relation("ContractConversations", fields: [contractId], references: [id])
+  messages     Message[]
+
+  // 1 conversación por par de participantes (orden no importa pero
+  // siempre guardamos participant1 < participant2 lexicográficamente)
+  @@unique([participant1Id, participant2Id, contractId])
+  @@index([participant1Id, lastMessageAt])
+  @@index([participant2Id, lastMessageAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  // Read receipts: hora a la que la contraparte lo vio (null = no leído)
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
 }

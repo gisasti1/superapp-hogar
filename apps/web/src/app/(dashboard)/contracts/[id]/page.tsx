@@ -8,6 +8,7 @@ import { ContractStatus } from '@superapp/shared';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ContractReviews } from '@/components/ContractReviews';
+import { ChatButton } from '@/components/ChatButton';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Borrador',
@@ -198,6 +199,18 @@ export default function ContractDetailPage() {
             <button onClick={handleDownloadPdf} className="btn-secondary w-full">
               📄 Descargar PDF
             </button>
+            {/* Chat con la contraparte */}
+            {user?.id && (() => {
+              const otherUserId = user.id === contract.tenantId ? contract.landlordId : contract.tenantId;
+              return (
+                <ChatButton
+                  otherUserId={otherUserId}
+                  contractId={contract.id}
+                  label="💬 Chatear con la contraparte"
+                  className="btn-secondary w-full"
+                />
+              );
+            })()}
           </div>
 
           {/* Policy card */}

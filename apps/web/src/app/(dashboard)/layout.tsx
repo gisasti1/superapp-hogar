@@ -15,6 +15,7 @@ const NAV = [
   { href: '/contracts', label: 'Contratos', icon: '📄' },
   { href: '/payments', label: 'Pagos', icon: '💳' },
   { href: '/issues', label: 'Desperfectos', icon: '🛠' },
+  { href: '/messages', label: 'Mensajes', icon: '💬' },
   { href: '/mediation', label: 'Mediación', icon: '⭐' },
   { href: '/insurance', label: 'Seguro', icon: '🛡️' },
   { href: '/premium', label: 'Premium', icon: '👑' },

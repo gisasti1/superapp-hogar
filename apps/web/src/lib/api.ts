@@ -254,6 +254,20 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
 };
 
+// ─── Conversations (chat 1:1) ──────────────────────────────────────────────
+export const conversationsApi = {
+  list: () => apiClient.get('/conversations').then(r => r.data),
+  unreadCount: (): Promise<{ total: number }> =>
+    apiClient.get('/conversations/unread-count').then(r => r.data),
+  get: (id: string) => apiClient.get(`/conversations/${id}`).then(r => r.data),
+  start: (dto: { otherUserId: string; contractId?: string; rentalRequestId?: string }) =>
+    apiClient.post('/conversations/start', dto).then(r => r.data),
+  messages: (id: string, since?: string) =>
+    apiClient.get(`/conversations/${id}/messages`, { params: since ? { since } : {} }).then(r => r.data),
+  send: (id: string, content: string) =>
+    apiClient.post(`/conversations/${id}/messages`, { content }).then(r => r.data),
+};
+
 // ─── Contract Reviews (reseñas mutuas) ─────────────────────────────────────
 export const contractReviewsApi = {
   create: (contractId: string, dto: { rating: number; comment?: string; ratingDetails?: Record<string, number> }) =>

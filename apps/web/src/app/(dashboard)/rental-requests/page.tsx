@@ -6,6 +6,7 @@ import { rentalRequestsApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ChatButton } from '@/components/ChatButton';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   PENDING: { label: 'Pendiente', color: 'bg-amber-100 text-amber-800' },
@@ -169,6 +170,18 @@ export default function RentalRequestsPage() {
                     <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2 text-xs">
                       <p className="text-blue-900 font-medium">Respuesta del propietario:</p>
                       <p className="text-blue-800 mt-0.5">{r.response}</p>
+                    </div>
+                  )}
+
+                  {/* Chat (cuando la solicitud está aprobada o pendiente, ambas partes pueden hablar) */}
+                  {['PENDING', 'APPROVED'].includes(r.status) && (
+                    <div className="mt-2">
+                      <ChatButton
+                        otherUserId={isLandlord ? r.tenant.id : r.landlord.id}
+                        rentalRequestId={r.id}
+                        label="💬 Chatear"
+                        className="text-xs text-brand-600 hover:underline"
+                      />
                     </div>
                   )}
                 </div>
