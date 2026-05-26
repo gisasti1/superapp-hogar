@@ -318,6 +318,30 @@ export const adminApi = {
   },
 };
 
+// ─── Marketing (segmentos + campañas) ─────────────────────────────────────
+export const marketingApi = {
+  previewSegment: (filters: Record<string, any>): Promise<{ count: number }> =>
+    apiClient.post('/marketing/segments/preview', { filters }).then(r => r.data),
+
+  listSegments: () =>
+    apiClient.get('/marketing/segments').then(r => r.data),
+
+  getSegment: (id: string) =>
+    apiClient.get(`/marketing/segments/${id}`).then(r => r.data),
+
+  listSegmentUsers: (id: string, page = 1) =>
+    apiClient.get(`/marketing/segments/${id}/users`, { params: { page } }).then(r => r.data),
+
+  createSegment: (dto: { name: string; description?: string; filters: Record<string, any> }) =>
+    apiClient.post('/marketing/segments', dto).then(r => r.data),
+
+  updateSegment: (id: string, dto: { name?: string; description?: string; filters?: Record<string, any> }) =>
+    apiClient.patch(`/marketing/segments/${id}`, dto).then(r => r.data),
+
+  deleteSegment: (id: string) =>
+    apiClient.delete(`/marketing/segments/${id}`).then(r => r.data),
+};
+
 // ─── External Listings (MercadoLibre y otras plataformas) ─────────────────
 export const externalListingsApi = {
   searchMercadoLibre: (params: { q?: string; city?: string; maxPrice?: number; limit?: number }) =>
@@ -419,5 +443,79 @@ export const servicesApi = {
     description?: string;
     cities: string[];
     isActive?: boolean;
+    yearsOfExperience?: number;
+    hasInsurance?: boolean;
+    emergency24h?: boolean;
+    hourlyRate?: number;
+    calloutFee?: number;
+    serviceRadiusKm?: number;
   }) => apiClient.post('/services/provider/me', dto).then(r => r.data),
+};
+
+// ─── Provider Account (onboarding completo del prestador) ─────────────────
+export const providerAccountApi = {
+  getOnboarding: () =>
+    apiClient.get('/services/provider/me/onboarding').then(r => r.data),
+
+  updatePersonalData: (dto: {
+    documentType: 'DNI' | 'CUIT' | 'CUIL';
+    documentNumber: string;
+    contactPhone?: string;
+    birthDate?: string;
+  }) => apiClient.patch('/services/provider/me/personal-data', dto).then(r => r.data),
+
+  updatePayoutAccount: (dto: {
+    payoutMethod: 'BANK_TRANSFER' | 'CVU' | 'MERCADOPAGO';
+    cbu?: string;
+    cvu?: string;
+    bankAlias?: string;
+    bankName?: string;
+    bankAccountHolder?: string;
+    bankAccountHolderId?: string;
+    mpAccountId?: string;
+  }) => apiClient.patch('/services/provider/me/payout-account', dto).then(r => r.data),
+
+  // KYC uploads — uno por endpoint para que el progreso por archivo sea claro
+  uploadIdFront: (file: File) => {
+    const fd = new FormData(); fd.append('file', file);
+    return apiClient.post('/services/provider/me/kyc/id-front', fd).then(r => r.data);
+  },
+  uploadIdBack: (file: File) => {
+    const fd = new FormData(); fd.append('file', file);
+    return apiClient.post('/services/provider/me/kyc/id-back', fd).then(r => r.data);
+  },
+  uploadSelfie: (file: File) => {
+    const fd = new FormData(); fd.append('file', file);
+    return apiClient.post('/services/provider/me/kyc/selfie', fd).then(r => r.data);
+  },
+  submitKyc: () => apiClient.post('/services/provider/me/kyc/submit').then(r => r.data),
+
+  // Matrícula
+  updateLicense: (dto: { licenseNumber: string; licenseAuthority: string; licenseExpiry?: string }) =>
+    apiClient.patch('/services/provider/me/license', dto).then(r => r.data),
+  uploadLicense: (file: File) => {
+    const fd = new FormData(); fd.append('file', file);
+    return apiClient.post('/services/provider/me/license/document', fd).then(r => r.data);
+  },
+  submitLicense: () => apiClient.post('/services/provider/me/license/submit').then(r => r.data),
+
+  // Seguro
+  updateInsurance: (dto: {
+    hasInsurance: boolean;
+    insuranceProvider?: string;
+    insurancePolicyNumber?: string;
+    insuranceExpiry?: string;
+  }) => apiClient.patch('/services/provider/me/insurance', dto).then(r => r.data),
+};
+
+// ─── Admin: revisión de prestadores ───────────────────────────────────────
+export const adminProvidersApi = {
+  listPending: (filter: 'KYC' | 'LICENSE' | 'ALL' = 'ALL') =>
+    apiClient.get('/services/admin/providers/pending', { params: { filter } }).then(r => r.data),
+  reviewKyc: (id: string, action: 'APPROVE' | 'REJECT', reason?: string) =>
+    apiClient.post(`/services/admin/providers/${id}/kyc/review`, { action, reason }).then(r => r.data),
+  reviewLicense: (id: string, action: 'APPROVE' | 'REJECT', reason?: string) =>
+    apiClient.post(`/services/admin/providers/${id}/license/review`, { action, reason }).then(r => r.data),
+  verifyPayout: (id: string, verified: boolean) =>
+    apiClient.post(`/services/admin/providers/${id}/payout/verify`, { verified }).then(r => r.data),
 };

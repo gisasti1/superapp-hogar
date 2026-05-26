@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '@/lib/api';
+import { adminApi, adminProvidersApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function AdminProvidersPage() {
@@ -10,6 +11,12 @@ export default function AdminProvidersPage() {
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ['admin-providers'],
     queryFn: adminApi.listProviders,
+  });
+
+  // Contador de pendientes para mostrar banner si hay para revisar.
+  const { data: pending = [] } = useQuery({
+    queryKey: ['admin-pending-providers', 'ALL'],
+    queryFn: () => adminProvidersApi.listPending('ALL'),
   });
 
   const verifyMutation = useMutation({
@@ -36,6 +43,23 @@ export default function AdminProvidersPage() {
         <h1 className="text-xl font-bold text-gray-900">Prestadores</h1>
         <p className="text-gray-500 text-sm mt-1">Verificar, activar/desactivar o eliminar prestadores del marketplace</p>
       </div>
+
+      {pending.length > 0 && (
+        <Link
+          href="/admin/providers/review"
+          className="card bg-amber-50 border-amber-200 hover:bg-amber-100 flex items-center justify-between"
+        >
+          <div>
+            <p className="font-semibold text-amber-900 text-sm">
+              🪪 {pending.length} prestador{pending.length === 1 ? '' : 'es'} esperando revisión
+            </p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              KYC o matrícula enviados, falta tu aprobación.
+            </p>
+          </div>
+          <span className="text-amber-900 text-sm font-medium">Ir a revisar →</span>
+        </Link>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12"><LoadingSpinner /></div>

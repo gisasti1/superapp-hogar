@@ -159,6 +159,37 @@ enum MaritalStatus {
   PREFER_NOT_TO_SAY
 }
 
+// ─── Prestadores: KYC / matrícula / pagos ─────────────────────────────────
+
+enum ProviderKycStatus {
+  NOT_STARTED       // No subió ningún documento todavía
+  PENDING           // Subió docs, falta enviar a revisión
+  UNDER_REVIEW      // Enviado a admin, esperando revisión
+  VERIFIED          // Admin aprobó
+  REJECTED          // Admin rechazó (ver rejectionReason)
+}
+
+enum ProviderLicenseStatus {
+  NOT_REQUIRED      // Categorías que no exigen matrícula (limpieza, mudanzas, etc.)
+  PENDING           // Requiere matrícula, todavía no la cargó
+  UNDER_REVIEW      // Cargada, esperando revisión admin
+  VERIFIED          // Validada
+  REJECTED          // Rechazada
+  EXPIRED           // Venció — necesita renovar
+}
+
+enum ProviderPayoutMethod {
+  BANK_TRANSFER     // Transferencia bancaria (CBU)
+  CVU               // Cuenta virtual (Mercado Pago, Ualá, etc.)
+  MERCADOPAGO       // ID de cuenta MP (para Marketplace MP)
+}
+
+enum ProviderDocumentType {
+  DNI               // Documento Nacional de Identidad
+  CUIT              // CUIT (empresas / autónomos)
+  CUIL              // CUIL (empleados en relación de dependencia)
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
@@ -237,6 +268,8 @@ model User {
   conversationsAsP1        Conversation[]   @relation("Participant1")
   conversationsAsP2        Conversation[]   @relation("Participant2")
   sentMessages             Message[]
+  createdSegments          Segment[]        @relation("CreatedSegments")
+  createdCampaigns         Campaign[]       @relation("CreatedCampaigns")
 
   @@map("users")
 }
@@ -589,8 +622,71 @@ model Provider {
   cities       String[]
   rating       Float    @default(0)
   reviewCount  Int      @default(0)
+  // isVerified = ya pasó KYC + matrícula + admin lo aprobó. Es la bandera
+  // que filtra en búsqueda pública. Lo seteamos en true sólo cuando
+  // kycStatus=VERIFIED y licenseStatus IN (VERIFIED, NOT_REQUIRED).
   isVerified   Boolean  @default(false)
   isActive     Boolean  @default(true)
+
+  // ─── Datos personales del prestador (separado de User porque puede
+  //      ser una empresa: el User es el dueño/contacto, los datos del
+  //      prestador son los datos fiscales del negocio) ─────────────────
+  documentType    ProviderDocumentType?  // DNI / CUIT / CUIL
+  documentNumber  String?                // sin guiones, sólo dígitos
+  contactPhone    String?                // teléfono dedicado al negocio
+  birthDate       DateTime?              // sólo si documentType=DNI
+
+  // ─── Cuenta para recibir pagos ────────────────────────────────────
+  payoutMethod        ProviderPayoutMethod? // BANK_TRANSFER / CVU / MERCADOPAGO
+  cbu                 String?               // 22 dígitos
+  cvu                 String?               // 22 dígitos (alternativa a CBU)
+  bankAlias           String?               // alias bancario (max 20 chars)
+  bankName            String?               // nombre del banco (ej "Galicia")
+  bankAccountHolder   String?               // titular de la cuenta
+  bankAccountHolderId String?               // CUIT/CUIL del titular
+  mpAccountId         String?               // ID de cuenta MercadoPago (para Marketplace)
+  payoutVerified      Boolean @default(false) // admin verificó que la cuenta es real
+
+  // ─── KYC del prestador (identidad) ────────────────────────────────
+  kycStatus           ProviderKycStatus @default(NOT_STARTED)
+  idDocumentFrontUrl  String?           // foto/PDF del DNI frente
+  idDocumentBackUrl   String?           // foto/PDF del DNI dorso
+  selfieUrl           String?           // selfie con DNI en mano (prueba de vida)
+  kycSubmittedAt      DateTime?         // cuando lo envió a revisión
+  kycReviewedAt       DateTime?
+  kycReviewedById     String?           // userId del admin que revisó
+  kycRejectionReason  String?           // por qué se rechazó (visible al prestador)
+
+  // ─── Matrícula profesional (gasista, electricista, plomero) ──────
+  // Algunas categorías como GAS y ELECTRICIAN exigen matrícula por ley
+  // (ENARGAS para gasistas, COPIME/COPITEC para electricistas).
+  // Para CLEANER, MOVER, GARDENER lo dejamos NOT_REQUIRED.
+  licenseStatus           ProviderLicenseStatus @default(NOT_REQUIRED)
+  licenseNumber           String?               // número de matrícula
+  licenseAuthority        String?               // ente emisor (ej "ENARGAS")
+  licenseDocumentUrl      String?               // foto/PDF de la matrícula
+  licenseExpiry           DateTime?             // fecha de vencimiento
+  licenseSubmittedAt      DateTime?
+  licenseReviewedAt       DateTime?
+  licenseReviewedById     String?
+  licenseRejectionReason  String?
+
+  // ─── Experiencia y seguros ────────────────────────────────────────
+  yearsOfExperience    Int?
+  hasInsurance         Boolean @default(false)
+  insuranceProvider    String?       // ej "La Caja Seguros"
+  insurancePolicyNumber String?
+  insuranceExpiry      DateTime?
+  emergency24h         Boolean @default(false) // atiende emergencias 24hs
+
+  // ─── Tarifas (informativas, no obligatorias) ──────────────────────
+  hourlyRate    Decimal? @db.Decimal(12, 2)
+  calloutFee    Decimal? @db.Decimal(12, 2)  // costo de visita / salida
+  serviceRadiusKm Int?                       // radio de cobertura desde su base
+
+  // ─── Onboarding ───────────────────────────────────────────────────
+  onboardingCompleted Boolean @default(false) // todos los pasos hechos
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -598,6 +694,9 @@ model Provider {
   bookings Booking[]
   reviews  Review[]  @relation("ProviderReviews")
 
+  @@index([kycStatus])
+  @@index([licenseStatus])
+  @@index([isVerified, isActive])
   @@map("providers")
 }
 
@@ -865,4 +964,71 @@ model RentAdjustment {
 
   @@index([contractId, effectiveFrom])
   @@map("rent_adjustments")
+}
+
+// ─── Marketing: segmentos para campañas ──────────────────────────────────────
+
+/**
+ * Un segmento es una "audiencia" definida por filtros. Se reusa para campañas.
+ * Los filtros se guardan como JSON estructurado y se aplican dinámicamente
+ * — el size cambia con el tiempo a medida que se registran nuevos usuarios.
+ *
+ * Ejemplo: { role: 'TENANT', city: 'Buenos Aires', minIncome: 500000,
+ *            hasPets: false, ageMin: 25, ageMax: 45 }
+ */
+model Segment {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  // Filtros estructurados — el AdminService los traduce a Prisma where.
+  filters     Json
+  // Snapshot del último count calculado (para no recalcular en cada list)
+  lastCount   Int      @default(0)
+  lastCountAt DateTime?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User      @relation("CreatedSegments", fields: [createdById], references: [id])
+  campaigns Campaign[]
+
+  @@map("segments")
+}
+
+enum CampaignStatus {
+  DRAFT       // borrador, no se envió
+  SENT        // ya se mandó
+  CANCELLED
+}
+
+enum CampaignChannel {
+  EMAIL
+  SMS
+}
+
+/**
+ * Una campaña apunta a un segmento y manda emails/SMS.
+ * Para MVP no soportamos templates ni A/B testing — sólo subject + body.
+ */
+model Campaign {
+  id          String          @id @default(uuid())
+  name        String
+  channel     CampaignChannel
+  subject     String?         // sólo para EMAIL
+  body        String          // texto plano o HTML básico
+  status      CampaignStatus  @default(DRAFT)
+  segmentId   String
+  // Estadísticas de envío
+  sentCount   Int             @default(0)
+  failedCount Int             @default(0)
+  sentAt      DateTime?
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("CreatedCampaigns", fields: [createdById], references: [id])
+
+  @@index([segmentId])
+  @@map("campaigns")
 }

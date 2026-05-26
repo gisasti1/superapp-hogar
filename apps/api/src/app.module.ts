@@ -27,6 +27,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { RentAdjustmentsModule } from './modules/rent-adjustments/rent-adjustments.module';
 import { ExternalListingsModule } from './modules/external-listings/external-listings.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -79,6 +80,7 @@ import { validateEnv } from './config/env.validation';
     RentAdjustmentsModule,
     ExternalListingsModule,
     AdminModule,
+    MarketingModule,
   ],
 })
 export class AppModule {}
