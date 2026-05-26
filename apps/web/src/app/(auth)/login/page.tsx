@@ -28,7 +28,10 @@ export default function LoginPage() {
     try {
       const res = await authApi.login(data.email, data.password);
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.push('/dashboard');
+      // Redirigir según el rol — prestadores y gestoras van a su panel propio
+      if (res.user.role === 'PROVIDER') router.push('/provider');
+      else if (res.user.role === 'REALTOR') router.push('/realtor');
+      else router.push('/dashboard');
     } catch {
       setError('root', { message: 'Email o contraseña incorrectos' });
     }

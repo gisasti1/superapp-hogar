@@ -28,6 +28,7 @@ import { RentAdjustmentsModule } from './modules/rent-adjustments/rent-adjustmen
 import { ExternalListingsModule } from './modules/external-listings/external-listings.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
+import { RealtorModule } from './modules/realtor/realtor.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -81,6 +82,7 @@ import { validateEnv } from './config/env.validation';
     ExternalListingsModule,
     AdminModule,
     MarketingModule,
+    RealtorModule,
   ],
 })
 export class AppModule {}

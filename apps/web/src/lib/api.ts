@@ -565,3 +565,28 @@ export const adminProvidersApi = {
   verifyPayout: (id: string, verified: boolean) =>
     apiClient.post(`/services/admin/providers/${id}/payout/verify`, { verified }).then(r => r.data),
 };
+
+// ─── Realtor / Agencia inmobiliaria ───────────────────────────────────────
+export const realtorApi = {
+  getMyAgency: () =>
+    apiClient.get('/realtor/me').then(r => r.data),
+  upsertMyAgency: (dto: {
+    agencyName: string;
+    cuit?: string;
+    licenseNumber?: string;
+    licenseAuthority?: string;
+    licenseExpiry?: string;
+    description?: string;
+    cities?: string[];
+    phone?: string;
+    website?: string;
+  }) => apiClient.post('/realtor/me', dto).then(r => r.data),
+  getMyListings: () =>
+    apiClient.get('/realtor/me/listings').then(r => r.data),
+  getMyContracts: () =>
+    apiClient.get('/realtor/me/contracts').then(r => r.data),
+  uploadLogo: (file: File) => {
+    const fd = new FormData(); fd.append('logo', file);
+    return apiClient.put('/realtor/me/logo', fd).then(r => r.data);
+  },
+};

@@ -275,6 +275,7 @@ model User {
   sentMessages             Message[]
   createdSegments          Segment[]        @relation("CreatedSegments")
   createdCampaigns         Campaign[]       @relation("CreatedCampaigns")
+  agency                   RealEstateAgency?
 
   @@map("users")
 }
@@ -1040,4 +1041,42 @@ model Campaign {
 
   @@index([segmentId])
   @@map("campaigns")
+}
+
+// ─── Inmobiliaria / Gestora de alquileres ────────────────────────────────────
+// Un usuario con role=REALTOR puede crear este perfil para representar
+// su agencia. Tiene matrícula CUCICBA/CMCPSI, CUIT y las ciudades donde opera.
+// Sus propiedades en Property apuntan directamente a ownerId=agency.userId.
+
+model RealEstateAgency {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+
+  // ─── Datos de la agencia ─────────────────────────────────────────
+  agencyName     String
+  cuit           String?                   // CUIT de la persona jurídica
+  licenseNumber  String?                   // Matrícula CUCICBA / CMCPSI / provincial
+  licenseAuthority String?                 // Organismo emisor, ej "CUCICBA"
+  licenseExpiry  DateTime?
+
+  description    String?
+  cities         String[]                  // ciudades donde opera
+  phone          String?                   // tel. comercial (distinto al del User)
+  website        String?
+  logoUrl        String?                   // URL de logo subido
+
+  // ─── Estado ────────────────────────────────────────────────────
+  isVerified     Boolean  @default(false)  // admin validó matrícula
+  isActive       Boolean  @default(true)
+
+  // ─── Contadores (desnormalizados, se actualizan en queries) ─────
+  listingCount   Int      @default(0)      // propiedades activas publicadas
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isVerified, isActive])
+  @@map("real_estate_agencies")
 }

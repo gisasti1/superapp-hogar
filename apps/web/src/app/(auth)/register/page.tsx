@@ -11,36 +11,81 @@ import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { UserRole } from '@superapp/shared';
 
+/* ─── Account types ──────────────────────────────────────────────────────── */
+type AccountType = 'TENANT' | 'LANDLORD' | 'PROVIDER' | 'REALTOR';
+
+const ACCOUNT_TYPES: {
+  type: AccountType;
+  icon: string;
+  title: string;
+  subtitle: string;
+  gradient: string;
+  ring: string;
+  badge?: string;
+}[] = [
+  {
+    type: 'TENANT',
+    icon: '🏠',
+    title: 'Inquilino',
+    subtitle: 'Busco un lugar para alquilar',
+    gradient: 'from-blue-50 to-sky-50',
+    ring: 'ring-blue-500',
+  },
+  {
+    type: 'LANDLORD',
+    icon: '🏢',
+    title: 'Propietario',
+    subtitle: 'Tengo propiedades para alquilar',
+    gradient: 'from-emerald-50 to-teal-50',
+    ring: 'ring-emerald-500',
+  },
+  {
+    type: 'PROVIDER',
+    icon: '🛠️',
+    title: 'Prestador de servicios',
+    subtitle: 'Plomero, gasista, electricista…',
+    gradient: 'from-orange-50 to-amber-50',
+    ring: 'ring-orange-500',
+    badge: 'Ofrecé servicios',
+  },
+  {
+    type: 'REALTOR',
+    icon: '🏛️',
+    title: 'Inmobiliaria',
+    subtitle: 'Gestiono alquileres de terceros',
+    gradient: 'from-purple-50 to-violet-50',
+    ring: 'ring-purple-500',
+    badge: 'Gestora',
+  },
+];
+
+/* ─── Schema ─────────────────────────────────────────────────────────────── */
 const schema = z
   .object({
-    firstName: z.string().min(2, 'Mínimo 2 caracteres'),
-    lastName: z.string().min(2, 'Mínimo 2 caracteres'),
-    email: z.string().email('Email inválido'),
-    password: z
-      .string()
+    firstName:  z.string().min(2, 'Mínimo 2 caracteres'),
+    lastName:   z.string().min(2, 'Mínimo 2 caracteres'),
+    email:      z.string().email('Email inválido'),
+    password:   z.string()
       .min(8, 'Mínimo 8 caracteres')
-      .regex(/[a-z]/, 'Debe tener al menos una minúscula')
-      .regex(/[A-Z]/, 'Debe tener al menos una mayúscula')
-      .regex(/\d/, 'Debe tener al menos un número'),
-    confirmPassword: z.string().min(8, 'Repetí la contraseña'),
-    phone: z.string().min(8, 'Teléfono requerido (mínimo 8 dígitos)'),
-    address: z.string().min(5, 'Dirección requerida (mínimo 5 caracteres)'),
-    city: z.string().min(2, 'Ciudad requerida'),
-    province: z.string().optional(),
-    dateOfBirth: z.string().min(10, 'Fecha de nacimiento requerida').refine(
-      v => {
-        const d = new Date(v);
-        if (Number.isNaN(d.getTime())) return false;
-        const age = (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-        return age >= 18 && age <= 120;
-      },
-      { message: 'Tenés que ser mayor de 18 años' },
-    ),
-    nationality: z.string().min(2, 'Nacionalidad requerida'),
-    occupation: z.string().min(2, 'Ocupación / profesión requerida'),
-    role: z.nativeEnum(UserRole),
+      .regex(/[a-z]/, 'Debe incluir minúscula')
+      .regex(/[A-Z]/, 'Debe incluir mayúscula')
+      .regex(/\d/, 'Debe incluir número'),
+    confirmPassword: z.string().min(8),
+    phone:      z.string().min(8, 'Teléfono requerido'),
+    address:    z.string().min(5, 'Dirección requerida'),
+    city:       z.string().min(2, 'Ciudad requerida'),
+    province:   z.string().optional(),
+    dateOfBirth: z.string().min(10).refine(v => {
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return false;
+      const age = (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      return age >= 18 && age <= 120;
+    }, { message: 'Tenés que tener al menos 18 años' }),
+    nationality: z.string().min(2, 'Requerida'),
+    occupation: z.string().min(2, 'Requerida'),
+    role:       z.nativeEnum(UserRole),
     marketingEmailConsent: z.boolean().optional().default(false),
-    marketingSmsConsent: z.boolean().optional().default(false),
+    marketingSmsConsent:   z.boolean().optional().default(false),
     referralSource: z.string().optional(),
   })
   .refine(d => d.password === d.confirmPassword, {
@@ -50,35 +95,68 @@ const schema = z
 
 type FormData = z.infer<typeof schema>;
 
-// SVG inline para el ícono ojo / ojo tachado (sin dependencia externa)
+/* ─── Eye icon ───────────────────────────────────────────────────────────── */
 const EyeIcon = ({ open }: { open: boolean }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {open ? (
-      <>
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-      </>
+      <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
     ) : (
-      <>
-        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-        <line x1="1" y1="1" x2="23" y2="23" />
-      </>
+      <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></>
     )}
   </svg>
 );
 
+/* ─── Labels per account type ────────────────────────────────────────────── */
+function getLabels(type: AccountType) {
+  switch (type) {
+    case 'PROVIDER': return {
+      addressLabel: 'Dirección base (desde donde trabajás)',
+      addressPlaceholder: 'Av. Juan B. Justo 2000, CABA',
+      occupationLabel: 'Rubro principal',
+      occupationPlaceholder: 'Gasista, Plomero, Electricista…',
+      firstNameLabel: 'Nombre del titular / responsable',
+      lastNameLabel: 'Apellido del titular',
+    };
+    case 'REALTOR': return {
+      addressLabel: 'Dirección de la oficina / agencia',
+      addressPlaceholder: 'Av. Corrientes 1234, CABA',
+      occupationLabel: 'Rubro de la agencia',
+      occupationPlaceholder: 'Inmobiliaria, Administración de alquileres…',
+      firstNameLabel: 'Nombre del responsable / contacto',
+      lastNameLabel: 'Apellido del responsable',
+    };
+    default: return {
+      addressLabel: 'Tu dirección particular',
+      addressPlaceholder: 'Av. Corrientes 1234, Piso 3 Dto B',
+      occupationLabel: 'Ocupación / profesión',
+      occupationPlaceholder: 'Ej: Programador, Médica, Estudiante…',
+      firstNameLabel: 'Nombre',
+      lastNameLabel: 'Apellido',
+    };
+  }
+}
+
+/* ─── Redirect per role ──────────────────────────────────────────────────── */
+function redirectAfterRegister(role: UserRole): string {
+  if (role === UserRole.PROVIDER) return '/provider?welcome=1';
+  if (role === UserRole.REALTOR)  return '/realtor?welcome=1';
+  return '/dashboard';
+}
+
+/* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function RegisterPage() {
-  const router = useRouter();
+  const router  = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.TENANT);
+
+  const [step,         setStep]        = useState<1 | 2>(1);
+  const [accountType,  setAccountType] = useState<AccountType>('TENANT');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm,  setShowConfirm]  = useState(false);
+
+  const labels = getLabels(accountType);
 
   const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
+    register, handleSubmit, setValue, watch,
     formState: { errors, isSubmitting },
     setError,
   } = useForm<FormData>({
@@ -88,28 +166,25 @@ export default function RegisterPage() {
   });
 
   const password = watch('password') ?? '';
-
-  // Strength meter — para que el usuario sepa qué le falta
   const strength = {
     length: password.length >= 8,
-    lower: /[a-z]/.test(password),
-    upper: /[A-Z]/.test(password),
-    digit: /\d/.test(password),
+    lower:  /[a-z]/.test(password),
+    upper:  /[A-Z]/.test(password),
+    digit:  /\d/.test(password),
   };
   const strengthScore = Object.values(strength).filter(Boolean).length;
 
-  const handleRoleToggle = (role: UserRole) => {
-    setSelectedRole(role);
-    setValue('role', role);
+  const handleTypeSelect = (type: AccountType) => {
+    setAccountType(type);
+    setValue('role', UserRole[type]);
   };
 
   const onSubmit = async (data: FormData) => {
     try {
-      // No mandamos confirmPassword al backend (es solo client-side)
       const { confirmPassword, ...payload } = data;
       const res = await authApi.register(payload);
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.push('/dashboard');
+      router.push(redirectAfterRegister(res.user.role as UserRole));
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       const text = Array.isArray(msg) ? msg.join(' · ') : (msg ?? 'Error al registrarse');
@@ -117,279 +192,255 @@ export default function RegisterPage() {
     }
   };
 
+  /* ── Step 1: elegir tipo de cuenta ─────────────────────────────────── */
+  if (step === 1) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+        <div className="w-full max-w-lg">
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-2xl shadow-lg mb-4">🏡</div>
+            <h1 className="text-2xl font-extrabold text-gray-900">SuperApp Hogar</h1>
+            <p className="text-gray-500 mt-1">¿Cómo vas a usar la app?</p>
+          </div>
+
+          {/* Type cards */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {ACCOUNT_TYPES.map(({ type, icon, title, subtitle, gradient, ring, badge }) => {
+              const selected = accountType === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handleTypeSelect(type)}
+                  className={clsx(
+                    `relative bg-gradient-to-br ${gradient} rounded-2xl p-5 text-left transition-all duration-200 border-2`,
+                    selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-gray-100 hover:border-gray-200 hover:shadow-md',
+                  )}
+                >
+                  {badge && (
+                    <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-white/80 text-gray-600 px-1.5 py-0.5 rounded-full">
+                      {badge}
+                    </span>
+                  )}
+                  {selected && (
+                    <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center text-[10px]">✓</span>
+                  )}
+                  <span className="text-3xl block mb-2">{icon}</span>
+                  <p className="font-bold text-gray-900 text-sm leading-tight">{title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-tight">{subtitle}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* What you get */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+            {accountType === 'TENANT' && (
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Buscá y filtrá propiedades en tu zona</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Firmá contratos digitales con validez legal</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Pagá el alquiler y seguí tus cuotas</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Pedí servicios del hogar con un clic</li>
+              </ul>
+            )}
+            {accountType === 'LANDLORD' && (
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Publicá propiedades y recibí solicitudes</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Gestioná contratos y cobros en un lugar</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Depósito en garantía digital</li>
+                <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Resolución de conflictos asistida por IA</li>
+              </ul>
+            )}
+            {accountType === 'PROVIDER' && (
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Creá tu perfil profesional en minutos</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Recibí pedidos de propietarios e inquilinos</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Subí matrícula, KYC y seguro para verificarte</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Mostrá tu portfolio de trabajos terminados</li>
+              </ul>
+            )}
+            {accountType === 'REALTOR' && (
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Perfil de agencia con matrícula CUCICBA</li>
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Publicá y gestioná propiedades de clientes</li>
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Dashboard de contratos e ingresos centralizado</li>
+                <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Suscripción REALTOR con funciones extendidas</li>
+              </ul>
+            )}
+          </div>
+
+          <button
+            onClick={() => setStep(2)}
+            className="btn-primary w-full text-base py-3"
+          >
+            Continuar como {ACCOUNT_TYPES.find(t => t.type === accountType)?.title} →
+          </button>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            ¿Ya tenés cuenta?{' '}
+            <Link href="/login" className="text-brand-600 font-semibold hover:underline">Iniciá sesión</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Step 2: formulario de datos ────────────────────────────────────── */
+  const cfg = ACCOUNT_TYPES.find(t => t.type === accountType)!;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-brand-600">SuperApp Hogar</h1>
-          <p className="text-gray-500 mt-2">Creá tu cuenta gratis</p>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-gray-900 hover:shadow-sm transition"
+          >
+            ←
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{cfg.icon}</span>
+              <p className="font-extrabold text-gray-900">{cfg.title}</p>
+            </div>
+            <p className="text-xs text-gray-500">Completá tus datos para crear la cuenta</p>
+          </div>
         </div>
 
-        <div className="card">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Role toggle */}
-            <div>
-              <label className="label">Soy</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleRoleToggle(UserRole.TENANT)}
-                  className={clsx(
-                    'flex flex-col items-center gap-1.5 py-3 rounded-lg border-2 text-sm font-medium transition-colors',
-                    selectedRole === UserRole.TENANT
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
-                  )}
-                >
-                  <span className="text-xl">🏠</span>
-                  Inquilino
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRoleToggle(UserRole.LANDLORD)}
-                  className={clsx(
-                    'flex flex-col items-center gap-1.5 py-3 rounded-lg border-2 text-sm font-medium transition-colors',
-                    selectedRole === UserRole.LANDLORD
-                      ? 'border-brand-500 bg-brand-50 text-brand-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
-                  )}
-                >
-                  <span className="text-xl">🏢</span>
-                  Propietario
-                </button>
-              </div>
-              <input type="hidden" {...register('role')} />
-            </div>
+        {/* Progress */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex-1 h-1.5 rounded-full bg-emerald-400" />
+          <div className="flex-1 h-1.5 rounded-full bg-brand-500" />
+          <span className="text-xs text-gray-400 font-medium">Paso 2 de 2</span>
+        </div>
 
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input type="hidden" {...register('role')} />
+
+            {/* Nombre y apellido */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Nombre *</label>
-                <input
-                  {...register('firstName')}
-                  type="text"
-                  className="input"
-                  placeholder="Juan"
-                  autoComplete="given-name"
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
-                )}
+                <label className="label">{labels.firstNameLabel} *</label>
+                <input {...register('firstName')} type="text" className="input" placeholder="Juan" autoComplete="given-name" />
+                {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className="label">Apellido *</label>
-                <input
-                  {...register('lastName')}
-                  type="text"
-                  className="input"
-                  placeholder="Pérez"
-                  autoComplete="family-name"
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
-                )}
+                <label className="label">{labels.lastNameLabel} *</label>
+                <input {...register('lastName')} type="text" className="input" placeholder="Pérez" autoComplete="family-name" />
+                {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
               </div>
             </div>
 
+            {/* Email */}
             <div>
               <label className="label">Email *</label>
-              <input
-                {...register('email')}
-                type="email"
-                className="input"
-                placeholder="tu@email.com"
-                autoComplete="email"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-              )}
+              <input {...register('email')} type="email" className="input" placeholder="tu@email.com" autoComplete="email" />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
 
-            {/* Password con toggle ver/ocultar */}
+            {/* Password */}
             <div>
               <label className="label">Contraseña *</label>
               <div className="relative">
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  className="input pr-10"
-                  placeholder="Mínimo 8 chars con A, a y 1"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(s => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700"
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
+                <input {...register('password')} type={showPassword ? 'text' : 'password'} className="input pr-10" placeholder="Mínimo 8 chars, A, a y 1" autoComplete="new-password" />
+                <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700">
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
-
-              {/* Strength meter */}
               {password.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map(n => (
-                      <div
-                        key={n}
-                        className={clsx(
-                          'h-1 flex-1 rounded-full transition-colors',
-                          strengthScore >= n
-                            ? strengthScore <= 2 ? 'bg-red-400'
-                              : strengthScore === 3 ? 'bg-amber-400'
-                              : 'bg-green-500'
-                            : 'bg-gray-200',
-                        )}
-                      />
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[1,2,3,4].map(n => (
+                      <div key={n} className={clsx('h-1 flex-1 rounded-full transition-colors',
+                        strengthScore >= n ? (strengthScore <= 2 ? 'bg-red-400' : strengthScore === 3 ? 'bg-amber-400' : 'bg-emerald-500') : 'bg-gray-200'
+                      )} />
                     ))}
                   </div>
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px]">
-                    <span className={strength.length ? 'text-green-600' : 'text-gray-400'}>
-                      {strength.length ? '✓' : '○'} 8 caracteres
-                    </span>
-                    <span className={strength.upper ? 'text-green-600' : 'text-gray-400'}>
-                      {strength.upper ? '✓' : '○'} 1 mayúscula
-                    </span>
-                    <span className={strength.lower ? 'text-green-600' : 'text-gray-400'}>
-                      {strength.lower ? '✓' : '○'} 1 minúscula
-                    </span>
-                    <span className={strength.digit ? 'text-green-600' : 'text-gray-400'}>
-                      {strength.digit ? '✓' : '○'} 1 número
-                    </span>
+                  <div className="grid grid-cols-2 gap-x-2 text-[10px]">
+                    {[
+                      [strength.length, '8 caracteres'],
+                      [strength.upper, '1 mayúscula'],
+                      [strength.lower, '1 minúscula'],
+                      [strength.digit, '1 número'],
+                    ].map(([ok, label]) => (
+                      <span key={label as string} className={ok ? 'text-emerald-600' : 'text-gray-400'}>
+                        {ok ? '✓' : '○'} {label}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
-
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
-            {/* Confirmar contraseña */}
+            {/* Confirmar */}
             <div>
               <label className="label">Repetir contraseña *</label>
               <div className="relative">
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirm ? 'text' : 'password'}
-                  className="input pr-10"
-                  placeholder="Tiene que ser igual a la de arriba"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(s => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700"
-                  aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
+                <input {...register('confirmPassword')} type={showConfirm ? 'text' : 'password'} className="input pr-10" placeholder="Igual que la de arriba" autoComplete="new-password" />
+                <button type="button" onClick={() => setShowConfirm(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700">
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
-              )}
+              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
+            {/* Teléfono */}
             <div>
               <label className="label">Teléfono *</label>
-              <input
-                {...register('phone')}
-                type="tel"
-                className="input"
-                placeholder="+54 11 1234-5678"
-                autoComplete="tel"
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
-              )}
+              <input {...register('phone')} type="tel" className="input" placeholder="+54 11 1234-5678" autoComplete="tel" />
+              {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
             </div>
 
+            {/* Dirección + ciudad */}
             <div>
-              <label className="label">Dirección *</label>
-              <input
-                {...register('address')}
-                type="text"
-                className="input"
-                placeholder="Av. Corrientes 1234, Piso 3 Dto B"
-                autoComplete="street-address"
-              />
-              {errors.address && (
-                <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
-              )}
+              <label className="label">{labels.addressLabel} *</label>
+              <input {...register('address')} type="text" className="input" placeholder={labels.addressPlaceholder} autoComplete="street-address" />
+              {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Ciudad *</label>
-                <input
-                  {...register('city')}
-                  type="text"
-                  className="input"
-                  placeholder="Buenos Aires"
-                  autoComplete="address-level2"
-                />
-                {errors.city && (
-                  <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
-                )}
+                <input {...register('city')} type="text" className="input" placeholder="Buenos Aires" autoComplete="address-level2" />
+                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
               </div>
               <div>
                 <label className="label">Provincia</label>
-                <input
-                  {...register('province')}
-                  type="text"
-                  className="input"
-                  placeholder="Buenos Aires"
-                  autoComplete="address-level1"
-                />
+                <input {...register('province')} type="text" className="input" placeholder="Buenos Aires" autoComplete="address-level1" />
               </div>
             </div>
 
-            {/* Datos personales adicionales */}
+            {/* Fecha nacimiento + nacionalidad */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Fecha de nacimiento *</label>
-                <input
-                  {...register('dateOfBirth')}
-                  type="date"
-                  className="input"
-                  autoComplete="bday"
-                  max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
-                />
-                {errors.dateOfBirth && (
-                  <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</p>
-                )}
+                <label className="label">
+                  {accountType === 'REALTOR' ? 'Fecha nacimiento del titular' : 'Fecha de nacimiento'} *
+                </label>
+                <input {...register('dateOfBirth')} type="date" className="input" autoComplete="bday"
+                  max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)} />
+                {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</p>}
               </div>
               <div>
                 <label className="label">Nacionalidad *</label>
-                <input
-                  {...register('nationality')}
-                  type="text"
-                  className="input"
-                  placeholder="Argentina"
-                />
-                {errors.nationality && (
-                  <p className="text-red-500 text-xs mt-1">{errors.nationality.message}</p>
-                )}
+                <input {...register('nationality')} type="text" className="input" placeholder="Argentina" />
+                {errors.nationality && <p className="text-red-500 text-xs mt-1">{errors.nationality.message}</p>}
               </div>
             </div>
 
+            {/* Ocupación (label varía por tipo) */}
             <div>
-              <label className="label">Ocupación / profesión *</label>
-              <input
-                {...register('occupation')}
-                type="text"
-                className="input"
-                placeholder="Ej: Programador, Médica, Estudiante, Comerciante..."
-              />
-              {errors.occupation && (
-                <p className="text-red-500 text-xs mt-1">{errors.occupation.message}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                Te ayuda a los propietarios a conocerte. Más datos podés completar después en tu perfil.
-              </p>
+              <label className="label">{labels.occupationLabel} *</label>
+              <input {...register('occupation')} type="text" className="input" placeholder={labels.occupationPlaceholder} />
+              {errors.occupation && <p className="text-red-500 text-xs mt-1">{errors.occupation.message}</p>}
             </div>
 
-            {/* ─── Cómo te enteraste + consentimientos de marketing ─── */}
+            {/* Cómo te enteraste */}
             <div>
               <label className="label">¿Cómo te enteraste? <span className="text-gray-400 font-normal">(opcional)</span></label>
               <select {...register('referralSource')} className="input">
@@ -397,59 +448,47 @@ export default function RegisterPage() {
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
                 <option value="google">Google</option>
-                <option value="amigo">Un amigo o familiar</option>
+                <option value="amigo">Un amigo o colega</option>
                 <option value="tv">TV / radio</option>
                 <option value="diario">Diario / revista</option>
-                <option value="cartel">Cartel en la calle</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
 
+            {/* Consentimientos */}
             <div className="border-t border-gray-100 pt-4 space-y-2">
-              <p className="text-xs text-gray-500 font-medium">Comunicaciones (podés cambiarlo después)</p>
+              <p className="text-xs text-gray-500 font-semibold">Comunicaciones <span className="font-normal">(podés cambiarlas después)</span></p>
               <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register('marketingEmailConsent')}
-                  className="mt-0.5 w-4 h-4 accent-brand-600"
-                />
+                <input type="checkbox" {...register('marketingEmailConsent')} className="mt-0.5 w-4 h-4 accent-brand-600" />
                 <span className="text-xs text-gray-600">
-                  📧 Quiero recibir <strong>novedades, tips y promociones por email</strong> sobre alquileres, seguros y servicios del hogar.
+                  📧 Novedades, tips y promociones por <strong>email</strong>
                 </span>
               </label>
               <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register('marketingSmsConsent')}
-                  className="mt-0.5 w-4 h-4 accent-brand-600"
-                />
+                <input type="checkbox" {...register('marketingSmsConsent')} className="mt-0.5 w-4 h-4 accent-brand-600" />
                 <span className="text-xs text-gray-600">
-                  📱 Quiero recibir <strong>alertas importantes por SMS</strong> (pagos próximos, ofertas, recordatorios).
+                  📱 Alertas importantes por <strong>SMS</strong>
                 </span>
               </label>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
-                Tus datos se tratan según la Ley AR 25.326. Podés revocar tu consentimiento en cualquier momento desde tu perfil.
-              </p>
+              <p className="text-[10px] text-gray-400">Ley AR 25.326 — podés revocar en cualquier momento desde tu perfil.</p>
             </div>
 
             {errors.root && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600">
                 {errors.root.message}
               </div>
             )}
 
-            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-              {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta gratis'}
+            <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3 text-base">
+              {isSubmitting ? 'Creando cuenta…' : `Crear cuenta ${cfg.icon}`}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-6">
-            ¿Ya tenés cuenta?{' '}
-            <Link href="/login" className="text-brand-600 font-medium hover:underline">
-              Iniciá sesión
-            </Link>
-          </p>
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          ¿Ya tenés cuenta?{' '}
+          <Link href="/login" className="text-brand-600 font-semibold hover:underline">Iniciá sesión</Link>
+        </p>
       </div>
     </div>
   );

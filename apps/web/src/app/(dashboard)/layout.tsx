@@ -7,23 +7,46 @@ import { useAuthStore } from '@/stores/auth.store';
 import { NotificationsBell } from '@/components/NotificationsBell';
 import { clsx } from 'clsx';
 
-const NAV = [
-  { href: '/dashboard', label: 'Inicio', icon: '🏠' },
-  { href: '/listings', label: 'Inmuebles', icon: '🏘️' },
-  { href: '/favorites', label: 'Favoritos', icon: '❤️' },
-  { href: '/rental-requests', label: 'Solicitudes', icon: '📨' },
-  { href: '/contracts', label: 'Contratos', icon: '📄' },
-  { href: '/payments', label: 'Pagos', icon: '💳' },
-  { href: '/issues', label: 'Desperfectos', icon: '🛠' },
-  { href: '/services', label: 'Servicios', icon: '🔧' },
-  { href: '/messages', label: 'Mensajes', icon: '💬' },
-  { href: '/mediation', label: 'Mediación', icon: '⭐' },
-  { href: '/insurance', label: 'Seguro', icon: '🛡️' },
-  { href: '/premium', label: 'Premium', icon: '👑' },
-  { href: '/profile', label: 'Perfil', icon: '👤' },
+// Nav base — visible para todos los roles autenticados
+const NAV_BASE = [
+  { href: '/dashboard',  label: 'Inicio',      icon: '🏠' },
+  { href: '/listings',   label: 'Inmuebles',   icon: '🏘️' },
+  { href: '/favorites',  label: 'Favoritos',   icon: '❤️' },
+  { href: '/messages',   label: 'Mensajes',    icon: '💬' },
+  { href: '/profile',    label: 'Perfil',      icon: '👤' },
 ];
 
-// Items visibles sólo para ADMIN — se renderizan al final del nav
+// Solo inquilinos y propietarios
+const NAV_TENANT_LANDLORD = [
+  { href: '/rental-requests', label: 'Solicitudes', icon: '📨' },
+  { href: '/contracts',       label: 'Contratos',   icon: '📄' },
+  { href: '/payments',        label: 'Pagos',       icon: '💳' },
+  { href: '/issues',          label: 'Desperfectos',icon: '🛠' },
+  { href: '/services',        label: 'Servicios',   icon: '🔧' },
+  { href: '/mediation',       label: 'Mediación',   icon: '⭐' },
+  { href: '/insurance',       label: 'Seguro',      icon: '🛡️' },
+  { href: '/premium',         label: 'Premium',     icon: '👑' },
+];
+
+// Solo PROVIDER
+const NAV_PROVIDER = [
+  { href: '/provider',         label: 'Mi perfil',    icon: '🛠️' },
+  { href: '/services/bookings',label: 'Mis reservas', icon: '📋' },
+  { href: '/services',         label: 'Explorar',     icon: '🔧' },
+  { href: '/payments',         label: 'Pagos',        icon: '💳' },
+  { href: '/premium',          label: 'Premium',      icon: '👑' },
+];
+
+// Solo REALTOR
+const NAV_REALTOR = [
+  { href: '/realtor',   label: 'Mi agencia', icon: '🏛️' },
+  { href: '/listings',  label: 'Propiedades',icon: '🏘️' },
+  { href: '/contracts', label: 'Contratos',  icon: '📄' },
+  { href: '/payments',  label: 'Pagos',      icon: '💳' },
+  { href: '/premium',   label: 'Plan',       icon: '👑' },
+];
+
+// Items visibles sólo para ADMIN
 const ADMIN_NAV = [
   { href: '/admin', label: 'Panel Admin', icon: '🛡️' },
 ];
@@ -33,7 +56,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const clearAuth = useAuthStore(s => s.clearAuth);
   const user = useAuthStore(s => s.user);
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin    = user?.role === 'ADMIN';
+  const isProvider = user?.role === 'PROVIDER';
+  const isRealtor  = user?.role === 'REALTOR';
+
+  // NAV completo según rol
+  const NAV = isProvider ? [
+    { href: '/dashboard',          label: 'Inicio',       icon: '🏠' },
+    ...NAV_PROVIDER,
+    { href: '/messages',           label: 'Mensajes',     icon: '💬' },
+    { href: '/profile',            label: 'Perfil',       icon: '👤' },
+  ] : isRealtor ? [
+    { href: '/dashboard',          label: 'Inicio',       icon: '🏠' },
+    ...NAV_REALTOR,
+    { href: '/messages',           label: 'Mensajes',     icon: '💬' },
+    { href: '/profile',            label: 'Perfil',       icon: '👤' },
+  ] : [
+    ...NAV_BASE,
+    ...NAV_TENANT_LANDLORD,
+  ];
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Cerrar el menú al cambiar de ruta (UX en mobile)
