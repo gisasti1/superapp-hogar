@@ -260,10 +260,321 @@ async function main() {
     skipDuplicates: true,
   });
 
+  // ── Prestador 1: Pedro González — Gasista matriculado (ENARGAS) ────
+  const pedro = await prisma.user.upsert({
+    where: { email: 'pedro@prestadores.com' },
+    update: {},
+    create: {
+      email: 'pedro@prestadores.com',
+      passwordHash,
+      firstName: 'Pedro',
+      lastName: 'González',
+      nickname: 'Pedrito',
+      phone: '+5491155667788',
+      role: UserRole.PROVIDER,
+      marketingEmailConsent: true,
+      marketingSmsConsent: true,
+      subscription: { create: { plan: 'FREE', status: 'ACTIVE' } },
+      verification: { create: { status: 'VERIFIED', verifiedAt: new Date() } },
+    },
+  });
+
+  await prisma.provider.upsert({
+    where: { userId: pedro.id },
+    update: {},
+    create: {
+      userId: pedro.id,
+      businessName: 'Pedro González — Gasista Matriculado',
+      category: 'GAS',
+      description:
+        'Instalaciones y reparaciones de gas natural y envasado. Matriculado ENARGAS. ' +
+        'Más de 10 años de experiencia en CABA y GBA. Atención de urgencias 24hs.',
+      cities: ['Buenos Aires', 'Lanús', 'Avellaneda', 'Lomas de Zamora'],
+      rating: 4.8,
+      reviewCount: 37,
+      isVerified: true,
+      isActive: true,
+      documentType: 'CUIT',
+      documentNumber: '20345678901',
+      contactPhone: '+5491155667788',
+      payoutMethod: 'BANK_TRANSFER',
+      cbu: '0720025888000012345674',
+      bankName: 'Santander',
+      bankAlias: 'PEDRO.GAS.CABA',
+      bankAccountHolder: 'Pedro González',
+      bankAccountHolderId: '20345678901',
+      payoutVerified: true,
+      kycStatus: 'VERIFIED',
+      kycSubmittedAt: new Date('2026-01-10'),
+      kycReviewedAt: new Date('2026-01-12'),
+      licenseStatus: 'VERIFIED',
+      licenseNumber: 'MAT-ENARGAS-00123456',
+      licenseAuthority: 'ENARGAS',
+      licenseExpiry: new Date('2027-12-31'),
+      licenseSubmittedAt: new Date('2026-01-10'),
+      licenseReviewedAt: new Date('2026-01-12'),
+      yearsOfExperience: 11,
+      hasInsurance: true,
+      insuranceProvider: 'Federación Patronal',
+      insurancePolicyNumber: 'FP-RC-2026-004421',
+      insuranceExpiry: new Date('2026-12-31'),
+      emergency24h: true,
+      hourlyRate: 8500,
+      calloutFee: 4000,
+      serviceRadiusKm: 30,
+      onboardingCompleted: true,
+    },
+  });
+
+  // ── Prestadora 2: Lucía Fernández — Limpieza del hogar ─────────────
+  const lucia = await prisma.user.upsert({
+    where: { email: 'lucia@prestadores.com' },
+    update: {},
+    create: {
+      email: 'lucia@prestadores.com',
+      passwordHash,
+      firstName: 'Lucía',
+      lastName: 'Fernández',
+      nickname: 'Lu',
+      phone: '+5491133445566',
+      role: UserRole.PROVIDER,
+      marketingEmailConsent: true,
+      marketingSmsConsent: false,
+      subscription: { create: { plan: 'PREMIUM', status: 'ACTIVE' } },
+      verification: { create: { status: 'VERIFIED', verifiedAt: new Date() } },
+    },
+  });
+
+  const luciaProvider = await prisma.provider.upsert({
+    where: { userId: lucia.id },
+    update: {},
+    create: {
+      userId: lucia.id,
+      businessName: 'Lu Hogar — Limpieza Profesional',
+      category: 'CLEANER',
+      description:
+        'Servicio de limpieza profunda, mantenimiento y orden para hogares y oficinas. ' +
+        'También mudanzas y post-obra. Productos incluidos. Trabajo en equipo de 2 personas.',
+      cities: ['Buenos Aires', 'Vicente López', 'San Isidro'],
+      rating: 4.9,
+      reviewCount: 94,
+      isVerified: true,
+      isActive: true,
+      documentType: 'DNI',
+      documentNumber: '33987654',
+      contactPhone: '+5491133445566',
+      payoutMethod: 'CVU',
+      cvu: '0000003100025678901234',
+      bankAlias: 'LU.HOGAR.MP',
+      bankAccountHolder: 'Lucía Fernández',
+      bankAccountHolderId: '27339876543',
+      payoutVerified: true,
+      kycStatus: 'VERIFIED',
+      kycSubmittedAt: new Date('2025-11-05'),
+      kycReviewedAt: new Date('2025-11-07'),
+      licenseStatus: 'NOT_REQUIRED',
+      yearsOfExperience: 6,
+      hasInsurance: false,
+      emergency24h: false,
+      hourlyRate: 4500,
+      calloutFee: 0,
+      serviceRadiusKm: 20,
+      onboardingCompleted: true,
+    },
+  });
+
+  // ── Bookings y reviews de los prestadores ─────────────────────────
+  const bookingGas = await prisma.booking.upsert({
+    where: { id: 'seed-booking-1' },
+    update: {},
+    create: {
+      id: 'seed-booking-1',
+      userId: tenant.id,
+      providerId: (await prisma.provider.findUnique({ where: { userId: pedro.id } }))!.id,
+      category: 'GAS',
+      description: 'Reparación de pérdida de gas en cocina y revisión de calefón.',
+      address: 'Av. Corrientes 1234, Piso 3 Dto B, CABA',
+      status: 'COMPLETED',
+      scheduledAt: new Date('2026-03-20T09:00:00'),
+      completedAt: new Date('2026-03-20T11:30:00'),
+      amount: 21000,
+    },
+  });
+
+  await prisma.review.upsert({
+    where: { bookingId: bookingGas.id },
+    update: {},
+    create: {
+      bookingId: bookingGas.id,
+      reviewerId: tenant.id,
+      providerId: (await prisma.provider.findUnique({ where: { userId: pedro.id } }))!.id,
+      rating: 5,
+      comment:
+        '¡Excelente! Vino puntual, explicó todo bien y dejó todo impecable. Muy recomendable.',
+    },
+  });
+
+  const bookingClean = await prisma.booking.upsert({
+    where: { id: 'seed-booking-2' },
+    update: {},
+    create: {
+      id: 'seed-booking-2',
+      userId: landlord.id,
+      providerId: luciaProvider.id,
+      category: 'CLEANER',
+      description: 'Limpieza profunda de departamento entre inquilinos (post-contrato).',
+      address: 'Av. Cabildo 2400, Piso 5 Dto A, Buenos Aires',
+      status: 'COMPLETED',
+      scheduledAt: new Date('2026-04-02T08:00:00'),
+      completedAt: new Date('2026-04-02T13:00:00'),
+      amount: 27000,
+    },
+  });
+
+  await prisma.review.upsert({
+    where: { bookingId: bookingClean.id },
+    update: {},
+    create: {
+      bookingId: bookingClean.id,
+      reviewerId: landlord.id,
+      providerId: luciaProvider.id,
+      rating: 5,
+      comment:
+        'El departamento quedó como nuevo. Muy profesional, puntual y con materiales propios. La voy a contratar de nuevo.',
+    },
+  });
+
+  // Booking pendiente: inquilino pide limpieza
+  await prisma.booking.upsert({
+    where: { id: 'seed-booking-3' },
+    update: {},
+    create: {
+      id: 'seed-booking-3',
+      userId: tenant.id,
+      providerId: luciaProvider.id,
+      category: 'CLEANER',
+      description: 'Limpieza de verano para el departamento de Palermo.',
+      address: 'Av. Corrientes 1234, Piso 3 Dto B, CABA',
+      status: 'ACCEPTED',
+      scheduledAt: new Date('2026-06-10T10:00:00'),
+      amount: 22000,
+    },
+  });
+
+  // ── Inmobiliaria / Gestora de alquileres ───────────────────────────
+  // Cuenta REALTOR con suscripción REALTOR. En la app puede publicar
+  // propiedades como si fuera propietario (owner) y gestionar contratos
+  // en nombre de sus clientes.
+  const agencia = await prisma.user.upsert({
+    where: { email: 'contacto@inmobiliaria-delvalle.com' },
+    update: {},
+    create: {
+      email: 'contacto@inmobiliaria-delvalle.com',
+      passwordHash,
+      firstName: 'Inmobiliaria',
+      lastName: 'Del Valle',
+      nickname: 'Del Valle',
+      phone: '+5491144556677',
+      role: UserRole.REALTOR,
+      marketingEmailConsent: true,
+      marketingSmsConsent: true,
+      subscription: { create: { plan: 'REALTOR', status: 'ACTIVE' } },
+      verification: { create: { status: 'VERIFIED', verifiedAt: new Date() } },
+    },
+  });
+
+  // Propiedades gestionadas por la inmobiliaria
+  const AGENCY_PROPERTIES = [
+    {
+      id: 'seed-property-6',
+      address: 'Av. Santa Fe 3200, Piso 8 Dto C',
+      city: 'Buenos Aires',
+      province: 'Buenos Aires',
+      rooms: 2,
+      bathrooms: 1,
+      squareMeters: 58,
+      monthlyRent: 480000,
+      expenses: 55000,
+      description:
+        'Impecable 2 ambientes en Palermo Hollywood. Contrafrente silencioso, cocina integrada, '  +
+        'piso flotante, baño reformado. Edificio con portería 24hs.',
+      title: '2 ambientes Palermo Hollywood — gestión Del Valle',
+      petsAllowed: false,
+      amenities: ['doorman', 'laundry', 'elevator'],
+      latitude: -34.5874,
+      longitude: -58.4271,
+    },
+    {
+      id: 'seed-property-7',
+      address: 'Ugarteche 3150, Piso 2',
+      city: 'Buenos Aires',
+      province: 'Buenos Aires',
+      rooms: 3,
+      bathrooms: 2,
+      squareMeters: 95,
+      monthlyRent: 720000,
+      expenses: 90000,
+      description:
+        'Luminoso PH en Palermo, planta alta con terraza privada de 20m². ' +
+        '3 ambientes separados, baño completo + toilette. Ideal familias o home office.',
+      title: 'PH con terraza en Palermo — gestión Del Valle',
+      petsAllowed: true,
+      amenities: ['balcony', 'parking', 'elevator'],
+      latitude: -34.5842,
+      longitude: -58.4204,
+    },
+  ];
+
+  for (const p of AGENCY_PROPERTIES) {
+    const { title, ...propertyData } = p;
+    await prisma.property.upsert({
+      where: { id: p.id },
+      update: {},
+      create: {
+        ...propertyData,
+        ownerId: agencia.id,
+        currency: 'ARS',
+        listing: { create: { title, isPublished: true } },
+      },
+    });
+  }
+
+  // ── Notificaciones adicionales ─────────────────────────────────────
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: pedro.id,
+        type: 'BOOKING_ACCEPTED',
+        title: 'Reseña recibida',
+        body: 'Ana dejó una reseña de 5 estrellas por la reparación de gas.',
+        isRead: false,
+      },
+      {
+        userId: lucia.id,
+        type: 'BOOKING_ACCEPTED',
+        title: 'Nueva reserva confirmada',
+        body: 'Tenés una limpieza programada para el 10/06.',
+        isRead: false,
+      },
+      {
+        userId: agencia.id,
+        type: 'LISTING_PUBLISHED',
+        title: 'Publicaciones activas',
+        body: 'Tus 2 propiedades están publicadas y visibles.',
+        isRead: true,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
   console.log('✓ Seed completo:');
-  console.log('  • 3 usuarios (admin/propietario/inquilino — password: Password123!)');
-  console.log('  • 5 propiedades publicadas en distintas ciudades');
-  console.log('  • 1 contrato firmado con 6 pagos + depósito + mediación + notificaciones');
+  console.log('  • 6 usuarios (admin / propietario / inquilino / 2 prestadores / inmobiliaria — password: Password123!)');
+  console.log('  • 7 propiedades publicadas (5 del propietario + 2 de la inmobiliaria)');
+  console.log('  • 1 contrato firmado con 6 pagos + depósito + mediación');
+  console.log('  • 3 bookings (2 completados con review, 1 aceptado pendiente)');
+  console.log('  • Pedro González: gasista ENARGAS verificado (GAS)');
+  console.log('  • Lucía Fernández: limpieza profesional verificada (CLEANER)');
+  console.log('  • Inmobiliaria Del Valle: gestora de alquileres (REALTOR)');
 }
 
 main()
