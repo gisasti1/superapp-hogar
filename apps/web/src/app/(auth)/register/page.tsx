@@ -245,7 +245,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => handleTypeSelect(type)}
                   className={clsx(
-                    `relative bg-gradient-to-br ${gradient} rounded-2xl p-5 text-left transition-all duration-200 border-2`,
+                    `relative bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 border-2 flex flex-col items-center justify-center`,
                     fullRow && 'col-span-2',
                     selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-gray-100 hover:border-gray-200 hover:shadow-md',
                   )}
@@ -256,11 +256,11 @@ export default function RegisterPage() {
                     </span>
                   )}
                   {selected && (
-                    <span className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center text-[10px]">✓</span>
+                    <span className="absolute top-3 left-3 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center text-[10px]">✓</span>
                   )}
-                  <span className="text-3xl block mb-2">{icon}</span>
+                  <span className="text-4xl block mb-2 leading-none">{icon}</span>
                   <p className="font-bold text-gray-900 text-sm leading-tight">{title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-tight">{subtitle}</p>
+                  <p className="text-xs text-gray-500 mt-1 leading-tight max-w-[200px]">{subtitle}</p>
                 </button>
               );
             })}
