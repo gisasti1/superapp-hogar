@@ -102,6 +102,19 @@ export class AuthController {
     return this.authService.me(req.user.id);
   }
 
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Cerrar (soft-delete) la cuenta del usuario actual. Requiere reconfirmar la contraseña. La info histórica se conserva.',
+  })
+  async deleteAccount(
+    @Request() req: any,
+    @Body() body: { password: string; reason?: string },
+  ) {
+    return this.authService.deleteAccount(req.user.id, body?.password, body?.reason);
+  }
+
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

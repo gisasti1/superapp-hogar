@@ -5,7 +5,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { BillsService, UpsertBillDto, PayMonthDto } from './bills.service';
+import { BillsService, UpsertBillDto, PayMonthDto, FreezeBillDto } from './bills.service';
 
 interface AuthUser { id: string; email: string; role: string; }
 
@@ -38,6 +38,22 @@ export class BillsController {
     @Body() body: { isEnabled: boolean },
   ) {
     return this.svc.toggleBill(u.id, id, !!body.isEnabled);
+  }
+
+  @Patch(':id/freeze')
+  @ApiOperation({ summary: 'Congelar un item N meses o hasta una fecha (months=0 descongela)' })
+  freeze(
+    @CurrentUser() u: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: FreezeBillDto,
+  ) {
+    return this.svc.freezeBill(u.id, id, dto);
+  }
+
+  @Patch('freeze-all')
+  @ApiOperation({ summary: 'Congelar todos los items activos N meses (ej: vacaciones)' })
+  freezeAll(@CurrentUser() u: AuthUser, @Body() dto: FreezeBillDto) {
+    return this.svc.freezeAll(u.id, dto);
   }
 
   @Delete(':id')

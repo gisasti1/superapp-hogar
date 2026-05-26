@@ -13,6 +13,23 @@ const CATEGORY_ICON: Record<string, string> = {
 
 const ALL_CATEGORIES = ['RENT','EXPENSES','ELECTRIC','GAS','WATER','ABL','INTERNET','CABLE','INSURANCE','OTHER'] as const;
 
+const PAYMENT_METHODS = [
+  { code: 'TRANSFER',    label: 'Transferencia',  icon: '🏦' },
+  { code: 'MERCADOPAGO', label: 'Mercado Pago',   icon: '💸' },
+  { code: 'CARD',        label: 'Tarjeta',         icon: '💳' },
+  { code: 'AUTO_DEBIT',  label: 'Débito automático', icon: '⚡' },
+  { code: 'CASH',        label: 'Efectivo',        icon: '💵' },
+] as const;
+
+function isFrozen(b: any): boolean {
+  if (!b.frozenUntil) return false;
+  return new Date(b.frozenUntil) > new Date();
+}
+function fmtMonthYear(d: string | Date) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+}
+
 function currentPeriod() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}`;
@@ -116,7 +133,7 @@ function BudgetEditor({
 
   const total = useMemo(() => {
     return bills
-      .filter(b => b.isEnabled && !skip.has(b.id))
+      .filter(b => b.isEnabled && !skip.has(b.id) && !isFrozen(b))
       .reduce((s, b) => s + (overrides[b.id] !== undefined ? overrides[b.id] : Number(b.amount)), 0);
   }, [bills, overrides, skip]);
 
@@ -130,6 +147,31 @@ function BudgetEditor({
     mutationFn: (id: string) => billsApi.remove(id),
     onSuccess:  onChanged,
   });
+  const freezeMutation = useMutation({
+    mutationFn: (v: { id: string; months: number }) => billsApi.freeze(v.id, { months: v.months }),
+    onSuccess:  onChanged,
+    onError:    (e: any) => alert(e?.response?.data?.message ?? 'Error'),
+  });
+  const freezeAllMutation = useMutation({
+    mutationFn: (months: number) => billsApi.freezeAll({ months }),
+    onSuccess:  onChanged,
+    onError:    (e: any) => alert(e?.response?.data?.message ?? 'Error'),
+  });
+
+  const promptFreeze = (id: string) => {
+    const ans = prompt('¿Cuántos meses querés congelar este concepto? (0 para descongelar)', '1');
+    if (ans === null) return;
+    const months = parseInt(ans, 10);
+    if (Number.isNaN(months) || months < 0 || months > 24) return alert('Ingresá un número entre 0 y 24');
+    freezeMutation.mutate({ id, months });
+  };
+  const promptFreezeAll = () => {
+    const ans = prompt('Congelar TODOS los conceptos activos por X meses (ej: te vas de vacaciones). 0 = descongelar todo.', '1');
+    if (ans === null) return;
+    const months = parseInt(ans, 10);
+    if (Number.isNaN(months) || months < 0 || months > 24) return alert('Ingresá un número entre 0 y 24');
+    freezeAllMutation.mutate(months);
+  };
   const payMutation = useMutation({
     mutationFn: () => billsApi.payMonth({
       period,
@@ -146,20 +188,29 @@ function BudgetEditor({
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
       {/* Total bar */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-5 py-4 flex items-center justify-between gap-4 text-white">
+      <div className="bg-gradient-to-r from-gray-900 to-gray-700 px-5 py-4 flex items-center justify-between gap-4 text-white flex-wrap">
         <div>
           <p className="text-[10px] uppercase tracking-wider opacity-70">{fmtPeriod(period)}</p>
           <p className="font-extrabold text-2xl">{fmtMoney(total, currency)}</p>
         </div>
-        <button
-          onClick={() => payMutation.mutate()}
-          disabled={alreadyPaid || total <= 0 || payMutation.isPending}
-          className="shrink-0 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
-        >
-          {alreadyPaid ? '✓ ' + t('bills.alreadyPaid', { period: fmtPeriod(period) })
-           : payMutation.isPending ? '…'
-           : t('bills.payAllMonth')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={promptFreezeAll}
+            className="shrink-0 bg-white/10 hover:bg-white/20 backdrop-blur text-white font-medium text-xs px-3 py-2 rounded-lg border border-white/20 transition"
+            title="Congelar todos los conceptos por X meses"
+          >
+            ❄️ Congelar todo
+          </button>
+          <button
+            onClick={() => payMutation.mutate()}
+            disabled={alreadyPaid || total <= 0 || payMutation.isPending}
+            className="shrink-0 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors"
+          >
+            {alreadyPaid ? '✓ ' + t('bills.alreadyPaid', { period: fmtPeriod(period) })
+             : payMutation.isPending ? '…'
+             : t('bills.payAllMonth')}
+          </button>
+        </div>
       </div>
 
       {/* Items list */}
@@ -167,7 +218,9 @@ function BudgetEditor({
         {bills.map(b => {
           const overriddenAmount = overrides[b.id] !== undefined ? overrides[b.id] : Number(b.amount);
           const skipped = skip.has(b.id);
-          const dimmed  = !b.isEnabled || skipped;
+          const frozen  = isFrozen(b);
+          const dimmed  = !b.isEnabled || skipped || frozen;
+          const pm      = PAYMENT_METHODS.find(m => m.code === b.paymentMethod);
           return (
             <li key={b.id} className={`flex items-center gap-3 px-5 py-3 ${dimmed ? 'opacity-50' : ''}`}>
               {/* Toggle */}
@@ -178,18 +231,34 @@ function BudgetEditor({
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${b.isEnabled ? 'translate-x-4' : ''}`} />
               </button>
-              <span className="text-xl">{CATEGORY_ICON[b.category] ?? '📦'}</span>
+              <span className="text-xl relative">
+                {CATEGORY_ICON[b.category] ?? '📦'}
+                {b.autoDebit && <span className="absolute -top-1 -right-1 text-[8px]" title="Débito automático">⚡</span>}
+              </span>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 text-sm leading-tight">{b.label}</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="font-semibold text-gray-900 text-sm leading-tight">{b.label}</p>
+                  {frozen && (
+                    <span className="text-[9px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide" title={`Congelado hasta ${fmtMonthYear(b.frozenUntil)}`}>
+                      ❄️ hasta {fmtMonthYear(b.frozenUntil)}
+                    </span>
+                  )}
+                  {b.autoDebit && !frozen && (
+                    <span className="text-[9px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-bold uppercase">
+                      ⚡ Auto
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-gray-400">
                   {t(`bills.category.${b.category}`)}
                   {b.dueDay && <> · vence día {b.dueDay}</>}
+                  {pm && <> · {pm.icon} {pm.label}</>}
                   {b.notes && <> · {b.notes}</>}
                 </p>
               </div>
 
               {/* Monto editable inline (override del mes) */}
-              {b.isEnabled && !skipped ? (
+              {b.isEnabled && !skipped && !frozen ? (
                 <input
                   type="number"
                   min="0"
@@ -201,8 +270,16 @@ function BudgetEditor({
                 <span className="w-28 text-right text-sm text-gray-400">—</span>
               )}
 
-              {/* Skip puntual */}
+              {/* Freeze por item */}
               {b.isEnabled && (
+                <button
+                  onClick={() => promptFreeze(b.id)}
+                  className={`text-xs ${frozen ? 'text-sky-600' : 'text-gray-400 hover:text-sky-600'}`}
+                  title={frozen ? 'Descongelar' : 'Congelar X meses'}
+                >❄️</button>
+              )}
+              {/* Skip puntual */}
+              {b.isEnabled && !frozen && (
                 <button
                   onClick={() => setSkip(s => { const n = new Set(s); n.has(b.id) ? n.delete(b.id) : n.add(b.id); return n; })}
                   className="text-xs text-gray-400 hover:text-amber-600"
@@ -244,14 +321,16 @@ function BudgetEditor({
 function BillFormModal({ initial, onClose, onSaved }: { initial: any | null; onClose: () => void; onSaved: () => void }) {
   const t = useT();
   const [form, setForm] = useState({
-    id:        initial?.id,
-    category:  (initial?.category ?? 'OTHER') as BillItem['category'],
-    label:     initial?.label ?? '',
-    amount:    initial?.amount ? Number(initial.amount) : 0,
-    currency:  initial?.currency ?? 'ARS',
-    dueDay:    initial?.dueDay ?? 10,
-    isEnabled: initial?.isEnabled ?? true,
-    notes:     initial?.notes ?? '',
+    id:            initial?.id,
+    category:      (initial?.category ?? 'OTHER') as BillItem['category'],
+    label:         initial?.label ?? '',
+    amount:        initial?.amount ? Number(initial.amount) : 0,
+    currency:      initial?.currency ?? 'ARS',
+    dueDay:        initial?.dueDay ?? 10,
+    isEnabled:     initial?.isEnabled ?? true,
+    notes:         initial?.notes ?? '',
+    paymentMethod: initial?.paymentMethod ?? '',
+    autoDebit:     initial?.autoDebit ?? false,
   });
 
   const save = useMutation({
@@ -259,6 +338,7 @@ function BillFormModal({ initial, onClose, onSaved }: { initial: any | null; onC
       ...form,
       amount: Number(form.amount),
       dueDay: Number(form.dueDay),
+      paymentMethod: (form.paymentMethod || null) as any,
     }),
     onSuccess: onSaved,
     onError:   (e: any) => alert(e?.response?.data?.message ?? 'Error'),
@@ -302,6 +382,35 @@ function BillFormModal({ initial, onClose, onSaved }: { initial: any | null; onC
             </select>
           </div>
         </div>
+
+        <div>
+          <label className="label">Medio de pago</label>
+          <select
+            className="input"
+            value={form.paymentMethod}
+            onChange={e => {
+              const v = e.target.value;
+              setForm(f => ({ ...f, paymentMethod: v, autoDebit: v === 'AUTO_DEBIT' ? true : f.autoDebit }));
+            }}
+          >
+            <option value="">— Sin definir —</option>
+            {PAYMENT_METHODS.map(m => (
+              <option key={m.code} value={m.code}>{m.icon} {m.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="w-4 h-4 accent-violet-600"
+            checked={form.autoDebit}
+            onChange={e => setForm(f => ({ ...f, autoDebit: e.target.checked }))}
+          />
+          <span className="text-sm text-gray-700">
+            ⚡ <strong>Débito automático</strong> — se cobra solo, no me hace falta marcar como pagado cada mes
+          </span>
+        </label>
 
         <div>
           <label className="label">{t('common.note')} ({t('common.optional')})</label>

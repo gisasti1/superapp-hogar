@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
@@ -313,7 +314,86 @@ export default function ProfilePage() {
               </dl>
             </div>
           )}
+
+          {/* ─── Zona peligrosa ─── */}
+          <DangerZone />
         </>
+      )}
+    </div>
+  );
+}
+
+/* ─── Zona peligrosa: dar de baja la cuenta ─────────────────────────── */
+function DangerZone() {
+  const router = useRouter();
+  const clearAuth = useAuthStore(s => s.clearAuth);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [reason, setReason] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: () => authApi.deleteAccount(password, reason || undefined),
+    onSuccess: () => {
+      clearAuth();
+      router.push('/?account-deleted=1');
+    },
+    onError: (e: any) => alert(e?.response?.data?.message ?? 'Error al dar de baja la cuenta'),
+  });
+
+  return (
+    <div className="card border-red-200 bg-red-50/40 space-y-3">
+      <h2 className="font-bold text-red-700 flex items-center gap-2">⚠️ Zona peligrosa</h2>
+      <p className="text-sm text-red-700/80">
+        Si das de baja tu cuenta, no vas a poder volver a iniciar sesión con este mail (lo liberamos
+        para que puedas registrarte de nuevo si querés). <strong>Tu información histórica
+        (contratos, pagos, mensajes, reseñas) NO se elimina</strong> — queda preservada para
+        cumplir con obligaciones legales y contables.
+      </p>
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="text-sm font-semibold text-red-600 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors">
+          Quiero dar de baja mi cuenta
+        </button>
+      ) : (
+        <div className="space-y-3 bg-white rounded-xl border border-red-200 p-4">
+          <div>
+            <label className="label">Reconfirmá tu contraseña *</label>
+            <input
+              type="password"
+              className="input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Para confirmar que sos vos"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="label">Motivo <span className="text-gray-400 font-normal">(opcional, nos ayuda a mejorar)</span></label>
+            <input
+              className="input"
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="Ej: ya no alquilo, encontré otra plataforma…"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => { setOpen(false); setPassword(''); setReason(''); }}
+              className="btn-secondary text-sm"
+              disabled={mutation.isPending}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (confirm('¿Estás seguro? Esta acción no se puede deshacer.')) mutation.mutate();
+              }}
+              disabled={!password || mutation.isPending}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
+            >
+              {mutation.isPending ? 'Dando de baja…' : 'Confirmar baja'}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -318,5 +319,57 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken, expiresIn: 900 };
+  }
+
+  /**
+   * Soft-delete de cuenta. Requiere reconfirmar password.
+   *
+   * Lo que se hace:
+   *  - isActive = false  (bloquea login)
+   *  - deletedAt = now, deletionReason = motivo opcional
+   *  - email cambia a deleted-<uuid>@deleted.local  (libera el email original
+   *    para que pueda usarse otra vez si el usuario quiere volver a registrarse)
+   *  - se eliminan todas las sesiones activas (fuerza logout en otros dispositivos)
+   *
+   * Lo que NO se toca:
+   *  - propiedades, contratos, pagos históricos, mensajes, reseñas, bills,
+   *    monthly_payments, conversations, audit_logs. Todo eso queda intacto.
+   *
+   * Esto cumple el requisito "no me elimine la información en mi base de datos".
+   */
+  async deleteAccount(userId: string, password: string, reason?: string) {
+    if (!password) throw new BadRequestException('La contraseña es obligatoria');
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    if (user.deletedAt) throw new ConflictException('La cuenta ya fue dada de baja');
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) throw new UnauthorizedException('Contraseña incorrecta');
+
+    const anonymizedEmail = `deleted-${user.id}@deleted.local`;
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: userId },
+        data:  {
+          email:          anonymizedEmail,
+          isActive:       false,
+          deletedAt:      new Date(),
+          deletionReason: reason?.trim() || null,
+        },
+      }),
+      this.prisma.session.deleteMany({ where: { userId } }),
+      this.prisma.auditLog.create({
+        data: {
+          userId,
+          action:     'USER_ACCOUNT_DELETED',
+          resource:   'user',
+          resourceId: userId,
+          newValue:   { reason: reason ?? null, originalEmail: user.email },
+        },
+      }),
+    ]);
+
+    return { ok: true, message: 'Cuenta dada de baja correctamente. Tu información histórica se conserva.' };
   }
 }

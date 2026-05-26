@@ -244,6 +244,16 @@ model User {
   lastLoginAt    DateTime?
   resetToken     String?  @unique
   resetTokenExp  DateTime?
+
+  // ─── Soft delete / cierre de cuenta ──────────────────────────────────
+  // Fecha en que el usuario solicitó dar de baja la cuenta. Si no es null,
+  // el usuario no puede iniciar sesión, pero TODA su info histórica
+  // (contratos, pagos, reseñas, mensajes) queda intacta en la base.
+  // El email se libera renombrándolo a deleted-<uuid>@deleted.local para
+  // que pueda volver a registrarse con el mismo mail si quisiera.
+  deletedAt        DateTime?
+  deletionReason   String?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1188,6 +1198,21 @@ model MonthlyBill {
   isEnabled Boolean  @default(true)
   notes     String?
   sortOrder Int      @default(0)
+
+  // ─── Congelamiento ───────────────────────────────────────────────────
+  // Si frozenUntil > now el item NO suma al total del mes. Sirve para
+  // pausas temporales (ej: vacaciones, gas en verano que no se usa)
+  // sin perder la config del item.
+  frozenUntil   DateTime?
+
+  // ─── Medio de pago default + débito automático ───────────────────────
+  // CASH | TRANSFER | MERCADOPAGO | CARD | AUTO_DEBIT
+  paymentMethod String?
+  // Si está en true el sistema asume que el monto se cobra solo (tarjeta,
+  // débito automático bancario). El UI lo marca con ⚡ y un futuro cron
+  // puede auto-registrar el pago.
+  autoDebit     Boolean  @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

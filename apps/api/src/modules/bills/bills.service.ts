@@ -17,6 +17,15 @@ export interface UpsertBillDto {
   isEnabled?: boolean;
   notes?:     string;
   sortOrder?: number;
+  // Medio de pago default y débito automático
+  paymentMethod?: 'CASH' | 'TRANSFER' | 'MERCADOPAGO' | 'CARD' | 'AUTO_DEBIT' | null;
+  autoDebit?: boolean;
+}
+
+export interface FreezeBillDto {
+  // Hasta cuándo congelar — uno u otro, no ambos
+  until?:  string; // ISO date
+  months?: number; // 1..12
 }
 
 export interface PayMonthDto {
@@ -67,14 +76,16 @@ export class BillsService {
     }
 
     const data = {
-      category:  dto.category,
-      label:     dto.label.trim(),
-      amount:    dto.amount,
-      currency:  dto.currency  ?? 'ARS',
-      dueDay:    dto.dueDay    ?? null,
-      isEnabled: dto.isEnabled ?? true,
-      notes:     dto.notes?.trim() || null,
-      sortOrder: dto.sortOrder ?? 0,
+      category:      dto.category,
+      label:         dto.label.trim(),
+      amount:        dto.amount,
+      currency:      dto.currency  ?? 'ARS',
+      dueDay:        dto.dueDay    ?? null,
+      isEnabled:     dto.isEnabled ?? true,
+      notes:         dto.notes?.trim() || null,
+      sortOrder:     dto.sortOrder ?? 0,
+      paymentMethod: dto.paymentMethod ?? null,
+      autoDebit:     dto.autoDebit ?? false,
     };
 
     if (dto.id) {
@@ -91,6 +102,49 @@ export class BillsService {
     const bill = await this.prisma.monthlyBill.findUnique({ where: { id } });
     if (!bill || bill.userId !== userId) throw new NotFoundException('Concepto no encontrado');
     return this.prisma.monthlyBill.update({ where: { id }, data: { isEnabled } });
+  }
+
+  /**
+   * Congela un item hasta `until` o por `months` meses.
+   * Si pasás `months: 0` o `until: null` se descongela.
+   */
+  async freezeBill(userId: string, id: string, dto: FreezeBillDto) {
+    const bill = await this.prisma.monthlyBill.findUnique({ where: { id } });
+    if (!bill || bill.userId !== userId) throw new NotFoundException('Concepto no encontrado');
+
+    const until = this.resolveFreezeUntil(dto);
+    return this.prisma.monthlyBill.update({
+      where: { id },
+      data:  { frozenUntil: until },
+    });
+  }
+
+  /** Congelar / descongelar TODOS los items habilitados del usuario. */
+  async freezeAll(userId: string, dto: FreezeBillDto) {
+    const until = this.resolveFreezeUntil(dto);
+    const result = await this.prisma.monthlyBill.updateMany({
+      where: { userId, isEnabled: true },
+      data:  { frozenUntil: until },
+    });
+    return { affected: result.count, frozenUntil: until };
+  }
+
+  private resolveFreezeUntil(dto: FreezeBillDto): Date | null {
+    if (dto.until === null || dto.months === 0) return null;
+    if (dto.until) {
+      const d = new Date(dto.until);
+      if (Number.isNaN(d.getTime())) throw new BadRequestException('Fecha de descongelamiento inválida');
+      return d;
+    }
+    if (dto.months !== undefined) {
+      if (dto.months < 0 || dto.months > 24) {
+        throw new BadRequestException('months debe estar entre 0 y 24');
+      }
+      const d = new Date();
+      d.setMonth(d.getMonth() + dto.months);
+      return d;
+    }
+    throw new BadRequestException('Tenés que mandar `until` o `months`');
   }
 
   async deleteBill(userId: string, id: string) {
@@ -178,15 +232,20 @@ export class BillsService {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
     const skipSet = new Set(dto.skip ?? []);
+    const now = new Date();
     const items = bills
       .filter(b => !skipSet.has(b.id))
+      // Items congelados (frozenUntil > now) NO suman al pago del mes
+      .filter(b => !b.frozenUntil || b.frozenUntil <= now)
       .map(b => {
         const amount = dto.overrides?.[b.id] !== undefined ? Number(dto.overrides[b.id]) : Number(b.amount);
         return {
-          billId:   b.id,
-          category: b.category,
-          label:    b.label,
+          billId:        b.id,
+          category:      b.category,
+          label:         b.label,
           amount,
+          paymentMethod: b.paymentMethod ?? null,
+          autoDebit:     b.autoDebit,
         };
       });
     const total = items.reduce((sum, it) => sum + Number(it.amount), 0);

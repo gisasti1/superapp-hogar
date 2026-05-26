@@ -57,6 +57,11 @@ export const authApi = {
   updateProfile: (dto: Record<string, unknown>) =>
     apiClient.patch('/auth/me', dto).then(r => r.data),
 
+  // Soft-delete de la cuenta — requiere reconfirmar password.
+  // La info histórica (contratos, pagos, mensajes, bills) se conserva.
+  deleteAccount: (password: string, reason?: string) =>
+    apiClient.delete('/auth/me', { data: { password, reason } }).then(r => r.data),
+
   uploadAvatar: (file: File) => {
     const fd = new FormData();
     fd.append('file', file);
@@ -655,6 +660,8 @@ export const myRentalApi = {
 };
 
 // ─── Bills (presupuesto mensual del Particular) ──────────────────────────
+export type PaymentMethod = 'CASH' | 'TRANSFER' | 'MERCADOPAGO' | 'CARD' | 'AUTO_DEBIT';
+
 export interface BillItem {
   id?: string;
   category: 'RENT' | 'EXPENSES' | 'ELECTRIC' | 'GAS' | 'WATER' | 'ABL' | 'INTERNET' | 'CABLE' | 'INSURANCE' | 'OTHER';
@@ -665,6 +672,9 @@ export interface BillItem {
   isEnabled?: boolean;
   notes?: string | null;
   sortOrder?: number;
+  frozenUntil?: string | null;
+  paymentMethod?: PaymentMethod | null;
+  autoDebit?: boolean;
 }
 
 export const billsApi = {
@@ -690,4 +700,8 @@ export const billsApi = {
   }) => apiClient.post('/bills/payments', dto).then(r => r.data),
   deletePayment: (id: string) =>
     apiClient.delete(`/bills/payments/${id}`).then(r => r.data),
+  freeze: (id: string, dto: { months?: number; until?: string | null }) =>
+    apiClient.patch(`/bills/${id}/freeze`, dto).then(r => r.data),
+  freezeAll: (dto: { months?: number; until?: string | null }) =>
+    apiClient.patch('/bills/freeze-all', dto).then(r => r.data),
 };
