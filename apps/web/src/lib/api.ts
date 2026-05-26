@@ -56,6 +56,13 @@ export const authApi = {
   // PATCH parcial — solo se actualizan los campos enviados.
   updateProfile: (dto: Record<string, unknown>) =>
     apiClient.patch('/auth/me', dto).then(r => r.data),
+
+  uploadAvatar: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return apiClient.post('/auth/me/avatar', fd).then(r => r.data);
+  },
+  deleteAvatar: () => apiClient.delete('/auth/me/avatar').then(r => r.data),
 };
 
 // ─── KYC ────────────────────────────────────────────────────────────────────
@@ -498,6 +505,14 @@ export const providerAccountApi = {
     return apiClient.post('/services/provider/me/license/document', fd).then(r => r.data);
   },
   submitLicense: () => apiClient.post('/services/provider/me/license/submit').then(r => r.data),
+
+  // Portfolio (fotos de trabajos)
+  addPortfolioPhoto: (file: File) => {
+    const fd = new FormData(); fd.append('file', file);
+    return apiClient.post('/services/provider/me/portfolio', fd).then(r => r.data);
+  },
+  removePortfolioPhoto: (url: string) =>
+    apiClient.delete('/services/provider/me/portfolio', { data: { url } }).then(r => r.data),
 
   // Seguro
   updateInsurance: (dto: {

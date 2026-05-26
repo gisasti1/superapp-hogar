@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -8,6 +8,15 @@ import { listingsApi } from '@/lib/api';
 
 export default function NewPropertyPage() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+
+  // Previews locales sin subir nada todavía. Se revocan los blob URLs al cambiar.
+  const photoPreviews = useMemo(
+    () => photos.map(f => ({ name: f.name, url: URL.createObjectURL(f) })),
+    [photos],
+  );
   const [form, setForm] = useState({
     address: '',
     city: '',
@@ -65,11 +74,24 @@ export default function NewPropertyPage() {
   const { mutate: createProperty, isPending } = useMutation({
     mutationFn: (dto: object) => listingsApi.createProperty(dto),
     onSuccess: async (created: any) => {
-      // Publicar inmediatamente después de crear
+      // 1) Subir las fotos seleccionadas (si hay) antes de publicar.
+      //    Si una falla no abortamos: el usuario puede subirlas después en el detalle.
+      if (photos.length > 0) {
+        setUploadingPhotos(true);
+        try {
+          await listingsApi.uploadImages(created.id, photos);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('No se pudieron subir las fotos:', e);
+        } finally {
+          setUploadingPhotos(false);
+        }
+      }
+      // 2) Publicar inmediatamente después de crear
       try {
         await listingsApi.publish(created.id);
       } catch { /* silencioso — el usuario puede publicar después */ }
-      router.push('/listings');
+      router.push(`/listings/${created.id}`);
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.message;
@@ -302,9 +324,61 @@ export default function NewPropertyPage() {
           />
         </div>
 
+        {/* ─── Fotos ──────────────────────────────────────────────── */}
+        <div>
+          <label className="label">Fotos del inmueble</label>
+          <p className="text-xs text-gray-400 mb-2">
+            Hasta 10 fotos · JPG, PNG, WEBP (5 MB c/u). Las primeras son las que más
+            se ven en el listado.
+          </p>
+
+          {photoPreviews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+              {photoPreviews.map((p, idx) => (
+                <div key={p.url} className="relative">
+                  <img src={p.url} alt={p.name} className="h-24 w-full object-cover rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={() => setPhotos(prev => prev.filter((_, i) => i !== idx))}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center shadow"
+                    title="Sacar"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            className="hidden"
+            onChange={e => {
+              const newFiles = Array.from(e.target.files ?? []);
+              setPhotos(prev => [...prev, ...newFiles].slice(0, 10));
+              if (fileRef.current) fileRef.current.value = '';
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="btn-secondary text-sm"
+            disabled={photos.length >= 10}
+          >
+            📷 {photos.length === 0 ? 'Agregar fotos' : `Agregar más (${photos.length}/10)`}
+          </button>
+        </div>
+
         <div className="flex items-center gap-3 pt-2">
-          <button type="submit" disabled={isPending} className="btn-primary">
-            {isPending ? 'Publicando...' : 'Publicar inmueble'}
+          <button type="submit" disabled={isPending || uploadingPhotos} className="btn-primary">
+            {uploadingPhotos
+              ? 'Subiendo fotos...'
+              : isPending
+                ? 'Publicando...'
+                : 'Publicar inmueble'}
           </button>
           <Link href="/listings" className="btn-secondary">Cancelar</Link>
         </div>

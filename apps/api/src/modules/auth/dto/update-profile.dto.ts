@@ -25,6 +25,10 @@ export class UpdateProfileDto {
   @ApiPropertyOptional() @IsString() @IsOptional() @MinLength(2) @MaxLength(60)
   lastName?: string;
 
+  @ApiPropertyOptional({ example: 'Juancho', description: 'Apodo opcional para mostrar en lugar del nombre real' })
+  @IsString() @IsOptional() @MaxLength(40)
+  nickname?: string;
+
   @ApiPropertyOptional() @IsString() @IsOptional() @MinLength(8) @MaxLength(20)
   phone?: string;
 

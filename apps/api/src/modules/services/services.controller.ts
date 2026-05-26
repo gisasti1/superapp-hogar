@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -281,6 +282,35 @@ export class ServicesController {
   @ApiOperation({ summary: 'Enviar matrícula a revisión' })
   async submitLicense(@CurrentUser() user: AuthUser) {
     return this.servicesService.submitLicenseForReview(user.id);
+  }
+
+  // ─── Portfolio (galería de trabajos realizados) ───────────────────────
+
+  @Post('provider/me/portfolio')
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Agregar foto al portfolio (trabajo realizado, antes/después, etc.)' })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: docStorage,
+      fileFilter: (_req, file, cb) => {
+        // En portfolio sólo imágenes — no tiene sentido PDF de trabajo.
+        const ok = ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype);
+        cb(ok ? null : new BadRequestException('Solo JPG/PNG/WEBP'), ok);
+      },
+      limits: { fileSize: 8 * 1024 * 1024 },
+    }),
+  )
+  async addPortfolioPhoto(@CurrentUser() user: AuthUser, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Falta el archivo');
+    const url = `/uploads/providers/${file.filename}`;
+    return this.servicesService.addPortfolioPhoto(user.id, url);
+  }
+
+  @Delete('provider/me/portfolio')
+  @ApiOperation({ summary: 'Eliminar una foto del portfolio (pasar url en el body)' })
+  async removePortfolioPhoto(@CurrentUser() user: AuthUser, @Body() body: { url: string }) {
+    if (!body?.url) throw new BadRequestException('Falta el url');
+    return this.servicesService.removePortfolioPhoto(user.id, body.url);
   }
 
   // ─── Seguro ───────────────────────────────────────────────────────────

@@ -669,6 +669,29 @@ export class ServicesService {
     return updated;
   }
 
+  // ─── Portfolio: fotos de trabajos anteriores ────────────────────────────
+
+  async addPortfolioPhoto(userId: string, url: string) {
+    const provider = await this.getProviderOrThrow(userId);
+
+    if (provider.portfolioPhotos.length >= 12) {
+      throw new BadRequestException('Máximo 12 fotos en el portfolio. Borrá alguna antes de subir más.');
+    }
+
+    return this.prisma.provider.update({
+      where: { id: provider.id },
+      data: { portfolioPhotos: { push: url } },
+    });
+  }
+
+  async removePortfolioPhoto(userId: string, url: string) {
+    const provider = await this.getProviderOrThrow(userId);
+    return this.prisma.provider.update({
+      where: { id: provider.id },
+      data: { portfolioPhotos: provider.portfolioPhotos.filter(p => p !== url) },
+    });
+  }
+
   async adminVerifyPayout(providerId: string, verified: boolean) {
     const provider = await this.prisma.provider.findUnique({ where: { id: providerId } });
     if (!provider) throw new NotFoundException('Prestador no encontrado');

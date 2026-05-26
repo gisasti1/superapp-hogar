@@ -45,6 +45,7 @@ export default function ProfileEditPage() {
       setForm({
         firstName: profile.firstName ?? '',
         lastName: profile.lastName ?? '',
+        nickname: profile.nickname ?? '',
         phone: profile.phone ?? '',
         address: profile.address ?? '',
         city: profile.city ?? '',
@@ -138,6 +139,19 @@ export default function ProfileEditPage() {
               <label className="label">Apellido</label>
               <input className="input" value={form.lastName ?? ''} onChange={handleChange('lastName')} />
             </div>
+          </div>
+          <div>
+            <label className="label">Apodo (opcional)</label>
+            <input
+              className="input"
+              maxLength={40}
+              value={form.nickname ?? ''}
+              onChange={handleChange('nickname')}
+              placeholder="Cómo querés que te llamen"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Si lo cargás, aparece en chats y reseñas en lugar de tu nombre real.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

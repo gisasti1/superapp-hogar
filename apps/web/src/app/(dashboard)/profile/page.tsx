@@ -1,9 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { VerificationStatus } from '@superapp/shared';
+import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import Link from 'next/link';
@@ -24,15 +26,46 @@ const KYC_LABELS: Record<string, string> = {
 
 export default function ProfilePage() {
   const user = useAuthStore(s => s.user);
+  const qc = useQueryClient();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: authApi.me,
   });
 
-  const initials = profile
-    ? `${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`
-    : user?.email?.[0]?.toUpperCase() ?? '?';
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [editingNickname, setEditingNickname] = useState(false);
+  const [nicknameDraft, setNicknameDraft] = useState('');
+
+  const uploadAvatar = useMutation({
+    mutationFn: (f: File) => authApi.uploadAvatar(f),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
+    onError: (err: any) => alert(err?.response?.data?.message ?? 'Error al subir avatar'),
+  });
+
+  const deleteAvatar = useMutation({
+    mutationFn: () => authApi.deleteAvatar(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
+  });
+
+  const saveNickname = useMutation({
+    mutationFn: (nickname: string) => authApi.updateProfile({ nickname }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me'] });
+      setEditingNickname(false);
+    },
+  });
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploading(true);
+    try { await uploadAvatar.mutateAsync(f); } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
 
   const kycStatus: VerificationStatus = profile?.verification?.status ?? profile?.verificationStatus ?? VerificationStatus.PENDING;
   const isVerified = kycStatus === VerificationStatus.VERIFIED;
@@ -52,19 +85,105 @@ export default function ProfilePage() {
       ) : (
         <>
           {/* Avatar + name */}
-          <div className="card flex items-center gap-5">
-            <div className="h-16 w-16 rounded-full bg-brand-600 flex items-center justify-center text-white text-xl font-bold shrink-0">
-              {initials}
+          <div className="card">
+            <div className="flex items-start gap-5 flex-wrap">
+              <div className="relative group shrink-0">
+                <Avatar
+                  url={profile?.avatarUrl}
+                  firstName={profile?.firstName}
+                  lastName={profile?.lastName}
+                  nickname={profile?.nickname}
+                  size="xl"
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute -bottom-1 -right-1 bg-white border border-gray-300 rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-gray-50 text-sm"
+                  title="Cambiar foto"
+                >
+                  {uploading ? '⏳' : '📷'}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-xl font-bold text-gray-900">
+                  {profile?.firstName} {profile?.lastName}
+                </p>
+
+                {/* Apodo editable inline */}
+                {editingNickname ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      maxLength={40}
+                      value={nicknameDraft}
+                      onChange={e => setNicknameDraft(e.target.value)}
+                      placeholder="Apodo (opcional)"
+                      className="input text-sm py-1 max-w-xs"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveNickname.mutate(nicknameDraft.trim());
+                        if (e.key === 'Escape') setEditingNickname(false);
+                      }}
+                    />
+                    <button
+                      onClick={() => saveNickname.mutate(nicknameDraft.trim())}
+                      disabled={saveNickname.isPending}
+                      className="text-xs text-brand-600 font-medium"
+                    >
+                      ✓ Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditingNickname(false)}
+                      className="text-xs text-gray-500"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setNicknameDraft(profile?.nickname ?? '');
+                      setEditingNickname(true);
+                    }}
+                    className="text-sm text-gray-600 hover:text-brand-600 mt-0.5 inline-flex items-center gap-1"
+                  >
+                    {profile?.nickname ? (
+                      <>👤 <span className="italic">"{profile.nickname}"</span> <span className="text-xs text-gray-400">(editar)</span></>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">+ Agregar apodo</span>
+                    )}
+                  </button>
+                )}
+
+                <p className="text-sm text-gray-500 mt-1">{profile?.email}</p>
+                {profile?.phone && (
+                  <p className="text-sm text-gray-400 mt-0.5">{profile.phone}</p>
+                )}
+
+                {profile?.avatarUrl && (
+                  <button
+                    onClick={() => {
+                      if (confirm('¿Eliminar la foto de perfil?')) deleteAvatar.mutate();
+                    }}
+                    className="text-xs text-red-600 hover:underline mt-2"
+                  >
+                    Eliminar foto
+                  </button>
+                )}
+              </div>
             </div>
-            <div>
-              <p className="text-xl font-bold text-gray-900">
-                {profile?.firstName} {profile?.lastName}
-              </p>
-              <p className="text-sm text-gray-500">{profile?.email}</p>
-              {profile?.phone && (
-                <p className="text-sm text-gray-400 mt-0.5">{profile.phone}</p>
-              )}
-            </div>
+
+            <p className="text-xs text-gray-400 mt-3">
+              📸 Foto JPG/PNG/WEBP, máx 5MB. Cuadrada queda mejor.
+            </p>
           </div>
 
           {/* KYC status */}

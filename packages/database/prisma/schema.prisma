@@ -198,6 +198,11 @@ model User {
   passwordHash   String
   firstName      String
   lastName       String
+  // Apodo opcional para mostrar en chats / reseñas en lugar del nombre real.
+  // Si está vacío usamos firstName.
+  nickname       String?
+  // Foto de perfil. Guardamos la URL (local /uploads/avatars/... o S3).
+  avatarUrl      String?
   phone          String?
   dni            String?  @unique
   // Dirección particular del usuario (no del inmueble que publica, sino su domicilio)
@@ -686,6 +691,10 @@ model Provider {
 
   // ─── Onboarding ───────────────────────────────────────────────────
   onboardingCompleted Boolean @default(false) // todos los pasos hechos
+
+  // ─── Portfolio (fotos de trabajos anteriores, antes/después) ─────
+  // Visible públicamente en el perfil del prestador. Max 12 imágenes.
+  portfolioPhotos     String[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

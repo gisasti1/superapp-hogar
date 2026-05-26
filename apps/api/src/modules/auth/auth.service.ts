@@ -114,6 +114,8 @@ export class AuthService {
         email: true,
         firstName: true,
         lastName: true,
+        nickname: true,
+        avatarUrl: true,
         phone: true,
         address: true,
         city: true,
@@ -237,6 +239,8 @@ export class AuthService {
         email: true,
         firstName: true,
         lastName: true,
+        nickname: true,
+        avatarUrl: true,
         phone: true,
         dni: true,
         address: true,
@@ -275,13 +279,16 @@ export class AuthService {
     // campos que no vinieron en el request.
     const data: Record<string, unknown> = {};
     const fields: Array<keyof typeof dto> = [
-      'firstName', 'lastName', 'phone', 'address', 'city', 'province',
+      'firstName', 'lastName', 'nickname', 'phone', 'address', 'city', 'province',
       'nationality', 'dni', 'occupation', 'employer', 'bio',
       'emergencyContactName', 'emergencyContactPhone',
     ];
     for (const f of fields) {
       if (dto[f] !== undefined) data[f] = dto[f];
     }
+    // avatarUrl viene del endpoint de upload o de DELETE (null para borrar).
+    // No está en el DTO con validación pero el endpoint lo pasa via cast `as any`.
+    if ((dto as any).avatarUrl !== undefined) data.avatarUrl = (dto as any).avatarUrl;
     if (dto.dateOfBirth !== undefined) data.dateOfBirth = new Date(dto.dateOfBirth);
     if (dto.employmentType !== undefined) data.employmentType = dto.employmentType;
     if (dto.maritalStatus !== undefined) data.maritalStatus = dto.maritalStatus;

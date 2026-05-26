@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { servicesApi, providerAccountApi } from '@/lib/api';
@@ -88,6 +88,8 @@ export default function ProviderProfilePage() {
       {onboarding.requiresLicense && (
         <LicenseSection provider={provider} done={steps.license} />
       )}
+
+      <PortfolioSection provider={provider} />
 
       <InsuranceSection provider={provider} />
 
@@ -847,6 +849,98 @@ function LicenseSection({ provider, done }: { provider: any; done: boolean }) {
           className="btn-primary"
         >
           {submit.isPending ? 'Enviando...' : 'Enviar matrícula a revisión'}
+        </button>
+      </div>
+    </details>
+  );
+}
+
+// ─── Galería de portfolio (fotos de trabajos realizados) ─────────────────
+
+function PortfolioSection({ provider }: { provider: any }) {
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const photos: string[] = provider?.portfolioPhotos ?? [];
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['provider-onboarding'] });
+
+  const add = useMutation({
+    mutationFn: (f: File) => providerAccountApi.addPortfolioPhoto(f),
+    onSuccess: invalidate,
+    onError: (err: any) => alert(err?.response?.data?.message ?? 'Error al subir foto'),
+  });
+
+  const remove = useMutation({
+    mutationFn: (url: string) => providerAccountApi.removePortfolioPhoto(url),
+    onSuccess: invalidate,
+  });
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploading(true);
+    try { await add.mutateAsync(f); } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  return (
+    <details className="card" open={photos.length === 0}>
+      <summary className="cursor-pointer flex items-center justify-between">
+        <h2 className="font-semibold text-gray-900">📸 Fotos de trabajos realizados</h2>
+        <span className="text-xs text-gray-500">{photos.length}/12 · Opcional pero suma mucho</span>
+      </summary>
+
+      <div className="space-y-3 mt-4">
+        <p className="text-sm text-gray-600">
+          Mostrá <strong>antes/después</strong>, trabajos terminados, materiales, fotos del taller.
+          Los clientes eligen mucho más rápido cuando ven fotos reales.
+        </p>
+
+        {photos.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {photos.map((url, idx) => (
+              <div key={idx} className="relative group">
+                <img
+                  src={url.startsWith('http') ? url : `${(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000')}${url}`}
+                  alt={`Trabajo ${idx + 1}`}
+                  className="h-28 w-full object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('¿Eliminar esta foto del portfolio?')) remove.mutate(url);
+                  }}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Eliminar"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center text-gray-400 text-sm">
+            Todavía no subiste ninguna foto.
+          </div>
+        )}
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFile}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading || photos.length >= 12}
+          className="btn-secondary text-sm"
+        >
+          📷 {uploading ? 'Subiendo...' : photos.length >= 12 ? 'Llegaste al máximo (12)' : 'Agregar foto'}
         </button>
       </div>
     </details>
