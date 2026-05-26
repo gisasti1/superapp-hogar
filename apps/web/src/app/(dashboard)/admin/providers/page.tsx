@@ -54,7 +54,7 @@ export default function AdminProvidersPage() {
               🪪 {pending.length} prestador{pending.length === 1 ? '' : 'es'} esperando revisión
             </p>
             <p className="text-xs text-amber-700 mt-0.5">
-              KYC o matrícula enviados, falta tu aprobación.
+              Identidad o matrícula enviadas, falta tu aprobación.
             </p>
           </div>
           <span className="text-amber-900 text-sm font-medium">Ir a revisar →</span>

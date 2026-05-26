@@ -187,14 +187,20 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* KYC status */}
+          {/* Verificación de identidad (KYC) */}
           <div className="card flex items-center justify-between gap-4">
             <div>
-              <p className="font-semibold text-gray-900">Verificación de identidad</p>
+              <p className="font-semibold text-gray-900 flex items-center gap-1.5">
+                🪪 Verificación de identidad
+                <span
+                  className="text-gray-400 cursor-help text-xs"
+                  title="Igual que hace tu banco: confirmamos que el DNI es tuyo. Solo nuestro equipo lo ve y no se comparte con otros usuarios."
+                >ℹ️</span>
+              </p>
               <p className="text-sm text-gray-500 mt-0.5">
                 {isVerified
                   ? 'Tu identidad está verificada. Podés firmar contratos y emitir pólizas.'
-                  : 'Verificá tu identidad para acceder a todas las funciones.'}
+                  : 'Es un paso rápido para confirmar que sos vos antes de firmar contratos. Solo se hace una vez.'}
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">

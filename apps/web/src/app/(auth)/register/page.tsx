@@ -258,7 +258,7 @@ export default function RegisterPage() {
               <ul className="space-y-1.5 text-sm text-gray-600">
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Creá tu perfil profesional en minutos</li>
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Recibí pedidos de propietarios e inquilinos</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Subí matrícula, KYC y seguro para verificarte</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Subí tu matrícula y DNI para verificarte (es como abrir una cuenta de banco)</li>
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Mostrá tu portfolio de trabajos terminados</li>
               </ul>
             )}

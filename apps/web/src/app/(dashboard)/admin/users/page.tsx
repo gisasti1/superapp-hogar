@@ -80,7 +80,7 @@ export default function AdminUsersPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Usuario</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Role</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 hidden lg:table-cell">KYC</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 hidden lg:table-cell" title="Verificación de identidad del usuario (KYC)">Identidad</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500 hidden lg:table-cell">Estado</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">Acciones</th>
               </tr>

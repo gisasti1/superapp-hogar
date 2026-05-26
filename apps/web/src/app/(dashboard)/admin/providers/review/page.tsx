@@ -75,7 +75,7 @@ export default function AdminProviderReviewPage() {
       <div>
         <h1 className="text-xl font-bold text-gray-900">Revisión de prestadores</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Aprobar o rechazar KYC y matrículas. Una vez aprobado todo, el prestador queda como
+          Aprobar o rechazar verificación de identidad y matrículas. Una vez aprobado todo, el prestador queda como
           <strong> verificado</strong> en el marketplace.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function AdminProviderReviewPage() {
                 : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
             }`}
           >
-            {f === 'ALL' ? 'Todos' : f === 'KYC' ? 'Sólo KYC' : 'Sólo matrícula'}
+            {f === 'ALL' ? 'Todos' : f === 'KYC' ? 'Sólo identidad' : 'Sólo matrícula'}
           </button>
         ))}
       </div>
@@ -120,7 +120,7 @@ export default function AdminProviderReviewPage() {
                 </div>
                 <div className="flex flex-col gap-1 text-right">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="text-gray-500">KYC:</span>
+                    <span className="text-gray-500" title="Verificación de identidad (KYC)">Identidad:</span>
                     <StatusBadge status={p.kycStatus} />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -142,10 +142,10 @@ export default function AdminProviderReviewPage() {
                 {p.birthDate && <p><strong>Nac:</strong> {new Date(p.birthDate).toLocaleDateString('es-AR')}</p>}
               </div>
 
-              {/* Revisión KYC */}
+              {/* Revisión identidad (KYC) */}
               {p.kycStatus === 'UNDER_REVIEW' && (
                 <div className="border-t pt-3 space-y-3">
-                  <p className="text-sm font-semibold text-gray-900">📷 Revisar KYC</p>
+                  <p className="text-sm font-semibold text-gray-900">📷 Revisar identidad</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {[
                       { label: 'DNI Frente', url: docUrl(p.idDocumentFrontUrl) },
@@ -178,7 +178,7 @@ export default function AdminProviderReviewPage() {
                       disabled={reviewKyc.isPending}
                       className="text-sm bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700"
                     >
-                      ✓ Aprobar KYC
+                      ✓ Aprobar identidad
                     </button>
                     <button
                       onClick={() => handleReject(reviewKyc, p.id, 'KYC')}

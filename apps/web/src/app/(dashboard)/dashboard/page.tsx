@@ -43,7 +43,7 @@ export default function DashboardPage() {
           <div>
             <p className="font-semibold text-amber-800">Verificá tu identidad</p>
             <p className="text-sm text-amber-700 mt-1">
-              Completá el KYC para emitir pólizas y firmar contratos.
+              Confirmá tu identidad — un paso rápido, igual que en tu banco. Después podés firmar contratos y emitir pólizas.
             </p>
             <a href="/kyc" className="text-sm font-semibold text-amber-700 underline mt-2 inline-block">
               Ir a verificación →

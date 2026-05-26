@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { kycApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { IdentityCheckExplainer } from '@/components/IdentityCheckExplainer';
 
 export default function KycPage() {
   const router = useRouter();
@@ -74,9 +75,12 @@ export default function KycPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Verificá tu identidad</h1>
         <p className="text-gray-500 mt-1">
-          Para firmar contratos digitales y contratar seguros necesitamos verificar tu identidad.
+          Un paso rápido para confirmar que sos vos antes de firmar contratos o emitir seguros.
         </p>
       </div>
+
+      {/* Explicación amigable — qué es, por qué se pide, qué pasa con tus datos */}
+      <IdentityCheckExplainer />
 
       <div className="card">
         <div className="flex items-start gap-3 mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">

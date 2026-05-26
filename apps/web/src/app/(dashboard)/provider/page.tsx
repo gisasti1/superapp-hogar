@@ -106,7 +106,7 @@ function OnboardingProgress({ onboarding }: { onboarding: any }) {
     { key: 'basicProfile',  label: 'Perfil del negocio',  done: steps.basicProfile },
     { key: 'personalData',  label: 'Datos personales',    done: steps.personalData },
     { key: 'payoutAccount', label: 'Cuenta de cobro',     done: steps.payoutAccount },
-    { key: 'kyc',           label: 'Verificación KYC',    done: steps.kyc },
+    { key: 'kyc',           label: 'Verificación de identidad', done: steps.kyc },
     ...(requiresLicense
       ? [{ key: 'license', label: 'Matrícula profesional', done: steps.license }]
       : []),
@@ -673,15 +673,19 @@ function KycSection({ provider, done }: { provider: any; done: boolean }) {
     <details className="card" open={!done}>
       <summary className="cursor-pointer flex items-center justify-between">
         <h2 className="font-semibold text-gray-900">
-          {done ? '✅' : '○'} 🪪 Verificación de identidad (KYC)
+          {done ? '✅' : '○'} 🪪 Verificación de identidad
         </h2>
         <StatusBadge status={provider.kycStatus} />
       </summary>
 
       <div className="space-y-4 mt-4">
         <p className="text-sm text-gray-600">
-          Necesitamos verificar que sos quien decís ser. Subí las fotos abajo y enviá a revisión.
-          Un admin las valida en 24-48hs hábiles.
+          Necesitamos verificar que sos quien decís ser — lo mismo que hace tu banco al abrirte una cuenta.
+          Subí las fotos abajo y enviá a revisión. Un admin las valida en 24-48hs hábiles.
+          <br />
+          <span className="text-xs text-gray-400">
+            🔒 Solo nuestro equipo lo ve, no se comparte con otros usuarios. Datos guardados según Ley AR 25.326.
+          </span>
         </p>
 
         {provider.kycStatus === 'REJECTED' && provider.kycRejectionReason && (
@@ -693,7 +697,7 @@ function KycSection({ provider, done }: { provider: any; done: boolean }) {
 
         {provider.kycStatus === 'UNDER_REVIEW' && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg p-3">
-            ⏳ Tu KYC está en revisión. Te avisamos cuando termine.
+            ⏳ Tu verificación está en revisión. Te avisamos cuando termine (24-48hs hábiles).
           </div>
         )}
 
@@ -726,7 +730,7 @@ function KycSection({ provider, done }: { provider: any; done: boolean }) {
           disabled={!canSubmit || submitKyc.isPending}
           className="btn-primary"
         >
-          {submitKyc.isPending ? 'Enviando...' : 'Enviar KYC a revisión'}
+          {submitKyc.isPending ? 'Enviando...' : 'Enviar identidad a revisión'}
         </button>
         {!canSubmit && provider.kycStatus !== 'UNDER_REVIEW' && provider.kycStatus !== 'VERIFIED' && (
           <p className="text-xs text-gray-400">Subí los 3 documentos para poder enviar.</p>
