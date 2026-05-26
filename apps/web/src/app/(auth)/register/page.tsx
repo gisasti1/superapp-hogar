@@ -9,63 +9,27 @@ import { z } from 'zod';
 import { clsx } from 'clsx';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
+import { useT } from '@/i18n';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { UserRole } from '@superapp/shared';
 
 /* ─── Account types ──────────────────────────────────────────────────────── */
 type AccountType = 'TENANT' | 'LANDLORD' | 'PROVIDER' | 'REALTOR' | 'SELF_TENANT';
 
+// Cada tipo trae sólo el id i18n + estilo. Los textos los resuelve useT() en runtime.
 const ACCOUNT_TYPES: {
   type: AccountType;
+  id: string;              // ej 'tenant', 'landlord', 'self'
   icon: string;
-  title: string;
-  subtitle: string;
   gradient: string;
   ring: string;
-  badge?: string;
+  hasBadge?: boolean;
 }[] = [
-  {
-    type: 'TENANT',
-    icon: '🏠',
-    title: 'Inquilino',
-    subtitle: 'Busco un lugar para alquilar',
-    gradient: 'from-blue-50 to-sky-50',
-    ring: 'ring-blue-500',
-  },
-  {
-    type: 'LANDLORD',
-    icon: '🏢',
-    title: 'Propietario',
-    subtitle: 'Tengo propiedades para alquilar',
-    gradient: 'from-emerald-50 to-teal-50',
-    ring: 'ring-emerald-500',
-  },
-  {
-    type: 'PROVIDER',
-    icon: '🛠️',
-    title: 'Prestador de servicios',
-    subtitle: 'Plomero, gasista, electricista…',
-    gradient: 'from-orange-50 to-amber-50',
-    ring: 'ring-orange-500',
-    badge: 'Ofrecé servicios',
-  },
-  {
-    type: 'REALTOR',
-    icon: '🏛️',
-    title: 'Inmobiliaria',
-    subtitle: 'Gestiono alquileres de terceros',
-    gradient: 'from-purple-50 to-violet-50',
-    ring: 'ring-purple-500',
-    badge: 'Gestora',
-  },
-  {
-    type: 'SELF_TENANT',
-    icon: '🧰',
-    title: 'Particular',
-    subtitle: 'Ya alquilo y quiero servicios + llevar mis pagos',
-    gradient: 'from-rose-50 to-pink-50',
-    ring: 'ring-rose-500',
-    badge: 'Solo servicios',
-  },
+  { type: 'TENANT',      id: 'tenant',   icon: '🏠', gradient: 'from-blue-50 to-sky-50',     ring: 'ring-blue-500'    },
+  { type: 'LANDLORD',    id: 'landlord', icon: '🏢', gradient: 'from-emerald-50 to-teal-50', ring: 'ring-emerald-500' },
+  { type: 'PROVIDER',    id: 'provider', icon: '🛠️', gradient: 'from-orange-50 to-amber-50', ring: 'ring-orange-500', hasBadge: true },
+  { type: 'REALTOR',     id: 'realtor',  icon: '🏛️', gradient: 'from-purple-50 to-violet-50',ring: 'ring-purple-500', hasBadge: true },
+  { type: 'SELF_TENANT', id: 'self',     icon: '🧰', gradient: 'from-rose-50 to-pink-50',    ring: 'ring-rose-500',   hasBadge: true },
 ];
 
 /* ─── Schema ─────────────────────────────────────────────────────────────── */
@@ -172,6 +136,7 @@ function redirectAfterRegister(type: AccountType, role: UserRole): string {
 export default function RegisterPage() {
   const router  = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
+  const t       = useT();
 
   const [step,         setStep]        = useState<1 | 2>(1);
   const [accountType,  setAccountType] = useState<AccountType>('TENANT');
@@ -226,16 +191,21 @@ export default function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
         <div className="w-full max-w-lg">
 
+          {/* Language switcher top-right */}
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-2xl shadow-lg mb-4">🏡</div>
-            <h1 className="text-2xl font-extrabold text-gray-900">SuperApp Hogar</h1>
-            <p className="text-gray-500 mt-1">¿Cómo vas a usar la app?</p>
+            <h1 className="text-2xl font-extrabold text-gray-900">{t('auth.register.title')}</h1>
+            <p className="text-gray-500 mt-1">{t('auth.register.subtitle')}</p>
           </div>
 
           {/* Type cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {ACCOUNT_TYPES.map(({ type, icon, title, subtitle, gradient, ring, badge }) => {
+            {ACCOUNT_TYPES.map(({ type, id, icon, gradient, ring, hasBadge }) => {
               const selected = accountType === type;
               // El 5to card ("Particular") ocupa fila completa
               const fullRow = type === 'SELF_TENANT';
@@ -250,17 +220,17 @@ export default function RegisterPage() {
                     selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-gray-100 hover:border-gray-200 hover:shadow-md',
                   )}
                 >
-                  {badge && (
+                  {hasBadge && (
                     <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-white/80 text-gray-600 px-1.5 py-0.5 rounded-full">
-                      {badge}
+                      {t(`auth.register.types.${id}.badge`)}
                     </span>
                   )}
                   {selected && (
                     <span className="absolute top-3 left-3 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center text-[10px]">✓</span>
                   )}
                   <span className="text-4xl block mb-2 leading-none">{icon}</span>
-                  <p className="font-bold text-gray-900 text-sm leading-tight">{title}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-tight max-w-[200px]">{subtitle}</p>
+                  <p className="font-bold text-gray-900 text-sm leading-tight">{t(`auth.register.types.${id}.title`)}</p>
+                  <p className="text-xs text-gray-500 mt-1 leading-tight max-w-[200px]">{t(`auth.register.types.${id}.subtitle`)}</p>
                 </button>
               );
             })}
@@ -314,12 +284,12 @@ export default function RegisterPage() {
             onClick={() => setStep(2)}
             className="btn-primary w-full text-base py-3"
           >
-            Continuar como {ACCOUNT_TYPES.find(t => t.type === accountType)?.title} →
+            {t('auth.register.continueAs')} {t(`auth.register.types.${ACCOUNT_TYPES.find(x => x.type === accountType)?.id}.title`)} →
           </button>
 
           <p className="text-center text-sm text-gray-500 mt-4">
-            ¿Ya tenés cuenta?{' '}
-            <Link href="/login" className="text-brand-600 font-semibold hover:underline">Iniciá sesión</Link>
+            {t('auth.register.alreadyHaveAccount')}{' '}
+            <Link href="/login" className="text-brand-600 font-semibold hover:underline">{t('auth.register.login')}</Link>
           </p>
         </div>
       </div>
@@ -327,7 +297,8 @@ export default function RegisterPage() {
   }
 
   /* ── Step 2: formulario de datos ────────────────────────────────────── */
-  const cfg = ACCOUNT_TYPES.find(t => t.type === accountType)!;
+  const cfg = ACCOUNT_TYPES.find(x => x.type === accountType)!;
+  const cfgTitle = t(`auth.register.types.${cfg.id}.title`);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
@@ -345,7 +316,7 @@ export default function RegisterPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">{cfg.icon}</span>
-              <p className="font-extrabold text-gray-900">{cfg.title}</p>
+              <p className="font-extrabold text-gray-900">{cfgTitle}</p>
             </div>
             <p className="text-xs text-gray-500">Completá tus datos para crear la cuenta</p>
           </div>

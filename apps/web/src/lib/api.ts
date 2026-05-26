@@ -653,3 +653,41 @@ export const myRentalApi = {
   deletePayment: (id: string) =>
     apiClient.delete(`/my-rental/payments/${id}`).then(r => r.data),
 };
+
+// ─── Bills (presupuesto mensual del Particular) ──────────────────────────
+export interface BillItem {
+  id?: string;
+  category: 'RENT' | 'EXPENSES' | 'ELECTRIC' | 'GAS' | 'WATER' | 'ABL' | 'INTERNET' | 'CABLE' | 'INSURANCE' | 'OTHER';
+  label: string;
+  amount: number | string;
+  currency?: string;
+  dueDay?: number | null;
+  isEnabled?: boolean;
+  notes?: string | null;
+  sortOrder?: number;
+}
+
+export const billsApi = {
+  list: () =>
+    apiClient.get<{ bills: BillItem[]; suggested: BillItem[] }>('/bills').then(r => r.data),
+  upsert: (dto: BillItem) =>
+    apiClient.post('/bills', dto).then(r => r.data),
+  toggle: (id: string, isEnabled: boolean) =>
+    apiClient.patch(`/bills/${id}/toggle`, { isEnabled }).then(r => r.data),
+  remove: (id: string) =>
+    apiClient.delete(`/bills/${id}`).then(r => r.data),
+  seedFromRental: () =>
+    apiClient.post('/bills/seed-from-rental').then(r => r.data),
+  listPayments: () =>
+    apiClient.get('/bills/payments').then(r => r.data),
+  payMonth: (dto: {
+    period: string;
+    paidAt: string;
+    method?: 'CASH' | 'TRANSFER' | 'MERCADOPAGO' | 'OTHER';
+    note?: string;
+    overrides?: Record<string, number>;
+    skip?: string[];
+  }) => apiClient.post('/bills/payments', dto).then(r => r.data),
+  deletePayment: (id: string) =>
+    apiClient.delete(`/bills/payments/${id}`).then(r => r.data),
+};

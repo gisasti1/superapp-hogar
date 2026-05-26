@@ -5,62 +5,60 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { NotificationsBell } from '@/components/NotificationsBell';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useT } from '@/i18n';
 import { clsx } from 'clsx';
 
-// Nav base — visible para todos los roles autenticados
+// Nav items con key de i18n en vez de label hardcodeado.
+// Resolvemos el label en runtime con useT().
 const NAV_BASE = [
-  { href: '/dashboard',  label: 'Inicio',      icon: '🏠' },
-  { href: '/listings',   label: 'Inmuebles',   icon: '🏘️' },
-  { href: '/favorites',  label: 'Favoritos',   icon: '❤️' },
-  { href: '/messages',   label: 'Mensajes',    icon: '💬' },
-  { href: '/profile',    label: 'Perfil',      icon: '👤' },
+  { href: '/dashboard',  k: 'nav.home',      icon: '🏠' },
+  { href: '/listings',   k: 'nav.listings',  icon: '🏘️' },
+  { href: '/favorites',  k: 'nav.favorites', icon: '❤️' },
+  { href: '/messages',   k: 'nav.messages',  icon: '💬' },
+  { href: '/profile',    k: 'nav.profile',   icon: '👤' },
 ];
 
-// Solo inquilinos y propietarios
 const NAV_TENANT_LANDLORD = [
-  { href: '/rental-requests', label: 'Solicitudes', icon: '📨' },
-  { href: '/contracts',          label: 'Contratos',   icon: '📄' },
-  { href: '/contracts/templates', label: 'Modelos',    icon: '📋' },
-  { href: '/payments',        label: 'Pagos',       icon: '💳' },
-  { href: '/issues',          label: 'Desperfectos',icon: '🛠' },
-  { href: '/services',        label: 'Servicios',   icon: '🔧' },
-  { href: '/mediation',       label: 'Mediación',   icon: '⭐' },
-  { href: '/insurance',       label: 'Seguro',      icon: '🛡️' },
-  { href: '/premium',         label: 'Premium',     icon: '👑' },
+  { href: '/rental-requests',     k: 'nav.rentalRequests', icon: '📨' },
+  { href: '/contracts',           k: 'nav.contracts',      icon: '📄' },
+  { href: '/contracts/templates', k: 'nav.templates',      icon: '📋' },
+  { href: '/payments',            k: 'nav.payments',       icon: '💳' },
+  { href: '/issues',              k: 'nav.issues',         icon: '🛠' },
+  { href: '/services',            k: 'nav.services',       icon: '🔧' },
+  { href: '/mediation',           k: 'nav.mediation',      icon: '⭐' },
+  { href: '/insurance',           k: 'nav.insurance',      icon: '🛡️' },
+  { href: '/premium',             k: 'nav.premium',        icon: '👑' },
 ];
 
-// Solo PROVIDER
 const NAV_PROVIDER = [
-  { href: '/provider',         label: 'Mi perfil',    icon: '🛠️' },
-  { href: '/services/bookings',label: 'Mis reservas', icon: '📋' },
-  { href: '/services',         label: 'Explorar',     icon: '🔧' },
-  { href: '/payments',         label: 'Pagos',        icon: '💳' },
-  { href: '/premium',          label: 'Premium',      icon: '👑' },
+  { href: '/provider',          k: 'nav.myProfile',  icon: '🛠️' },
+  { href: '/services/bookings', k: 'nav.myBookings', icon: '📋' },
+  { href: '/services',          k: 'nav.explore',    icon: '🔧' },
+  { href: '/payments',          k: 'nav.payments',   icon: '💳' },
+  { href: '/premium',           k: 'nav.premium',    icon: '👑' },
 ];
 
-// Solo REALTOR
 const NAV_REALTOR = [
-  { href: '/realtor',   label: 'Mi agencia', icon: '🏛️' },
-  { href: '/listings',  label: 'Propiedades',icon: '🏘️' },
-  { href: '/contracts', label: 'Contratos',  icon: '📄' },
-  { href: '/payments',  label: 'Pagos',      icon: '💳' },
-  { href: '/premium',   label: 'Plan',       icon: '👑' },
+  { href: '/realtor',   k: 'nav.myAgency',   icon: '🏛️' },
+  { href: '/listings',  k: 'nav.properties', icon: '🏘️' },
+  { href: '/contracts', k: 'nav.contracts',  icon: '📄' },
+  { href: '/payments',  k: 'nav.payments',   icon: '💳' },
+  { href: '/premium',   k: 'nav.plan',       icon: '👑' },
 ];
 
-// "Particular" (TENANT + selfManagedRental). Ya alquila por fuera, sólo
-// usa la app para gestionar pagos y pedir servicios.
 const NAV_SELF_TENANT = [
-  { href: '/dashboard', label: 'Inicio',      icon: '🏠' },
-  { href: '/my-rental', label: 'Mi alquiler', icon: '📄' },
-  { href: '/services',  label: 'Servicios',   icon: '🔧' },
-  { href: '/issues',    label: 'Desperfectos',icon: '🛠' },
-  { href: '/messages',  label: 'Mensajes',    icon: '💬' },
-  { href: '/profile',   label: 'Perfil',      icon: '👤' },
+  { href: '/dashboard', k: 'nav.home',      icon: '🏠' },
+  { href: '/my-rental', k: 'nav.myRental',  icon: '📄' },
+  { href: '/payments',  k: 'nav.payments',  icon: '💳' },
+  { href: '/services',  k: 'nav.services',  icon: '🔧' },
+  { href: '/issues',    k: 'nav.issues',    icon: '🛠' },
+  { href: '/messages',  k: 'nav.messages',  icon: '💬' },
+  { href: '/profile',   k: 'nav.profile',   icon: '👤' },
 ];
 
-// Items visibles sólo para ADMIN
 const ADMIN_NAV = [
-  { href: '/admin', label: 'Panel Admin', icon: '🛡️' },
+  { href: '/admin', k: 'nav.adminPanel', icon: '🛡️' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -68,6 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const clearAuth = useAuthStore(s => s.clearAuth);
   const user = useAuthStore(s => s.user);
+  const t = useT();
   const isAdmin    = user?.role === 'ADMIN';
   const isProvider = user?.role === 'PROVIDER';
   const isRealtor  = user?.role === 'REALTOR';
@@ -75,15 +74,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // NAV completo según rol
   const NAV = isProvider ? [
-    { href: '/dashboard',          label: 'Inicio',       icon: '🏠' },
+    { href: '/dashboard', k: 'nav.home',     icon: '🏠' },
     ...NAV_PROVIDER,
-    { href: '/messages',           label: 'Mensajes',     icon: '💬' },
-    { href: '/profile',            label: 'Perfil',       icon: '👤' },
+    { href: '/messages',  k: 'nav.messages', icon: '💬' },
+    { href: '/profile',   k: 'nav.profile',  icon: '👤' },
   ] : isRealtor ? [
-    { href: '/dashboard',          label: 'Inicio',       icon: '🏠' },
+    { href: '/dashboard', k: 'nav.home',     icon: '🏠' },
     ...NAV_REALTOR,
-    { href: '/messages',           label: 'Mensajes',     icon: '💬' },
-    { href: '/profile',            label: 'Perfil',       icon: '👤' },
+    { href: '/messages',  k: 'nav.messages', icon: '💬' },
+    { href: '/profile',   k: 'nav.profile',  icon: '👤' },
   ] : isSelfTenant ? NAV_SELF_TENANT : [
     ...NAV_BASE,
     ...NAV_TENANT_LANDLORD,
@@ -119,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {NAV.map(item => (
           <Link
-            key={item.href}
+            key={item.href + item.k}
             href={item.href}
             className={clsx(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
@@ -129,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           >
             <span className="text-base">{item.icon}</span>
-            {item.label}
+            {t(item.k)}
           </Link>
         ))}
         {isAdmin && (
@@ -147,7 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               >
                 <span className="text-base">{item.icon}</span>
-                {item.label}
+                {t(item.k)}
               </Link>
             ))}
           </>
@@ -158,7 +157,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onClick={handleLogout}
           className="w-full text-left text-sm text-gray-500 hover:text-red-500 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
         >
-          Cerrar sesión
+          {t('nav.logout')}
         </button>
       </div>
     </>
@@ -209,7 +208,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           {/* Logo mobile centrado */}
           <span className="lg:hidden font-bold text-brand-600 text-base">SuperApp Hogar</span>
-          <NotificationsBell />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <NotificationsBell />
+          </div>
         </header>
 
         <main className="flex-1 p-4 lg:p-8 overflow-auto">

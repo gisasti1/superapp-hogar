@@ -285,6 +285,10 @@ model User {
   selfManagedRental Boolean        @default(false)
   externalRental    ExternalRental?
 
+  // ─── Presupuesto y pagos mensuales del Particular ─────────────────────
+  monthlyBills    MonthlyBill[]    @relation("UserMonthlyBills")
+  monthlyPayments MonthlyPayment[] @relation("UserMonthlyPayments")
+
   @@map("users")
 }
 
@@ -1166,4 +1170,51 @@ model ExternalPayment {
   @@unique([rentalId, period])
   @@index([rentalId, paidAt])
   @@map("external_payments")
+}
+
+// ─── Presupuesto mensual del usuario "Particular" ─────────────────────────
+// Cada fila es un concepto recurrente (alquiler, expensas, luz, gas, etc.).
+// El usuario puede prender/apagar (isEnabled) los items que paga vs. los que
+// están a cargo del propietario, y editar el monto cuando llega una factura
+// con valor distinto.
+model MonthlyBill {
+  id        String   @id @default(uuid())
+  userId    String
+  category  String   // RENT, EXPENSES, ELECTRIC, GAS, WATER, ABL, INTERNET, CABLE, INSURANCE, OTHER
+  label     String   // "Alquiler", "EDESUR", "Metrogas"... editable
+  amount    Decimal  @db.Decimal(12,2)
+  currency  String   @default("ARS")
+  dueDay    Int?     // día del mes que vence (opcional)
+  isEnabled Boolean  @default(true)
+  notes     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation("UserMonthlyBills", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+  @@index([userId, isEnabled])
+  @@map("monthly_bills")
+}
+
+// Snapshot del pago de un mes completo, con el desglose congelado en JSON
+// (porque si después editás el monto de luz, no querés pisar los pagos pasados).
+model MonthlyPayment {
+  id         String   @id @default(uuid())
+  userId     String
+  period     String   // YYYY-MM
+  total      Decimal  @db.Decimal(12,2)
+  currency   String   @default("ARS")
+  breakdown  Json     // [{ category, label, amount }]
+  paidAt     DateTime
+  method     String?  // CASH | TRANSFER | MERCADOPAGO | OTHER
+  note       String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation("UserMonthlyPayments", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period])
+  @@index([userId, paidAt])
+  @@map("monthly_payments")
 }

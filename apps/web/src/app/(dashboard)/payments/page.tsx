@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/auth.store';
+import { SelfTenantBudget } from './SelfTenantBudget';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 const fileUrl = (u: string) => !u ? '' : u.startsWith('http') ? u : `${API_BASE}${u}`;
@@ -45,6 +46,16 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function PaymentsPage() {
+  const user = useAuthStore(s => s.user);
+
+  // El "Particular" (TENANT con selfManagedRental) ve un flujo distinto:
+  // presupuesto mensual editable + pagar todo el mes con desglose.
+  if (user?.selfManagedRental) return <SelfTenantBudget />;
+
+  return <RegularPaymentsView />;
+}
+
+function RegularPaymentsView() {
   const [tab, setTab] = useState<Tab>('pending');
   const user = useAuthStore(s => s.user);
   const qc = useQueryClient();
