@@ -14,6 +14,7 @@ const ADMIN_NAV = [
   { href: '/admin/providers/review', label: 'Revisar KYC', icon: '🪪' },
   { href: '/admin/issues', label: 'Desperfectos', icon: '🚨' },
   { href: '/admin/marketing', label: 'Marketing', icon: '📈' },
+  { href: '/admin/segments', label: 'Segmentos', icon: '🎯' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
