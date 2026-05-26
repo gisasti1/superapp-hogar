@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { href: '/admin/issues', label: 'Desperfectos', icon: '🚨' },
   { href: '/admin/marketing', label: 'Marketing', icon: '📈' },
   { href: '/admin/segments', label: 'Segmentos', icon: '🎯' },
+  { href: '/admin/campaigns', label: 'Campañas', icon: '📨' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

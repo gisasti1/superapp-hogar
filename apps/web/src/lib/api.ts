@@ -349,6 +349,37 @@ export const marketingApi = {
     apiClient.delete(`/marketing/segments/${id}`).then(r => r.data),
 };
 
+// ─── Marketing → Campañas ──────────────────────────────────────────────────
+export const campaignsApi = {
+  list: () => apiClient.get('/marketing/campaigns').then(r => r.data),
+  get: (id: string) => apiClient.get(`/marketing/campaigns/${id}`).then(r => r.data),
+
+  /** Cuántos destinatarios reales (post-consentimiento) tiene la campaña ahora. */
+  preview: (id: string): Promise<{ inSegment: number; reachable: number; filtered: number; channel: 'EMAIL' | 'SMS' }> =>
+    apiClient.get(`/marketing/campaigns/${id}/preview`).then(r => r.data),
+
+  create: (dto: {
+    name: string;
+    segmentId: string;
+    channel: 'EMAIL' | 'SMS';
+    subject?: string;
+    body: string;
+  }) => apiClient.post('/marketing/campaigns', dto).then(r => r.data),
+
+  update: (id: string, dto: { name?: string; subject?: string; body?: string; segmentId?: string }) =>
+    apiClient.patch(`/marketing/campaigns/${id}`, dto).then(r => r.data),
+
+  remove: (id: string) =>
+    apiClient.delete(`/marketing/campaigns/${id}`).then(r => r.data),
+
+  cancel: (id: string) =>
+    apiClient.post(`/marketing/campaigns/${id}/cancel`).then(r => r.data),
+
+  /** ⚠️ Irreversible. Manda a todos los destinatarios. */
+  send: (id: string, confirmedReachable: number) =>
+    apiClient.post(`/marketing/campaigns/${id}/send`, { confirmedReachable }).then(r => r.data),
+};
+
 // ─── External Listings (MercadoLibre y otras plataformas) ─────────────────
 export const externalListingsApi = {
   searchMercadoLibre: (params: { q?: string; city?: string; maxPrice?: number; limit?: number }) =>
