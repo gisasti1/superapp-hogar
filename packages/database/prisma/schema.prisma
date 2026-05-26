@@ -278,6 +278,13 @@ model User {
   createdTemplates         ContractTemplate[] @relation("CreatedTemplates")
   agency                   RealEstateAgency?
 
+  // ─── Modo "Particular" ───────────────────────────────────────────────
+  // Usuario que NO alquila por la plataforma pero la usa para servicios y
+  // para registrar manualmente su contrato y sus pagos. Si está en true,
+  // el nav se simplifica y se habilita /my-rental.
+  selfManagedRental Boolean        @default(false)
+  externalRental    ExternalRental?
+
   @@map("users")
 }
 
@@ -1104,4 +1111,59 @@ model RealEstateAgency {
 
   @@index([isVerified, isActive])
   @@map("real_estate_agencies")
+}
+
+// ─── Contrato externo del usuario "Particular" ────────────────────────────
+// Para usuarios que alquilan por fuera de la plataforma pero quieren
+// trackear su contrato y sus pagos mensuales acá. No genera obligaciones
+// legales en la app — es solo una bitácora personal.
+model ExternalRental {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  // Contraparte (propietario / inmobiliaria)
+  landlordName    String
+  landlordPhone   String?
+  landlordEmail   String?
+  landlordCbu     String?
+  // Inmueble
+  address         String
+  city            String
+  province        String?
+  // Condiciones
+  monthlyAmount   Decimal  @db.Decimal(12,2)
+  currency        String   @default("ARS")
+  depositAmount   Decimal? @db.Decimal(12,2)
+  dueDay          Int      @default(10)
+  startDate       DateTime
+  endDate         DateTime
+  // Estado / notas
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments        ExternalPayment[]
+
+  @@map("external_rentals")
+}
+
+model ExternalPayment {
+  id          String   @id @default(uuid())
+  rentalId    String
+  // Período de cobro, formato "YYYY-MM" — uno por mes
+  period      String
+  amount      Decimal  @db.Decimal(12,2)
+  currency    String   @default("ARS")
+  paidAt      DateTime
+  method      String?  // 'CASH','TRANSFER','MERCADOPAGO','OTHER'
+  receiptUrl  String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  rental      ExternalRental @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalId, period])
+  @@index([rentalId, paidAt])
+  @@map("external_payments")
 }

@@ -9,6 +9,9 @@ interface AuthUser {
   firstName: string;
   lastName: string;
   role: string;
+  // Flag para usuarios "Particular" — alquilan por fuera de la plataforma
+  // y usan /my-rental para registrar su contrato y sus pagos.
+  selfManagedRental?: boolean;
 }
 
 interface AuthState {

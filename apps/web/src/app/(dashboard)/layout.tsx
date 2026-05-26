@@ -47,6 +47,17 @@ const NAV_REALTOR = [
   { href: '/premium',   label: 'Plan',       icon: '👑' },
 ];
 
+// "Particular" (TENANT + selfManagedRental). Ya alquila por fuera, sólo
+// usa la app para gestionar pagos y pedir servicios.
+const NAV_SELF_TENANT = [
+  { href: '/dashboard', label: 'Inicio',      icon: '🏠' },
+  { href: '/my-rental', label: 'Mi alquiler', icon: '📄' },
+  { href: '/services',  label: 'Servicios',   icon: '🔧' },
+  { href: '/issues',    label: 'Desperfectos',icon: '🛠' },
+  { href: '/messages',  label: 'Mensajes',    icon: '💬' },
+  { href: '/profile',   label: 'Perfil',      icon: '👤' },
+];
+
 // Items visibles sólo para ADMIN
 const ADMIN_NAV = [
   { href: '/admin', label: 'Panel Admin', icon: '🛡️' },
@@ -60,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdmin    = user?.role === 'ADMIN';
   const isProvider = user?.role === 'PROVIDER';
   const isRealtor  = user?.role === 'REALTOR';
+  const isSelfTenant = user?.selfManagedRental === true;
 
   // NAV completo según rol
   const NAV = isProvider ? [
@@ -72,7 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ...NAV_REALTOR,
     { href: '/messages',           label: 'Mensajes',     icon: '💬' },
     { href: '/profile',            label: 'Perfil',       icon: '👤' },
-  ] : [
+  ] : isSelfTenant ? NAV_SELF_TENANT : [
     ...NAV_BASE,
     ...NAV_TENANT_LANDLORD,
   ];

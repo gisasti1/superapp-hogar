@@ -30,6 +30,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { RealtorModule } from './modules/realtor/realtor.module';
 import { ContractTemplatesModule } from './modules/contract-templates/contract-templates.module';
+import { MyRentalModule } from './modules/my-rental/my-rental.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -85,6 +86,7 @@ import { validateEnv } from './config/env.validation';
     MarketingModule,
     RealtorModule,
     ContractTemplatesModule,
+    MyRentalModule,
   ],
 })
 export class AppModule {}

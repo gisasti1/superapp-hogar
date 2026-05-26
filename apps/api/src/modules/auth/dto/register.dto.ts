@@ -92,4 +92,11 @@ export class RegisterDto {
   @IsOptional()
   @MaxLength(60)
   referralSource?: string;
+
+  @ApiPropertyOptional({
+    description: 'Marca al usuario como "Particular" — alquila por fuera de la plataforma y va a usar /my-rental para cargar su contrato externo.',
+  })
+  @IsBoolean()
+  @IsOptional()
+  selfManagedRental?: boolean;
 }

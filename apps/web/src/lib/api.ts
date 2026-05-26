@@ -616,3 +616,40 @@ export const realtorApi = {
     return apiClient.put('/realtor/me/logo', fd).then(r => r.data);
   },
 };
+
+// ─── My Rental (contrato externo del "Particular") ──────────────────────────
+export const myRentalApi = {
+  get: () =>
+    apiClient.get('/my-rental').then(r => r.data),
+  upsert: (dto: {
+    landlordName: string;
+    landlordPhone?: string;
+    landlordEmail?: string;
+    landlordCbu?: string;
+    address: string;
+    city: string;
+    province?: string;
+    monthlyAmount: number;
+    currency?: string;
+    depositAmount?: number;
+    dueDay?: number;
+    startDate: string;
+    endDate: string;
+    notes?: string;
+  }) => apiClient.put('/my-rental', dto).then(r => r.data),
+  remove: () =>
+    apiClient.delete('/my-rental').then(r => r.data),
+  listPayments: () =>
+    apiClient.get('/my-rental/payments').then(r => r.data),
+  registerPayment: (dto: {
+    period: string;
+    amount: number;
+    currency?: string;
+    paidAt: string;
+    method?: 'CASH' | 'TRANSFER' | 'MERCADOPAGO' | 'OTHER';
+    receiptUrl?: string;
+    note?: string;
+  }) => apiClient.post('/my-rental/payments', dto).then(r => r.data),
+  deletePayment: (id: string) =>
+    apiClient.delete(`/my-rental/payments/${id}`).then(r => r.data),
+};

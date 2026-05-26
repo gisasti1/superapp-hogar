@@ -12,7 +12,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { UserRole } from '@superapp/shared';
 
 /* ─── Account types ──────────────────────────────────────────────────────── */
-type AccountType = 'TENANT' | 'LANDLORD' | 'PROVIDER' | 'REALTOR';
+type AccountType = 'TENANT' | 'LANDLORD' | 'PROVIDER' | 'REALTOR' | 'SELF_TENANT';
 
 const ACCOUNT_TYPES: {
   type: AccountType;
@@ -56,6 +56,15 @@ const ACCOUNT_TYPES: {
     gradient: 'from-purple-50 to-violet-50',
     ring: 'ring-purple-500',
     badge: 'Gestora',
+  },
+  {
+    type: 'SELF_TENANT',
+    icon: '🧰',
+    title: 'Particular',
+    subtitle: 'Ya alquilo y quiero servicios + llevar mis pagos',
+    gradient: 'from-rose-50 to-pink-50',
+    ring: 'ring-rose-500',
+    badge: 'Solo servicios',
   },
 ];
 
@@ -125,6 +134,14 @@ function getLabels(type: AccountType) {
       firstNameLabel: 'Nombre del responsable / contacto',
       lastNameLabel: 'Apellido del responsable',
     };
+    case 'SELF_TENANT': return {
+      addressLabel: 'Dirección del inmueble que alquilás',
+      addressPlaceholder: 'Av. Corrientes 1234, Piso 3 Dto B',
+      occupationLabel: 'Ocupación / profesión',
+      occupationPlaceholder: 'Ej: Programador, Médica, Estudiante…',
+      firstNameLabel: 'Nombre',
+      lastNameLabel: 'Apellido',
+    };
     default: return {
       addressLabel: 'Tu dirección particular',
       addressPlaceholder: 'Av. Corrientes 1234, Piso 3 Dto B',
@@ -136,10 +153,18 @@ function getLabels(type: AccountType) {
   }
 }
 
-/* ─── Redirect per role ──────────────────────────────────────────────────── */
-function redirectAfterRegister(role: UserRole): string {
-  if (role === UserRole.PROVIDER) return '/provider?welcome=1';
-  if (role === UserRole.REALTOR)  return '/realtor?welcome=1';
+/* ─── Map account type → UserRole real ──────────────────────────────────── */
+function mapTypeToRole(type: AccountType): UserRole {
+  // SELF_TENANT no es un rol de DB — guardamos TENANT y marcamos selfManagedRental
+  if (type === 'SELF_TENANT') return UserRole.TENANT;
+  return UserRole[type as Exclude<AccountType, 'SELF_TENANT'>];
+}
+
+/* ─── Redirect per type ──────────────────────────────────────────────────── */
+function redirectAfterRegister(type: AccountType, role: UserRole): string {
+  if (type === 'SELF_TENANT')      return '/my-rental?welcome=1';
+  if (role === UserRole.PROVIDER)  return '/provider?welcome=1';
+  if (role === UserRole.REALTOR)   return '/realtor?welcome=1';
   return '/dashboard';
 }
 
@@ -176,15 +201,18 @@ export default function RegisterPage() {
 
   const handleTypeSelect = (type: AccountType) => {
     setAccountType(type);
-    setValue('role', UserRole[type]);
+    setValue('role', mapTypeToRole(type));
   };
 
   const onSubmit = async (data: FormData) => {
     try {
       const { confirmPassword, ...payload } = data;
-      const res = await authApi.register(payload);
+      // El backend acepta selfManagedRental opcional en el dto de register;
+      // si no, el flag se setea después en /my-rental al cargar el contrato.
+      const extra = accountType === 'SELF_TENANT' ? { selfManagedRental: true } : {};
+      const res = await authApi.register({ ...payload, ...extra });
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.push(redirectAfterRegister(res.user.role as UserRole));
+      router.push(redirectAfterRegister(accountType, res.user.role as UserRole));
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       const text = Array.isArray(msg) ? msg.join(' · ') : (msg ?? 'Error al registrarse');
@@ -209,6 +237,8 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3 mb-6">
             {ACCOUNT_TYPES.map(({ type, icon, title, subtitle, gradient, ring, badge }) => {
               const selected = accountType === type;
+              // El 5to card ("Particular") ocupa fila completa
+              const fullRow = type === 'SELF_TENANT';
               return (
                 <button
                   key={type}
@@ -216,6 +246,7 @@ export default function RegisterPage() {
                   onClick={() => handleTypeSelect(type)}
                   className={clsx(
                     `relative bg-gradient-to-br ${gradient} rounded-2xl p-5 text-left transition-all duration-200 border-2`,
+                    fullRow && 'col-span-2',
                     selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-gray-100 hover:border-gray-200 hover:shadow-md',
                   )}
                 >
@@ -267,6 +298,14 @@ export default function RegisterPage() {
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Publicá y gestioná propiedades de clientes</li>
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Dashboard de contratos e ingresos centralizado</li>
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Suscripción REALTOR con funciones extendidas</li>
+              </ul>
+            )}
+            {accountType === 'SELF_TENANT' && (
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Cargá los datos de tu contrato (propietario, monto, vencimiento)</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Registrá cada pago mensual y guardá comprobantes</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Pedí servicios del hogar a prestadores verificados</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Recordatorios automáticos antes del vencimiento</li>
               </ul>
             )}
           </div>

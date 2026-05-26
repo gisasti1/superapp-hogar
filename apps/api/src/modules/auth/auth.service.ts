@@ -102,6 +102,7 @@ export class AuthService {
         marketingSmsConsent: dto.marketingSmsConsent ?? false,
         referralSource: dto.referralSource,
         consentUpdatedAt: hasAnyConsent ? new Date() : null,
+        selfManagedRental: dto.selfManagedRental ?? false,
         verification: {
           create: { status: 'PENDING' },
         },
@@ -124,6 +125,7 @@ export class AuthService {
         nationality: true,
         occupation: true,
         role: true,
+        selfManagedRental: true,
         createdAt: true,
       },
     });
@@ -259,6 +261,7 @@ export class AuthService {
         emergencyContactName: true,
         emergencyContactPhone: true,
         role: true,
+        selfManagedRental: true,
         createdAt: true,
         verification: { select: { status: true, verifiedAt: true } },
         subscription: { select: { plan: true, status: true, currentPeriodEnd: true } },
