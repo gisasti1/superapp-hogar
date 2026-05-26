@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense as _Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+
+// Cast por el doble @types/react que rompe el JSX type checking de Suspense.
+const Suspense = _Suspense as any;
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { myRentalApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -28,6 +31,14 @@ function fmtPeriod(p: string) {
 
 /* ─── Page ─────────────────────────────────────────────────────────────── */
 export default function MyRentalPage() {
+  return (
+    <Suspense fallback={null}>
+      <MyRentalPageInner />
+    </Suspense>
+  );
+}
+
+function MyRentalPageInner() {
   const qc = useQueryClient();
   const params = useSearchParams();
   const isWelcome = params.get('welcome') === '1';

@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense as _Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+
+// Cast por el doble @types/react que rompe el JSX type checking de Suspense.
+const Suspense = _Suspense as any;
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { realtorApi } from '@/lib/api';
@@ -108,6 +111,14 @@ function ContractRow({ contract }: { contract: any }) {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function RealtorPage() {
+  return (
+    <Suspense fallback={null}>
+      <RealtorPageInner />
+    </Suspense>
+  );
+}
+
+function RealtorPageInner() {
   const user       = useAuthStore(s => s.user);
   const qc         = useQueryClient();
   const params     = useSearchParams();

@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense as _Suspense } from 'react';
+
+// Cast por el doble @types/react que rompe el JSX type checking de Suspense.
+const Suspense = _Suspense as any;
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -64,6 +67,14 @@ function Stepper({ step }: { step: number }) {
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 export default function NewContractPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewContractPageInner />
+    </Suspense>
+  );
+}
+
+function NewContractPageInner() {
   const router     = useRouter();
   const params     = useSearchParams();
   const user       = useAuthStore(s => s.user);
