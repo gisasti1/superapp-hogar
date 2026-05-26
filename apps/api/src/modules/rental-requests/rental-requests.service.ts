@@ -47,6 +47,7 @@ export class RentalRequestsService {
         message: dto.message,
         proposedStartDate: dto.proposedStartDate ? new Date(dto.proposedStartDate) : null,
         proposedMonths: dto.proposedMonths,
+        proposedMonthlyAmount: dto.proposedMonthlyAmount ?? null,
         status: 'PENDING',
       },
     });
@@ -105,12 +106,58 @@ export class RentalRequestsService {
     if (req.tenantId !== tenantId) {
       throw new ForbiddenException('Sólo podés cancelar tus propias solicitudes.');
     }
-    if (req.status !== 'PENDING') {
-      throw new BadRequestException('Sólo se pueden cancelar solicitudes PENDING.');
+    if (!['PENDING', 'COUNTER_OFFERED'].includes(req.status)) {
+      throw new BadRequestException('Sólo se pueden cancelar solicitudes activas.');
     }
     return this.prisma.rentalRequest.update({
       where: { id },
       data: { status: 'CANCELLED' },
+    });
+  }
+
+  /**
+   * Cualquiera de los dos lados puede contraproponer (monto, duración, fecha de inicio).
+   * Después del 6º round forzamos a aceptar/cancelar para evitar ping-pong infinito.
+   */
+  async counterOffer(userId: string, id: string, dto: {
+    amount?: number; months?: number; startDate?: string; message?: string;
+  }) {
+    const req = await this.prisma.rentalRequest.findUnique({ where: { id } });
+    if (!req) throw new NotFoundException('Solicitud no encontrada.');
+    if (req.tenantId !== userId && req.landlordId !== userId) {
+      throw new ForbiddenException('No participás en esta solicitud.');
+    }
+    if (!['PENDING', 'COUNTER_OFFERED'].includes(req.status)) {
+      throw new BadRequestException(`No se puede contraproponer en estado ${req.status}.`);
+    }
+    if (req.counterByUserId === userId) {
+      throw new BadRequestException('Tu última contraoferta sigue pendiente — esperá la respuesta del otro lado.');
+    }
+    if (req.rounds >= 6) {
+      throw new BadRequestException('Demasiadas idas y vueltas — aceptá o cancelá la solicitud.');
+    }
+
+    const hasAmount    = dto.amount    !== undefined && dto.amount    !== null;
+    const hasMonths    = dto.months    !== undefined && dto.months    !== null;
+    const hasStartDate = dto.startDate !== undefined && dto.startDate !== null;
+    if (!hasAmount && !hasMonths && !hasStartDate) {
+      throw new BadRequestException('Tenés que cambiar al menos un campo (monto, meses o fecha).');
+    }
+    if (hasAmount && dto.amount! <= 0) throw new BadRequestException('El monto debe ser > 0');
+    if (hasMonths && dto.months! < 1)  throw new BadRequestException('La duración debe ser >= 1 mes');
+
+    return this.prisma.rentalRequest.update({
+      where: { id },
+      data:  {
+        counterAmount:    hasAmount ? dto.amount : req.counterAmount,
+        counterMonths:    hasMonths ? dto.months : req.counterMonths,
+        counterStartDate: hasStartDate ? new Date(dto.startDate!) : req.counterStartDate,
+        counterMessage:   dto.message?.trim() || null,
+        counterByUserId:  userId,
+        counterAt:        new Date(),
+        rounds:           { increment: 1 },
+        status:           'COUNTER_OFFERED',
+      },
     });
   }
 
@@ -125,8 +172,9 @@ export class RentalRequestsService {
     if (req.landlordId !== landlordId) {
       throw new ForbiddenException('Sólo el propietario puede responder.');
     }
-    if (req.status !== 'PENDING') {
-      throw new BadRequestException('Sólo se pueden responder solicitudes PENDING.');
+    // Permitimos también responder cuando hay una contraoferta en curso
+    if (!['PENDING', 'COUNTER_OFFERED'].includes(req.status)) {
+      throw new BadRequestException('Sólo se pueden responder solicitudes activas.');
     }
     return this.prisma.rentalRequest.update({
       where: { id },

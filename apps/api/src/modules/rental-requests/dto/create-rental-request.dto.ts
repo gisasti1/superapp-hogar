@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsDateString, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, IsOptional, IsInt, Min, Max, IsDateString, MinLength, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -22,6 +22,41 @@ export class CreateRentalRequestDto {
   @IsOptional()
   @Type(() => Number)
   proposedMonths?: number;
+
+  @ApiPropertyOptional({ example: 480000, description: 'Monto mensual que el inquilino quiere proponer (puede ser distinto al publicado, abre negociación)' })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  proposedMonthlyAmount?: number;
+}
+
+export class CounterOfferDto {
+  @ApiPropertyOptional({ example: 510000 })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  amount?: number;
+
+  @ApiPropertyOptional({ example: 24 })
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  @IsOptional()
+  @Type(() => Number)
+  months?: number;
+
+  @ApiPropertyOptional({ example: '2026-07-01' })
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  @MaxLength(1000)
+  message?: string;
 }
 
 export class RespondRentalRequestDto {

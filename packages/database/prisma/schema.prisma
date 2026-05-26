@@ -299,6 +299,12 @@ model User {
   monthlyBills    MonthlyBill[]    @relation("UserMonthlyBills")
   monthlyPayments MonthlyPayment[] @relation("UserMonthlyPayments")
 
+  // ─── Visitas y co-firmantes ─────────────────────────────────────────
+  visitsAsVisitor   PropertyVisit[]  @relation("VisitorVisits")
+  visitsAsOwner     PropertyVisit[]  @relation("OwnerVisits")
+  contractParties   ContractParty[]  @relation("ContractPartyUser")
+  contractInvites   ContractParty[]  @relation("ContractPartyInviter")
+
   @@map("users")
 }
 
@@ -363,6 +369,7 @@ model Property {
   favorites Favorite[]
   issues    Issue[]
   rentalRequests RentalRequest[]
+  visits    PropertyVisit[]
 
   @@map("properties")
 }
@@ -447,6 +454,7 @@ model Contract {
   rentalRequest RentalRequest? @relation("OriginatingRequest")
   conversations Conversation[] @relation("ContractConversations")
   rentAdjustments RentAdjustment[]
+  parties    ContractParty[]   // co-firmantes invitados de cada lado
 
   @@map("contracts")
 }
@@ -887,12 +895,13 @@ model Issue {
 // ─── Bloque 2: Solicitar alquiler + reseñas mutuas ───────────────────────────
 
 enum RentalRequestStatus {
-  PENDING      // recién enviada
-  APPROVED     // el propietario aceptó, hay que generar el contrato
-  REJECTED     // el propietario rechazó
-  CANCELLED    // el inquilino canceló su propia solicitud
-  EXPIRED      // pasaron N días sin respuesta
-  CONVERTED    // se convirtió en contrato
+  PENDING          // recién enviada
+  COUNTER_OFFERED  // hay una contraoferta activa esperando respuesta del otro
+  APPROVED         // el propietario aceptó, hay que generar el contrato
+  REJECTED         // el propietario rechazó
+  CANCELLED        // el inquilino canceló su propia solicitud
+  EXPIRED          // pasaron N días sin respuesta
+  CONVERTED        // se convirtió en contrato
 }
 
 model RentalRequest {
@@ -901,11 +910,21 @@ model RentalRequest {
   tenantId    String
   landlordId  String
   message     String              @db.Text
-  // El inquilino propone fechas tentativas; el propietario las confirma al aprobar.
-  proposedStartDate DateTime?
-  proposedMonths    Int?          // duración propuesta en meses
+  // Lo que el inquilino propone — duración y opcionalmente monto distinto al publicado
+  proposedStartDate    DateTime?
+  proposedMonths       Int?
+  proposedMonthlyAmount Decimal? @db.Decimal(12, 2)
+  // Contraoferta — última propuesta del otro lado durante la negociación
+  counterAmount       Decimal? @db.Decimal(12, 2)
+  counterMonths       Int?
+  counterStartDate    DateTime?
+  counterMessage      String?
+  counterByUserId     String?     // quien hizo la última contraoferta
+  counterAt           DateTime?
+  // Cantidad de idas y vueltas (limit ~6 para evitar ping-pong infinito)
+  rounds              Int     @default(0)
   status      RentalRequestStatus @default(PENDING)
-  // Respuesta del propietario al aprobar o rechazar
+  // Respuesta final al aprobar o rechazar
   response    String?             @db.Text
   respondedAt DateTime?
   // Si se generó un contrato a partir de esta solicitud
@@ -1258,4 +1277,83 @@ model MonthlyPayment {
   @@unique([userId, period])
   @@index([userId, paidAt])
   @@map("monthly_payments")
+}
+
+// ─── Visitas al inmueble ──────────────────────────────────────────────────
+enum VisitStatus {
+  PROPOSED          // el inquilino propuso fecha/hora — espera al propietario
+  COUNTER_PROPOSED  // alguien contrapropuso; espera al otro
+  CONFIRMED         // ambas partes acordaron
+  REJECTED          // alguien rechazó
+  CANCELLED         // alguien canceló después de confirmada
+  COMPLETED         // pasó la fecha
+}
+
+model PropertyVisit {
+  id           String      @id @default(uuid())
+  propertyId   String
+  // Quien quiere visitar (típicamente el interesado en alquilar)
+  visitorId    String
+  // Quien tiene que aprobar (propietario o realtor a cargo)
+  ownerId      String
+  // Última propuesta de fecha/hora — siempre refleja la negociación más reciente
+  proposedDate DateTime
+  // Quien hizo la última propuesta (PROPOSED / COUNTER_PROPOSED)
+  proposedBy   String
+  status       VisitStatus @default(PROPOSED)
+  message      String?
+  // Nº de contraofertas — para evitar ping-pong infinito
+  rounds       Int         @default(0)
+  confirmedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  visitor  User     @relation("VisitorVisits", fields: [visitorId], references: [id])
+  owner    User     @relation("OwnerVisits",   fields: [ownerId],   references: [id])
+
+  @@index([propertyId, status])
+  @@index([visitorId])
+  @@index([ownerId])
+  @@index([proposedDate])
+  @@map("property_visits")
+}
+
+// ─── Co-firmantes del contrato ────────────────────────────────────────────
+// Cada parte (TENANT o LANDLORD) puede sumar a otra persona al contrato.
+// El primary es el que abrió el contrato; los cosigners se invitan por email
+// y al aceptar quedan integrados y pueden gestionar igual que el primary.
+enum ContractPartyStatus {
+  INVITED
+  ACCEPTED
+  DECLINED
+  REMOVED
+}
+
+model ContractParty {
+  id           String              @id @default(uuid())
+  contractId   String
+  // Si invitamos a un usuario que ya existe, lo linkeamos; si no, queda solo el email
+  userId       String?
+  invitedEmail String?
+  side         String              // 'TENANT' | 'LANDLORD'
+  // PRIMARY = el que abrió el contrato (1 por lado), COSIGNER = invitado
+  role         String              @default("COSIGNER")
+  invitedById  String
+  invitedAt    DateTime            @default(now())
+  acceptedAt   DateTime?
+  declinedAt   DateTime?
+  status       ContractPartyStatus @default(INVITED)
+  inviteToken  String              @unique @default(uuid())
+
+  contract  Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user      User?    @relation("ContractPartyUser",    fields: [userId],     references: [id])
+  invitedBy User     @relation("ContractPartyInviter", fields: [invitedById], references: [id])
+
+  @@unique([contractId, userId])
+  @@index([contractId, side])
+  @@index([userId])
+  @@map("contract_parties")
 }

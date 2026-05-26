@@ -12,7 +12,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RentalRequestsService } from './rental-requests.service';
-import { CreateRentalRequestDto, RespondRentalRequestDto } from './dto/create-rental-request.dto';
+import { CreateRentalRequestDto, RespondRentalRequestDto, CounterOfferDto } from './dto/create-rental-request.dto';
 
 interface AuthUser { id: string; email: string; role: string; }
 
@@ -65,5 +65,15 @@ export class RentalRequestsController {
   @ApiOperation({ summary: 'Inquilino cancela su propia solicitud (sólo si PENDING)' })
   cancel(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.service.cancel(user.id, id);
+  }
+
+  @Post(':id/counter')
+  @ApiOperation({ summary: 'Hacer una contraoferta (monto / duración / fecha de inicio)' })
+  counter(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: CounterOfferDto,
+  ) {
+    return this.service.counterOffer(user.id, id, dto);
   }
 }

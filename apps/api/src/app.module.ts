@@ -32,6 +32,8 @@ import { RealtorModule } from './modules/realtor/realtor.module';
 import { ContractTemplatesModule } from './modules/contract-templates/contract-templates.module';
 import { MyRentalModule } from './modules/my-rental/my-rental.module';
 import { BillsModule } from './modules/bills/bills.module';
+import { VisitsModule } from './modules/visits/visits.module';
+import { ContractPartiesModule } from './modules/contract-parties/contract-parties.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -89,6 +91,8 @@ import { validateEnv } from './config/env.validation';
     ContractTemplatesModule,
     MyRentalModule,
     BillsModule,
+    VisitsModule,
+    ContractPartiesModule,
   ],
 })
 export class AppModule {}

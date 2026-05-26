@@ -107,15 +107,18 @@ export class ContractsService {
   async sign(contractId: string, userId: string) {
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },
-      include: { signatures: true },
+      include: { signatures: true, parties: true },
     });
 
     if (!contract) throw new NotFoundException('Contrato no encontrado.');
 
-    const isTenant = contract.tenantId === userId;
-    const isLandlord = contract.landlordId === userId;
+    const isTenantPrimary   = contract.tenantId   === userId;
+    const isLandlordPrimary = contract.landlordId === userId;
+    const cosignerEntry     = contract.parties.find(
+      (p) => p.userId === userId && p.status === 'ACCEPTED',
+    );
 
-    if (!isTenant && !isLandlord) {
+    if (!isTenantPrimary && !isLandlordPrimary && !cosignerEntry) {
       throw new ForbiddenException('Solo las partes del contrato pueden firmarlo.');
     }
 
@@ -130,7 +133,35 @@ export class ContractsService {
       throw new BadRequestException('Ya firmaste este contrato.');
     }
 
-    const role = isTenant ? 'TENANT' : 'LANDLORD';
+    // ─── Gate de datos del usuario ──────────────────────────────────
+    // El contrato se redacta con los datos personales del firmante. Si
+    // faltan campos críticos, bloqueamos y pedimos que los complete.
+    const me = await this.prisma.user.findUnique({
+      where:  { id: userId },
+      select: {
+        firstName: true, lastName: true, dni: true,
+        dateOfBirth: true, nationality: true, address: true, phone: true,
+      },
+    });
+    const missing: string[] = [];
+    if (!me?.firstName)   missing.push('nombre');
+    if (!me?.lastName)    missing.push('apellido');
+    if (!me?.dni)         missing.push('DNI');
+    if (!me?.dateOfBirth) missing.push('fecha de nacimiento');
+    if (!me?.nationality) missing.push('nacionalidad');
+    if (!me?.address)     missing.push('dirección particular');
+    if (!me?.phone)       missing.push('teléfono');
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Para firmar el contrato necesitamos algunos datos tuyos: ${missing.join(', ')}. ` +
+        `Completálos en tu perfil y volvé a intentar.`,
+      );
+    }
+
+    // Role: tenant/landlord para primaries, "side" del cosigner para co-firmantes
+    const role = isTenantPrimary ? 'TENANT'
+               : isLandlordPrimary ? 'LANDLORD'
+               : (cosignerEntry!.side as 'TENANT' | 'LANDLORD');
 
     await this.prisma.contractSignature.create({
       data: {
@@ -140,46 +171,38 @@ export class ContractsService {
       },
     });
 
-    // Check if both parties have now signed
+    // ¿Firmaron todos los que tienen que firmar (primaries + cosigners ACCEPTED)?
     const allSignatures = await this.prisma.contractSignature.findMany({
       where: { contractId },
     });
+    const expectedSigners = new Set<string>([contract.tenantId, contract.landlordId]);
+    contract.parties.forEach((p) => {
+      if (p.status === 'ACCEPTED' && p.userId) expectedSigners.add(p.userId);
+    });
+    const signedSet = new Set(allSignatures.map(s => s.userId));
+    const allSigned = Array.from(expectedSigners).every(uid => signedSet.has(uid));
 
-    const tenantSigned = allSignatures.some(
-      (s) => s.userId === contract.tenantId,
-    );
-    const landlordSigned = allSignatures.some(
-      (s) => s.userId === contract.landlordId,
-    );
-
-    if (tenantSigned && landlordSigned) {
-      const pdfBuffer = await this.generatePdf(contract);
-      const pdfHash = crypto
-        .createHash('sha256')
-        .update(pdfBuffer)
-        .digest('hex');
-
-      const pdfKey = `contracts/${contractId}/contract-${Date.now()}.pdf`;
-      const pdfUrl = await this.s3.uploadFile(pdfBuffer, pdfKey, 'application/pdf');
-
-      await this.prisma.contract.update({
-        where: { id: contractId },
-        data: {
-          status: 'SIGNED',
-          signedAt: new Date(),
-          pdfUrl,
-          pdfHash,
-        },
-      });
-    } else {
-      // At least one party signed — move to PENDING_SIGNATURES if still DRAFT
+    if (!allSigned) {
+      // Algún primary o cosigner todavía no firmó — sólo actualizamos estado
       if (contract.status === 'DRAFT') {
         await this.prisma.contract.update({
           where: { id: contractId },
-          data: { status: 'PENDING_SIGNATURES' },
+          data:  { status: 'PENDING_SIGNATURES' },
         });
       }
+      return this.getById(contractId, userId);
     }
+
+    // Todos firmaron → generamos PDF y marcamos SIGNED
+    const pdfBuffer = await this.generatePdf(contract);
+    const pdfHash = crypto.createHash('sha256').update(pdfBuffer).digest('hex');
+    const pdfKey = `contracts/${contractId}/contract-${Date.now()}.pdf`;
+    const pdfUrl = await this.s3.uploadFile(pdfBuffer, pdfKey, 'application/pdf');
+
+    await this.prisma.contract.update({
+      where: { id: contractId },
+      data:  { status: 'SIGNED', signedAt: new Date(), pdfUrl, pdfHash },
+    });
 
     return this.getById(contractId, userId);
   }
