@@ -275,6 +275,7 @@ model User {
   sentMessages             Message[]
   createdSegments          Segment[]        @relation("CreatedSegments")
   createdCampaigns         Campaign[]       @relation("CreatedCampaigns")
+  createdTemplates         ContractTemplate[] @relation("CreatedTemplates")
   agency                   RealEstateAgency?
 
   @@map("users")
@@ -371,6 +372,26 @@ model Listing {
   @@map("listings")
 }
 
+model ContractTemplate {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  // 'RESIDENTIAL' | 'COMMERCIAL' | 'SEASONAL' | 'ROOM'
+  type        String   @default("RESIDENTIAL")
+  // Texto completo con placeholders: {{landlordName}}, {{tenantName}}, {{address}}, etc.
+  content     String   @db.Text
+  isBuiltIn   Boolean  @default(false)  // plantillas del sistema — no se pueden borrar
+  isActive    Boolean  @default(true)
+  createdById String?  // null = plantilla built-in del sistema
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User?      @relation("CreatedTemplates", fields: [createdById], references: [id])
+  contracts  Contract[]
+
+  @@map("contract_templates")
+}
+
 model Contract {
   id            String         @id @default(uuid())
   propertyId    String
@@ -382,13 +403,17 @@ model Contract {
   depositAmount Decimal        @db.Decimal(12, 2)
   currency      String         @default("ARS")
   status        ContractStatus @default(DRAFT)
+  // Plantilla usada como base
   templateId    String?
+  // Texto final del contrato (puede ser la plantilla con datos llenados, o editado manualmente)
+  customContent String?        @db.Text
   signedAt      DateTime?
   pdfUrl        String?
   pdfHash       String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  template ContractTemplate? @relation(fields: [templateId], references: [id])
   property Property        @relation(fields: [propertyId], references: [id])
   tenant   User            @relation("TenantContracts", fields: [tenantId], references: [id])
   landlord User            @relation("LandlordContracts", fields: [landlordId], references: [id])

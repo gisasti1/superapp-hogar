@@ -2,10 +2,13 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Param,
   Body,
   UseGuards,
   Res,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
@@ -49,6 +52,17 @@ export class ContractsController {
   @ApiOperation({ summary: 'Firmar un contrato' })
   async sign(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.contractsService.sign(id, user.id);
+  }
+
+  @Patch(':id/content')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Guardar texto del contrato (plantilla llenada o editada manualmente)' })
+  async saveContent(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: { customContent: string; templateId?: string },
+  ) {
+    return this.contractsService.saveContent(id, user.id, body.customContent, body.templateId);
   }
 
   @Get(':id/pdf')

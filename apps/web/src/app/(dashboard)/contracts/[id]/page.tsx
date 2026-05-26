@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contractsApi, depositsApi } from '@/lib/api';
@@ -236,6 +238,21 @@ export default function ContractDetailPage() {
             />
           )}
 
+          {/* ── Texto del contrato ────────────────────────── */}
+          {contract.customContent && (
+            <ContractTextSection content={contract.customContent} templateId={contract.templateId} />
+          )}
+          {!contract.customContent && contract.status === 'DRAFT' && (
+            <div className="card border-dashed border-2 text-center py-6 space-y-2">
+              <p className="text-2xl">📄</p>
+              <p className="font-semibold text-gray-700">Sin texto de contrato todavía</p>
+              <p className="text-sm text-gray-400">Podés agregar texto desde una plantilla modelo o redactarlo manualmente.</p>
+              <Link href={`/contracts/templates`} className="text-sm text-indigo-600 hover:underline font-medium inline-block">
+                Ver plantillas de contratos →
+              </Link>
+            </div>
+          )}
+
           <ContractReviews contractId={contract.id} contractStatus={contract.status} />
 
           {deposit && (
@@ -265,6 +282,38 @@ function DataItem({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-xs font-medium text-gray-400 uppercase tracking-wide">{label}</dt>
       <dd className="mt-1 text-sm font-medium text-gray-900">{value}</dd>
+    </div>
+  );
+}
+
+function ContractTextSection({ content, templateId }: { content: string; templateId?: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const preview = content.slice(0, 600);
+  return (
+    <div className="card space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+          📄 Texto del contrato
+        </h2>
+        <div className="flex items-center gap-2">
+          {templateId && (
+            <Link href={`/contracts/templates/${templateId}`} className="text-xs text-indigo-600 hover:underline">
+              Ver plantilla
+            </Link>
+          )}
+          <button onClick={() => setExpanded(e => !e)} className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 px-2.5 py-1 rounded-lg transition-colors">
+            {expanded ? '▲ Colapsar' : '▼ Ver completo'}
+          </button>
+        </div>
+      </div>
+      <pre className={`text-xs text-gray-700 font-sans whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-xl p-4 border border-gray-100 ${expanded ? '' : 'max-h-48 overflow-hidden relative'}`}>
+        {expanded ? content : preview + (content.length > 600 ? '…' : '')}
+      </pre>
+      {!expanded && content.length > 600 && (
+        <button onClick={() => setExpanded(true)} className="text-xs text-indigo-600 hover:underline w-full text-center">
+          Mostrar el contrato completo →
+        </button>
+      )}
     </div>
   );
 }

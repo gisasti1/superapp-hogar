@@ -86,6 +86,24 @@ export class ContractsService {
     });
   }
 
+  async saveContent(contractId: string, userId: string, customContent: string, templateId?: string) {
+    const contract = await this.prisma.contract.findUnique({ where: { id: contractId } });
+    if (!contract) throw new NotFoundException('Contrato no encontrado.');
+    if (contract.landlordId !== userId && contract.tenantId !== userId) {
+      throw new ForbiddenException('Solo las partes del contrato pueden editarlo.');
+    }
+    if (contract.status !== 'DRAFT') {
+      throw new BadRequestException('Solo se puede editar el texto de contratos en borrador.');
+    }
+    return this.prisma.contract.update({
+      where: { id: contractId },
+      data: {
+        customContent,
+        ...(templateId ? { templateId } : {}),
+      },
+    });
+  }
+
   async sign(contractId: string, userId: string) {
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },

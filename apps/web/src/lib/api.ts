@@ -566,6 +566,32 @@ export const adminProvidersApi = {
     apiClient.post(`/services/admin/providers/${id}/payout/verify`, { verified }).then(r => r.data),
 };
 
+// ─── Contract Templates ───────────────────────────────────────────────────
+export const contractTemplatesApi = {
+  list: (type?: string) =>
+    apiClient.get('/contract-templates', { params: type ? { type } : undefined }).then(r => r.data),
+  get: (id: string) =>
+    apiClient.get(`/contract-templates/${id}`).then(r => r.data),
+  create: (dto: { title: string; description?: string; type?: string; content: string }) =>
+    apiClient.post('/contract-templates', dto).then(r => r.data),
+  update: (id: string, dto: { title?: string; description?: string; content?: string }) =>
+    apiClient.patch(`/contract-templates/${id}`, dto).then(r => r.data),
+  remove: (id: string) =>
+    apiClient.delete(`/contract-templates/${id}`).then(r => r.data),
+  duplicate: (id: string) =>
+    apiClient.post(`/contract-templates/${id}/duplicate`).then(r => r.data),
+  fill: (dto: {
+    templateId?: string; customContent?: string;
+    landlordName: string; landlordDni: string; landlordAddress: string;
+    tenantName: string; tenantDni: string; tenantAddress: string;
+    address: string; city: string; province?: string; rooms?: number;
+    startDate: string; endDate: string; monthlyRent: number;
+    currency: string; deposit: number;
+  }) => apiClient.post('/contract-templates/fill', dto).then(r => r.data as { content: string }),
+  saveToContract: (contractId: string, customContent: string, templateId?: string) =>
+    apiClient.patch(`/contracts/${contractId}/content`, { customContent, templateId }).then(r => r.data),
+};
+
 // ─── Realtor / Agencia inmobiliaria ───────────────────────────────────────
 export const realtorApi = {
   getMyAgency: () =>

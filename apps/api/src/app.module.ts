@@ -29,6 +29,7 @@ import { ExternalListingsModule } from './modules/external-listings/external-lis
 import { AdminModule } from './modules/admin/admin.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { RealtorModule } from './modules/realtor/realtor.module';
+import { ContractTemplatesModule } from './modules/contract-templates/contract-templates.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -83,6 +84,7 @@ import { validateEnv } from './config/env.validation';
     AdminModule,
     MarketingModule,
     RealtorModule,
+    ContractTemplatesModule,
   ],
 })
 export class AppModule {}

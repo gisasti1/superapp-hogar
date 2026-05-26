@@ -19,7 +19,8 @@ const NAV_BASE = [
 // Solo inquilinos y propietarios
 const NAV_TENANT_LANDLORD = [
   { href: '/rental-requests', label: 'Solicitudes', icon: '📨' },
-  { href: '/contracts',       label: 'Contratos',   icon: '📄' },
+  { href: '/contracts',          label: 'Contratos',   icon: '📄' },
+  { href: '/contracts/templates', label: 'Modelos',    icon: '📋' },
   { href: '/payments',        label: 'Pagos',       icon: '💳' },
   { href: '/issues',          label: 'Desperfectos',icon: '🛠' },
   { href: '/services',        label: 'Servicios',   icon: '🔧' },
