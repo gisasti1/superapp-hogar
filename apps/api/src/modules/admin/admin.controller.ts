@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res, Header,
+  Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus, Res, Header,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -190,5 +190,44 @@ export class AdminController {
     });
     // BOM UTF-8 para que Excel abra acentos bien en Windows
     res.send('﻿' + csv);
+  }
+
+  /* ─── DEPÓSITOS / INVERSIONES ─── */
+
+  @Get('deposits')
+  @ApiOperation({ summary: 'Listar depósitos en custodia (filtros + agregados por moneda)' })
+  @ApiQuery({ name: 'status',   required: false })
+  @ApiQuery({ name: 'invested', required: false, description: "'yes' / 'no'" })
+  @ApiQuery({ name: 'currency', required: false })
+  @ApiQuery({ name: 'search',   required: false })
+  async listDeposits(
+    @Query('status')   status?:   string,
+    @Query('invested') invested?: string,
+    @Query('currency') currency?: string,
+    @Query('search')   search?:   string,
+  ) {
+    return this.admin.listDeposits({ status, invested, currency, search });
+  }
+
+  @Get('deposits/:id')
+  @ApiOperation({ summary: 'Detalle completo de un depósito + contrato + ledger' })
+  async getDeposit(@Param('id') id: string) {
+    return this.admin.getDeposit(id);
+  }
+
+  @Put('deposits/:id/investment')
+  @ApiOperation({ summary: 'Declarar / actualizar / limpiar dónde está invertido' })
+  async updateInvestment(
+    @Param('id') id: string,
+    @Body() dto: {
+      investedIn?:         string | null;
+      investedAt?:         string | null;
+      investmentMaturity?: string | null;
+      interestRatePct?:    number | null;
+      investmentNotes?:    string | null;
+      expectedReleaseDate?: string | null;
+    },
+  ) {
+    return this.admin.updateDepositInvestment(id, dto);
   }
 }

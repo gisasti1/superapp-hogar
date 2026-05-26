@@ -493,13 +493,27 @@ model Policy {
 model Deposit {
   id          String        @id @default(uuid())
   contractId  String        @unique
-  userId      String
+  userId      String        // dueño del depósito (= inquilino, normalmente)
   amount      Decimal       @db.Decimal(12, 2)
   currency    String        @default("ARS")
   status      DepositStatus @default(HELD)
   yieldEarned Decimal       @db.Decimal(12, 2) @default(0)
   depositedAt DateTime      @default(now())
   releasedAt  DateTime?
+
+  // ─── Custodia / inversión administrada por el admin ───────────────────
+  // La plataforma actúa como ventanilla neutral. El admin decide si la plata
+  // queda en cuenta espejo, plazo fijo, FCI, etc. Cada depósito tiene su
+  // trazabilidad propia (qué inquilino, qué contrato, plazo y dónde está).
+  // Si investedIn es null y investedAt es null, está sin invertir.
+  investedIn          String?   // "Banco Galicia - PF 30 días", "FCI Pellegrini", etc.
+  investedAt          DateTime?
+  investmentMaturity  DateTime? // vencimiento del instrumento (plazo de devolución)
+  interestRatePct     Decimal?  @db.Decimal(7, 4) // TNA % opcional informativa
+  investmentNotes     String?
+  // Fecha estimada en que el depósito vuelve al inquilino (= fin de contrato + buffer)
+  expectedReleaseDate DateTime?
+
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -507,6 +521,8 @@ model Deposit {
   user          User           @relation(fields: [userId], references: [id])
   ledgerEntries LedgerEntry[]
 
+  @@index([status, currency])
+  @@index([investedAt])
   @@map("deposits")
 }
 

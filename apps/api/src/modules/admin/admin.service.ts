@@ -386,4 +386,123 @@ export class AdminService {
       referrals,
     };
   }
+
+  /* ─── DEPÓSITOS / INVERSIONES ─────────────────────────────────────────
+   * La plataforma actúa como ventanilla neutral de los depósitos de
+   * garantía. El admin ve qué plata custodia, de qué inquilino/contrato,
+   * y dónde está invertida (o no). Cada fila tiene su trazabilidad propia.
+   */
+
+  /** Listar depósitos con filtros opcionales y agregados por moneda. */
+  async listDeposits(opts: {
+    status?:    string;   // 'HELD' | 'PARTIALLY_RELEASED' | 'RELEASED' | 'DISPUTED'
+    invested?:  string;   // 'yes' | 'no' | undefined
+    currency?:  string;
+    search?:    string;   // por contrato o usuario
+  } = {}) {
+    const where: any = {};
+    if (opts.status && opts.status !== 'ALL') where.status = opts.status;
+    if (opts.currency)                        where.currency = opts.currency;
+    if (opts.invested === 'yes')              where.investedAt = { not: null };
+    if (opts.invested === 'no')               where.investedAt = null;
+    if (opts.search) {
+      const q = opts.search.trim();
+      where.OR = [
+        { contractId: { contains: q, mode: 'insensitive' } },
+        { user: { firstName: { contains: q, mode: 'insensitive' } } },
+        { user: { lastName:  { contains: q, mode: 'insensitive' } } },
+        { user: { email:     { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    const deposits = await this.prisma.deposit.findMany({
+      where,
+      orderBy: [{ depositedAt: 'desc' }],
+      include: {
+        user:     { select: { id: true, firstName: true, lastName: true, email: true } },
+        contract: {
+          select: {
+            id: true, status: true, startDate: true, endDate: true,
+            monthlyAmount: true, currency: true,
+            property: { select: { id: true, address: true, city: true } },
+            tenant:   { select: { id: true, firstName: true, lastName: true } },
+            landlord: { select: { id: true, firstName: true, lastName: true } },
+          },
+        },
+      },
+    });
+
+    // Agregados por moneda — totales custodiados / invertidos / libres
+    const byCurrency: Record<string, { custodyTotal: number; investedTotal: number; freeTotal: number; count: number }> = {};
+    for (const d of deposits) {
+      const c = d.currency;
+      byCurrency[c] ??= { custodyTotal: 0, investedTotal: 0, freeTotal: 0, count: 0 };
+      const amt = Number(d.amount);
+      byCurrency[c].custodyTotal += amt;
+      byCurrency[c].count += 1;
+      if (d.investedAt) byCurrency[c].investedTotal += amt;
+      else              byCurrency[c].freeTotal     += amt;
+    }
+
+    return { deposits, byCurrency };
+  }
+
+  async getDeposit(id: string) {
+    const d = await this.prisma.deposit.findUnique({
+      where: { id },
+      include: {
+        user:     { select: { id: true, firstName: true, lastName: true, email: true } },
+        contract: {
+          select: {
+            id: true, status: true, startDate: true, endDate: true,
+            monthlyAmount: true, currency: true, customContent: true,
+            property: true,
+            tenant:   { select: { id: true, firstName: true, lastName: true, email: true } },
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true } },
+          },
+        },
+        ledgerEntries: { orderBy: { createdAt: 'desc' } },
+      },
+    });
+    if (!d) throw new NotFoundException('Depósito no encontrado');
+    return d;
+  }
+
+  /** Marcar un depósito como invertido (o limpiar la inversión si investedIn es null). */
+  async updateDepositInvestment(id: string, dto: {
+    investedIn?:         string | null;
+    investedAt?:         string | null;
+    investmentMaturity?: string | null;
+    interestRatePct?:    number | null;
+    investmentNotes?:    string | null;
+    expectedReleaseDate?: string | null;
+  }) {
+    const d = await this.prisma.deposit.findUnique({ where: { id } });
+    if (!d) throw new NotFoundException('Depósito no encontrado');
+
+    // Validaciones
+    const investedIn = dto.investedIn?.trim();
+    const investedAt = dto.investedAt ? new Date(dto.investedAt) : null;
+    if (investedIn && !investedAt) {
+      throw new BadRequestException('Si declarás dónde está invertido, también tenés que poner la fecha de inversión');
+    }
+    if (dto.investmentMaturity && investedAt && new Date(dto.investmentMaturity) < investedAt) {
+      throw new BadRequestException('La fecha de vencimiento no puede ser anterior a la fecha de inversión');
+    }
+    if (dto.interestRatePct !== undefined && dto.interestRatePct !== null && (dto.interestRatePct < 0 || dto.interestRatePct > 1000)) {
+      throw new BadRequestException('TNA fuera de rango (0-1000%)');
+    }
+
+    return this.prisma.deposit.update({
+      where: { id },
+      data:  {
+        investedIn:          investedIn || null,
+        investedAt,
+        investmentMaturity:  dto.investmentMaturity ? new Date(dto.investmentMaturity) : null,
+        interestRatePct:     dto.interestRatePct ?? null,
+        investmentNotes:     dto.investmentNotes?.trim() || null,
+        expectedReleaseDate: dto.expectedReleaseDate ? new Date(dto.expectedReleaseDate) : null,
+      },
+    });
+  }
 }

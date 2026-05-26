@@ -21,12 +21,22 @@ if (typeof window !== 'undefined') {
     return config;
   });
 
-  // Redirigir a /login si hay 401
+  // 401 = token expirado/inválido → único caso donde forzamos navegación
+  // a /login. Para cualquier otro error (5xx, red, timeout) NO desloguemos
+  // ni redirigimos: dejamos que la página o el error boundary lo manejen.
   apiClient.interceptors.response.use(
     res => res,
     err => {
-      if (err?.response?.status === 401) {
-        window.location.href = '/login';
+      const status = err?.response?.status;
+      if (status === 401) {
+        // No estamos ya en una pantalla pública? Si sí, no rebotar en loop.
+        const path = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isPublic = ['/', '/login', '/register', '/forgot-password', '/reset-password'].some(p =>
+          path === p || path.startsWith(p + '/'),
+        );
+        if (!isPublic) {
+          window.location.href = '/login';
+        }
       }
       return Promise.reject(err);
     },
@@ -307,6 +317,20 @@ export const adminApi = {
     apiClient.get('/admin/issues').then(r => r.data),
   forceCloseIssue: (id: string, note?: string) =>
     apiClient.post(`/admin/issues/${id}/force-close`, { note }).then(r => r.data),
+
+  // Deposits / investments
+  listDeposits: (params: { status?: string; invested?: 'yes' | 'no'; currency?: string; search?: string } = {}) =>
+    apiClient.get('/admin/deposits', { params }).then(r => r.data),
+  getDeposit: (id: string) =>
+    apiClient.get(`/admin/deposits/${id}`).then(r => r.data),
+  updateDepositInvestment: (id: string, dto: {
+    investedIn?: string | null;
+    investedAt?: string | null;
+    investmentMaturity?: string | null;
+    interestRatePct?: number | null;
+    investmentNotes?: string | null;
+    expectedReleaseDate?: string | null;
+  }) => apiClient.put(`/admin/deposits/${id}/investment`, dto).then(r => r.data),
 
   // Marketing
   marketingStats: () =>

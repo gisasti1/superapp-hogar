@@ -12,6 +12,7 @@ const ADMIN_NAV = [
   { href: '/admin/properties', label: 'Propiedades', icon: '🏘️' },
   { href: '/admin/providers', label: 'Prestadores', icon: '🛠' },
   { href: '/admin/providers/review', label: 'Revisar KYC', icon: '🪪' },
+  { href: '/admin/deposits', label: 'Depósitos', icon: '🏦' },
   { href: '/admin/issues', label: 'Desperfectos', icon: '🚨' },
   { href: '/admin/marketing', label: 'Marketing', icon: '📈' },
   { href: '/admin/segments', label: 'Segmentos', icon: '🎯' },
