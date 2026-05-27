@@ -46,7 +46,7 @@ export default function PremiumPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Plan Premium</h1>
-        <p className="text-gray-500 mt-1">Accedé a todas las funciones de habitta</p>
+        <p className="text-gray-500 mt-1">Accedé a todas las funciones de Habitta</p>
       </div>
 
       {isPremium && (

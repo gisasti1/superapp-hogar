@@ -1,4 +1,4 @@
-export const metadata = { title: 'Política de privacidad — habitta' };
+export const metadata = { title: 'Política de privacidad — Habitta' };
 
 export default function PrivacyPage() {
   return (
@@ -8,7 +8,7 @@ export default function PrivacyPage() {
 
       <h2>1. Datos que recolectamos</h2>
       <p>
-        habitta (en adelante, "la plataforma") recolecta los siguientes datos personales
+        Habitta (en adelante, "la plataforma") recolecta los siguientes datos personales
         cuando creás una cuenta y usás el servicio:
       </p>
       <ul>

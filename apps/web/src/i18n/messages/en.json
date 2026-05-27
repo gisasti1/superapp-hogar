@@ -48,7 +48,7 @@
   "nav.adminPanel": "Admin Panel",
   "nav.logout": "Sign out",
 
-  "auth.register.title": "habitta",
+  "auth.register.title": "Habitta",
   "auth.register.subtitle": "How will you use the app?",
   "auth.register.alreadyHaveAccount": "Already have an account?",
   "auth.register.login": "Sign in",
@@ -70,7 +70,7 @@
   "myRental.header.eyebrow": "My rental",
   "myRental.header.title": "External contract & payments",
   "myRental.header.subtitle": "Keep a log of your rental — landlord info, amount, due dates and every payment made.",
-  "myRental.welcome.title": "Welcome to habitta! 🎉",
+  "myRental.welcome.title": "Welcome to Habitta! 🎉",
   "myRental.welcome.body": "Load your current rental details below and you'll be able to record monthly payments, save receipts and request home services when needed.",
   "myRental.summary.property": "Property",
   "myRental.summary.monthlyAmount": "Monthly amount",

@@ -60,7 +60,7 @@ async function bootstrap() {
   // Swagger sólo en non-prod (en prod queda detrás de auth o se desactiva)
   if (!isProd) {
     const config = new DocumentBuilder()
-      .setTitle('habitta API')
+      .setTitle('Habitta API')
       .setDescription('API del MVP de SuperApp del Hogar')
       .setVersion(process.env.APP_VERSION ?? '0.1.0')
       .addBearerAuth()

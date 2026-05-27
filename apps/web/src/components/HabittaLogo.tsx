@@ -9,7 +9,7 @@ import Link from 'next/link';
  *  - variant: 'full' (default) | 'mark' | 'wordmark'
  *  - size: px del ícono (texto escala 0.85x). Default 40.
  *  - color:     color del ÍCONO (casita). Default tierra.
- *  - textColor: color del WORDMARK "habitta". Default marrón profundo.
+ *  - textColor: color del WORDMARK "Habitta". Default marrón profundo.
  *  - accentColor: color del PUNTO acento (después de la 2da "t"). Default terracota.
  *  - tagline: muestra "Donde tu hogar, encuentra todo."
  *  - href: si está, el logo se vuelve clickeable y navega ahí.
@@ -68,7 +68,7 @@ export function HabittaLogo({
             className="font-extrabold tracking-tight inline-flex items-baseline"
             style={{ color: textColor, fontSize: size * 0.85 }}
           >
-            habitta
+            Habitta
             {/* Punto-acento estilo "casa habitada" */}
             <span
               className="ml-0.5"

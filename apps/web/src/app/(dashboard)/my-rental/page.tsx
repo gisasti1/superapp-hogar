@@ -68,7 +68,7 @@ function MyRentalPageInner() {
       {/* Welcome banner */}
       {isWelcome && (
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-rose-800">
-          <p className="font-bold">¡Bienvenido a habitta! 🎉</p>
+          <p className="font-bold">¡Bienvenido a Habitta! 🎉</p>
           <p className="text-sm mt-1">
             Cargá los datos de tu alquiler actual abajo y vas a poder registrar tus pagos mensuales, guardar comprobantes y pedir servicios para el hogar cuando los necesites.
           </p>

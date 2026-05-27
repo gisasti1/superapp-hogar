@@ -5,7 +5,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-white">
       <nav className="border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-habitta-terra">habitta</Link>
+          <Link href="/" className="text-xl font-bold text-habitta-terra">Habitta</Link>
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">Volver al login</Link>
         </div>
       </nav>
@@ -14,7 +14,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       </article>
       <footer className="border-t border-gray-100 py-6">
         <div className="max-w-3xl mx-auto px-6 flex items-center justify-between text-xs text-gray-400">
-          <span>© 2026 habitta</span>
+          <span>© 2026 Habitta</span>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-gray-600">Privacidad</Link>
             <Link href="/terms" className="hover:text-gray-600">Términos</Link>

@@ -48,7 +48,7 @@
   "nav.adminPanel": "Painel Admin",
   "nav.logout": "Sair",
 
-  "auth.register.title": "habitta",
+  "auth.register.title": "Habitta",
   "auth.register.subtitle": "Como você vai usar o app?",
   "auth.register.alreadyHaveAccount": "Já tem uma conta?",
   "auth.register.login": "Entrar",
@@ -70,7 +70,7 @@
   "myRental.header.eyebrow": "Meu aluguel",
   "myRental.header.title": "Contrato externo e pagamentos",
   "myRental.header.subtitle": "Mantenha o registro do seu aluguel — dados do proprietário, valor, vencimentos e cada pagamento feito.",
-  "myRental.welcome.title": "Bem-vindo ao habitta! 🎉",
+  "myRental.welcome.title": "Bem-vindo ao Habitta! 🎉",
   "myRental.welcome.body": "Carregue os dados do seu aluguel atual abaixo e poderá registrar pagamentos mensais, salvar comprovantes e pedir serviços para casa quando precisar.",
   "myRental.summary.property": "Imóvel",
   "myRental.summary.monthlyAmount": "Valor mensal",

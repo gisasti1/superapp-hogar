@@ -192,7 +192,7 @@ export class ReceiptsService {
       dash,
       '',
       'Este comprobante es un recibo NO fiscal emitido por la plataforma',
-      'habitta y vale como prueba civil del pago entre las partes.',
+      'Habitta y vale como prueba civil del pago entre las partes.',
       'No reemplaza factura AFIP si la ley lo exige.',
       '',
       sep,

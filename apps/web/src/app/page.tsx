@@ -104,7 +104,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-habitta-sand py-8 bg-habitta-cream">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-habitta-stone">
-          <span>© 2026 habitta. Todos los derechos reservados.</span>
+          <span>© 2026 Habitta. Todos los derechos reservados.</span>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-habitta-terra transition">Privacidad</Link>
             <Link href="/terms"   className="hover:text-habitta-terra transition">Términos</Link>

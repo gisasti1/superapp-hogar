@@ -217,11 +217,11 @@ export default function RegisterPage() {
                   className={clsx(
                     `relative bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 border-2 flex flex-col items-center justify-center`,
                     fullRow && 'col-span-2',
-                    selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-gray-100 hover:border-gray-200 hover:shadow-md',
+                    selected ? `border-transparent ring-2 ${ring} shadow-lg scale-[1.02]` : 'border-habitta-sand hover:border-habitta-olive/40 hover:shadow-md',
                   )}
                 >
                   {hasBadge && (
-                    <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-white/80 text-gray-600 px-1.5 py-0.5 rounded-full">
+                    <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wide bg-white/80 text-habitta-charcoal px-1.5 py-0.5 rounded-full">
                       {t(`auth.register.types.${id}.badge`)}
                     </span>
                   )}
@@ -229,17 +229,17 @@ export default function RegisterPage() {
                     <span className="absolute top-3 left-3 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center text-[10px]">✓</span>
                   )}
                   <span className="text-4xl block mb-2 leading-none">{icon}</span>
-                  <p className="font-bold text-gray-900 text-sm leading-tight">{t(`auth.register.types.${id}.title`)}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-tight max-w-[200px]">{t(`auth.register.types.${id}.subtitle`)}</p>
+                  <p className="font-bold text-habitta-deep text-sm leading-tight">{t(`auth.register.types.${id}.title`)}</p>
+                  <p className="text-xs text-habitta-stone mt-1 leading-tight max-w-[200px]">{t(`auth.register.types.${id}.subtitle`)}</p>
                 </button>
               );
             })}
           </div>
 
           {/* What you get */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+          <div className="bg-white rounded-2xl border border-habitta-sand shadow-sm p-4 mb-6">
             {accountType === 'TENANT' && (
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <ul className="space-y-1.5 text-sm text-habitta-charcoal">
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Buscá y filtrá propiedades en tu zona</li>
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Firmá contratos digitales con validez legal</li>
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Pagá el alquiler y seguí tus cuotas</li>
@@ -247,7 +247,7 @@ export default function RegisterPage() {
               </ul>
             )}
             {accountType === 'LANDLORD' && (
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <ul className="space-y-1.5 text-sm text-habitta-charcoal">
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Publicá propiedades y recibí solicitudes</li>
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Gestioná contratos y cobros en un lugar</li>
                 <li className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Depósito en garantía digital</li>
@@ -255,7 +255,7 @@ export default function RegisterPage() {
               </ul>
             )}
             {accountType === 'PROVIDER' && (
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <ul className="space-y-1.5 text-sm text-habitta-charcoal">
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Creá tu perfil profesional en minutos</li>
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Recibí pedidos de propietarios e inquilinos</li>
                 <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Subí tu matrícula y DNI para verificarte (es como abrir una cuenta de banco)</li>
@@ -263,7 +263,7 @@ export default function RegisterPage() {
               </ul>
             )}
             {accountType === 'REALTOR' && (
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <ul className="space-y-1.5 text-sm text-habitta-charcoal">
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Perfil de agencia con matrícula CUCICBA</li>
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Publicá y gestioná propiedades de clientes</li>
                 <li className="flex items-center gap-2"><span className="text-purple-500">✓</span> Dashboard de contratos e ingresos centralizado</li>
@@ -271,7 +271,7 @@ export default function RegisterPage() {
               </ul>
             )}
             {accountType === 'SELF_TENANT' && (
-              <ul className="space-y-1.5 text-sm text-gray-600">
+              <ul className="space-y-1.5 text-sm text-habitta-charcoal">
                 <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Cargá los datos de tu contrato (propietario, monto, vencimiento)</li>
                 <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Registrá cada pago mensual y guardá comprobantes</li>
                 <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Pedí servicios del hogar a prestadores verificados</li>
@@ -287,7 +287,7 @@ export default function RegisterPage() {
             {t('auth.register.continueAs')} {t(`auth.register.types.${ACCOUNT_TYPES.find(x => x.type === accountType)?.id}.title`)} →
           </button>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-sm text-habitta-stone mt-4">
             {t('auth.register.alreadyHaveAccount')}{' '}
             <Link href="/login" className="text-habitta-terra font-semibold hover:underline">{t('auth.register.login')}</Link>
           </p>
@@ -304,32 +304,38 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-habitta-cream px-4 py-12">
       <div className="w-full max-w-md">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        {/* Logo arriba */}
+        <div className="flex justify-center mb-6">
+          <HabittaLogo size={36} color="#C98E5B" accentColor="#7E9081" />
+        </div>
+
+        {/* Header con back + tipo de cuenta */}
+        <div className="flex items-center gap-3 mb-5">
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-gray-900 hover:shadow-sm transition"
+            className="w-9 h-9 rounded-xl border border-habitta-olive/40 bg-white flex items-center justify-center text-habitta-deep hover:bg-habitta-sand hover:shadow-sm transition"
+            aria-label="Volver al paso 1"
           >
             ←
           </button>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">{cfg.icon}</span>
-              <p className="font-extrabold text-gray-900">{cfgTitle}</p>
+              <p className="font-extrabold text-habitta-deep">{cfgTitle}</p>
             </div>
-            <p className="text-xs text-gray-500">Completá tus datos para crear la cuenta</p>
+            <p className="text-xs text-habitta-charcoal/70">Completá tus datos para crear la cuenta</p>
           </div>
         </div>
 
         {/* Progress */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="flex-1 h-1.5 rounded-full bg-emerald-400" />
-          <div className="flex-1 h-1.5 rounded-full bg-habitta-sand0" />
-          <span className="text-xs text-gray-400 font-medium">Paso 2 de 2</span>
+          <div className="flex-1 h-1.5 rounded-full bg-habitta-eucalyptus" />
+          <div className="flex-1 h-1.5 rounded-full bg-habitta-terra" />
+          <span className="text-xs text-habitta-stone font-medium">Paso 2 de 2</span>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-habitta-sand p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <input type="hidden" {...register('role')} />
 
@@ -359,7 +365,7 @@ export default function RegisterPage() {
               <label className="label">Contraseña *</label>
               <div className="relative">
                 <input {...register('password')} type={showPassword ? 'text' : 'password'} className="input pr-10" placeholder="Mínimo 8 chars, A, a y 1" autoComplete="new-password" />
-                <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700">
+                <button type="button" onClick={() => setShowPassword(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-habitta-stone hover:text-habitta-deep">
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
@@ -379,7 +385,7 @@ export default function RegisterPage() {
                       [strength.lower, '1 minúscula'],
                       [strength.digit, '1 número'],
                     ].map(([ok, label]) => (
-                      <span key={label as string} className={ok ? 'text-emerald-600' : 'text-gray-400'}>
+                      <span key={label as string} className={ok ? 'text-emerald-600' : 'text-habitta-stone'}>
                         {ok ? '✓' : '○'} {label}
                       </span>
                     ))}
@@ -394,7 +400,7 @@ export default function RegisterPage() {
               <label className="label">Repetir contraseña *</label>
               <div className="relative">
                 <input {...register('confirmPassword')} type={showConfirm ? 'text' : 'password'} className="input pr-10" placeholder="Igual que la de arriba" autoComplete="new-password" />
-                <button type="button" onClick={() => setShowConfirm(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700">
+                <button type="button" onClick={() => setShowConfirm(s => !s)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-habitta-stone hover:text-habitta-deep">
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
@@ -452,7 +458,7 @@ export default function RegisterPage() {
 
             {/* Cómo te enteraste */}
             <div>
-              <label className="label">¿Cómo te enteraste? <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <label className="label">¿Cómo te enteraste? <span className="text-habitta-stone font-normal">(opcional)</span></label>
               <select {...register('referralSource')} className="input">
                 <option value="">Elegí una opción</option>
                 <option value="instagram">Instagram</option>
@@ -466,21 +472,21 @@ export default function RegisterPage() {
             </div>
 
             {/* Consentimientos */}
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <p className="text-xs text-gray-500 font-semibold">Comunicaciones <span className="font-normal">(podés cambiarlas después)</span></p>
+            <div className="border-t border-habitta-sand pt-4 space-y-2">
+              <p className="text-xs text-habitta-stone font-semibold">Comunicaciones <span className="font-normal">(podés cambiarlas después)</span></p>
               <label className="flex items-start gap-2 cursor-pointer">
                 <input type="checkbox" {...register('marketingEmailConsent')} className="mt-0.5 w-4 h-4 accent-brand-600" />
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-habitta-charcoal">
                   📧 Novedades, tips y promociones por <strong>email</strong>
                 </span>
               </label>
               <label className="flex items-start gap-2 cursor-pointer">
                 <input type="checkbox" {...register('marketingSmsConsent')} className="mt-0.5 w-4 h-4 accent-brand-600" />
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-habitta-charcoal">
                   📱 Alertas importantes por <strong>SMS</strong>
                 </span>
               </label>
-              <p className="text-[10px] text-gray-400">Ley AR 25.326 — podés revocar en cualquier momento desde tu perfil.</p>
+              <p className="text-[10px] text-habitta-stone">Ley AR 25.326 — podés revocar en cualquier momento desde tu perfil.</p>
             </div>
 
             {errors.root && (
@@ -495,7 +501,7 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+        <p className="text-center text-sm text-habitta-stone mt-4">
           ¿Ya tenés cuenta?{' '}
           <Link href="/login" className="text-habitta-terra font-semibold hover:underline">Iniciá sesión</Link>
         </p>

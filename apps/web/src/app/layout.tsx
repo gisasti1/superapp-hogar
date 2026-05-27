@@ -6,14 +6,14 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'habitta — Donde tu hogar, encuentra todo',
+  title: 'Habitta — Donde tu hogar, encuentra todo',
   description: 'Alquilá fácil. Viví tranquilo. Seguro de caución, contrato digital, pagos y servicios del hogar en un solo lugar.',
   manifest: '/manifest.json',
-  applicationName: 'habitta',
+  applicationName: 'Habitta',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'habitta',
+    title: 'Habitta',
   },
   icons: {
     icon: [

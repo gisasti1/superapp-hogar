@@ -112,7 +112,7 @@ export class InsuranceService {
       `Vigencia: ${policy.startDate.toISOString().split('T')[0]} al ${policy.endDate.toISOString().split('T')[0]}`,
       `Proveedor ID: ${policy.providerId}`,
       '',
-      'Generado automáticamente por habitta.',
+      'Generado automáticamente por Habitta.',
     ];
 
     return Buffer.from(lines.join('\n'), 'utf-8');
