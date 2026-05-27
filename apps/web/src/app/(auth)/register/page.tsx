@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense as _Suspense } from 'react';
+const Suspense = _Suspense as any;
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -135,9 +136,29 @@ function redirectAfterRegister(type: AccountType, role: UserRole): string {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageInner() {
   const router  = useRouter();
+  const params  = useSearchParams();
   const setAuth = useAuthStore(s => s.setAuth);
   const t       = useT();
+
+  // Si llegamos con ?next=/ruta, lo respetamos post-registro
+  const nextParam = (() => {
+    const raw = params.get('next');
+    if (!raw) return '';
+    try {
+      const decoded = decodeURIComponent(raw);
+      if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.startsWith('/http')) return decoded;
+    } catch {}
+    return '';
+  })();
 
   const [step,         setStep]        = useState<1 | 2>(1);
   const [accountType,  setAccountType] = useState<AccountType>('TENANT');
@@ -178,7 +199,8 @@ export default function RegisterPage() {
       const extra = accountType === 'SELF_TENANT' ? { selfManagedRental: true } : {};
       const res = await authApi.register({ ...payload, ...extra });
       setAuth(res.user, res.accessToken, res.refreshToken);
-      router.push(redirectAfterRegister(accountType, res.user.role as UserRole));
+      // Si vinieron de un link directo, respetar ese destino antes que el default por rol
+      router.push(nextParam || redirectAfterRegister(accountType, res.user.role as UserRole));
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       const text = Array.isArray(msg) ? msg.join(' · ') : (msg ?? 'Error al registrarse');

@@ -36,6 +36,7 @@ import { VisitsModule } from './modules/visits/visits.module';
 import { ContractPartiesModule } from './modules/contract-parties/contract-parties.module';
 import { ReceiptsModule } from './modules/receipts/receipts.module';
 import { SupportModule } from './modules/support/support.module';
+import { SearchModule } from './modules/search/search.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -97,6 +98,7 @@ import { validateEnv } from './config/env.validation';
     ContractPartiesModule,
     ReceiptsModule,
     SupportModule,
+    SearchModule,
   ],
 })
 export class AppModule {}

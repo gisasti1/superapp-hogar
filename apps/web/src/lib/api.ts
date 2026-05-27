@@ -35,7 +35,9 @@ if (typeof window !== 'undefined') {
           path === p || path.startsWith(p + '/'),
         );
         if (!isPublic) {
-          window.location.href = '/login';
+          // Preservamos la ruta + querystring para volver acá después del login
+          const next = encodeURIComponent(path + (window.location.search || ''));
+          window.location.href = `/login?next=${next}`;
         }
       }
       return Promise.reject(err);
@@ -280,6 +282,11 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
   counter: (id: string, dto: { amount?: number; months?: number; startDate?: string; message?: string }) =>
     apiClient.post(`/rental-requests/${id}/counter`, dto).then(r => r.data),
+};
+
+// ─── Búsqueda global ───────────────────────────────────────────────────────
+export const searchApi = {
+  query: (q: string) => apiClient.get('/search', { params: { q } }).then(r => r.data),
 };
 
 // ─── Soporte / consultas a la admin ────────────────────────────────────────

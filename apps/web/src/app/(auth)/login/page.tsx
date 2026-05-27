@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense as _Suspense } from 'react';
+const Suspense = _Suspense as any;
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,7 +18,16 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const setAuth = useAuthStore(s => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -25,11 +35,32 @@ export default function LoginPage() {
     resolver: zodResolver(schema),
   });
 
+  // Si me empujaron acá con ?next=/ruta/original, después del login redirigir
+  // a esa ruta en vez del dashboard. Validamos que sea una ruta relativa (no
+  // un URL externo) para evitar open redirect.
+  const next = (() => {
+    const raw = params.get('next');
+    if (!raw) return '';
+    try {
+      const decoded = decodeURIComponent(raw);
+      // Sólo aceptamos paths internos (empiezan con / pero no //)
+      if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.startsWith('/http')) {
+        return decoded;
+      }
+    } catch { /* ignore */ }
+    return '';
+  })();
+
   const onSubmit = async (data: FormData) => {
     try {
       const res = await authApi.login(data.email, data.password);
       setAuth(res.user, res.accessToken, res.refreshToken);
-      // Redirigir según el rol — prestadores y gestoras van a su panel propio
+      // Prioridad 1: si vinieron desde un link directo, volver a esa ruta
+      if (next) {
+        router.push(next);
+        return;
+      }
+      // Prioridad 2: destino por defecto según el rol
       if (res.user.role === 'PROVIDER') router.push('/provider');
       else if (res.user.role === 'REALTOR') router.push('/realtor');
       else router.push('/dashboard');
@@ -45,6 +76,13 @@ export default function LoginPage() {
           <HabittaLogo size={44} color="#C98E5B" accentColor="#7E9081" />
           <p className="text-habitta-charcoal/70 mt-1 text-sm">Iniciá sesión en tu cuenta</p>
         </div>
+
+        {/* Aviso "estás acá porque te empujamos desde un link directo" */}
+        {next && (
+          <div className="mb-4 bg-habitta-sand border border-habitta-olive/30 rounded-xl px-4 py-3 text-sm text-habitta-deep">
+            🔒 Para abrir <span className="font-mono text-xs bg-white/60 px-1.5 py-0.5 rounded">{next}</span> necesitás iniciar sesión. Después te llevamos directo ahí.
+          </div>
+        )}
 
         <div className="card">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -113,7 +151,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             ¿No tenés cuenta?{' '}
-            <Link href="/register" className="text-habitta-terra font-medium hover:underline">
+            <Link href={next ? `/register?next=${encodeURIComponent(next)}` : '/register'} className="text-habitta-terra font-medium hover:underline">
               Registrate
             </Link>
           </p>
