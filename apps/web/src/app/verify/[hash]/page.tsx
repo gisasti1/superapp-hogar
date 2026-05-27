@@ -35,7 +35,7 @@ export default function VerifyReceiptPage() {
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-2xl shadow-lg mb-3">🏡</div>
-          <h1 className="text-xl font-extrabold text-gray-900">SuperApp Hogar</h1>
+          <h1 className="text-xl font-extrabold text-gray-900">habitta</h1>
           <p className="text-xs text-gray-500">Verificación pública de recibo</p>
         </div>
 
@@ -57,7 +57,7 @@ export default function VerifyReceiptPage() {
             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-4 text-center">
               <div className="text-3xl">✅</div>
               <p className="font-extrabold mt-1">Recibo verificado</p>
-              <p className="text-xs opacity-80 mt-0.5">Emitido por SuperApp Hogar</p>
+              <p className="text-xs opacity-80 mt-0.5">Emitido por habitta</p>
             </div>
 
             <div className="p-5 space-y-3">
@@ -111,7 +111,7 @@ export default function VerifyReceiptPage() {
 
         <p className="text-center text-xs text-gray-400">
           ¿Querés ver más?{' '}
-          <Link href="/" className="text-brand-600 font-semibold hover:underline">Conocé SuperApp Hogar</Link>
+          <Link href="/" className="text-brand-600 font-semibold hover:underline">Conocé habitta</Link>
         </p>
       </div>
     </div>

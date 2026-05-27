@@ -18,7 +18,7 @@ export class S3Service {
     const accessKeyId = this.config.get<string>('app.aws.accessKeyId');
     const secretAccessKey = this.config.get<string>('app.aws.secretAccessKey');
     this.region = this.config.get<string>('app.aws.region') ?? 'us-east-1';
-    this.bucket = this.config.get<string>('app.aws.s3Bucket') ?? 'superapp-hogar-dev';
+    this.bucket = this.config.get<string>('app.aws.s3Bucket') ?? 'habitta-dev';
 
     if (accessKeyId && secretAccessKey) {
       this.client = new S3Client({

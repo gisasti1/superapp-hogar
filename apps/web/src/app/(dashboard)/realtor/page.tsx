@@ -216,7 +216,7 @@ function RealtorPageInner() {
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <button onClick={() => setShowWelcome(false)} className="absolute top-4 right-4 text-white/70 hover:text-white text-xl">×</button>
           <div className="relative">
-            <p className="text-2xl mb-1">🏛️ ¡Bienvenida a SuperApp Hogar!</p>
+            <p className="text-2xl mb-1">🏛️ ¡Bienvenida a habitta!</p>
             <p className="text-sm opacity-90 max-w-sm">
               Tu cuenta de inmobiliaria está lista. Completá el perfil de la agencia para aparecer verificada en el marketplace.
             </p>

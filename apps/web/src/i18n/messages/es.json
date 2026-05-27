@@ -48,7 +48,7 @@
   "nav.adminPanel": "Panel Admin",
   "nav.logout": "Cerrar sesión",
 
-  "auth.register.title": "SuperApp Hogar",
+  "auth.register.title": "habitta",
   "auth.register.subtitle": "¿Cómo vas a usar la app?",
   "auth.register.alreadyHaveAccount": "¿Ya tenés cuenta?",
   "auth.register.login": "Iniciá sesión",
@@ -70,7 +70,7 @@
   "myRental.header.eyebrow": "Mi alquiler",
   "myRental.header.title": "Contrato externo y pagos",
   "myRental.header.subtitle": "Llevá la bitácora de tu alquiler — datos del propietario, monto, vencimientos y cada pago hecho.",
-  "myRental.welcome.title": "¡Bienvenido a SuperApp Hogar! 🎉",
+  "myRental.welcome.title": "¡Bienvenido a habitta! 🎉",
   "myRental.welcome.body": "Cargá los datos de tu alquiler actual abajo y vas a poder registrar tus pagos mensuales, guardar comprobantes y pedir servicios para el hogar cuando los necesites.",
   "myRental.summary.property": "Inmueble",
   "myRental.summary.monthlyAmount": "Monto mensual",

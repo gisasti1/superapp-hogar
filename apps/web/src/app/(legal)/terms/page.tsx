@@ -1,4 +1,4 @@
-export const metadata = { title: 'Términos y condiciones — SuperApp Hogar' };
+export const metadata = { title: 'Términos y condiciones — habitta' };
 
 export default function TermsPage() {
   return (
@@ -8,13 +8,13 @@ export default function TermsPage() {
 
       <h2>1. Aceptación</h2>
       <p>
-        Al crear una cuenta o usar SuperApp Hogar aceptás estos términos. Si no estás de acuerdo,
+        Al crear una cuenta o usar habitta aceptás estos términos. Si no estás de acuerdo,
         no uses el servicio.
       </p>
 
       <h2>2. Naturaleza del servicio</h2>
       <p>
-        SuperApp Hogar es una plataforma tecnológica que conecta inquilinos, propietarios e
+        habitta es una plataforma tecnológica que conecta inquilinos, propietarios e
         inmobiliarias, facilitando: publicación de inmuebles, firma digital de contratos,
         gestión de pagos, contratación de seguros de caución, mediación asistida por IA y
         marketplace de servicios del hogar.
@@ -56,7 +56,7 @@ export default function TermsPage() {
       <h2>7. Seguro de caución</h2>
       <p>
         Las pólizas son emitidas por compañías aseguradoras autorizadas (Finaer, Experta, etc).
-        SuperApp Hogar actúa como intermediario; los términos específicos de cada póliza son
+        habitta actúa como intermediario; los términos específicos de cada póliza son
         responsabilidad de la aseguradora.
       </p>
 
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
       <h2>9. Limitación de responsabilidad</h2>
       <p>
-        SuperApp Hogar no es responsable por: el estado real de los inmuebles publicados, el
+        habitta no es responsable por: el estado real de los inmuebles publicados, el
         cumplimiento de los contratos entre las partes, fallas de servicios de terceros
         (Mercado Pago, RENAPER, etc.) ni por daños indirectos derivados del uso de la plataforma.
       </p>

@@ -6,14 +6,14 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'SuperApp Hogar',
-  description: 'Alquilá sin estrés. Seguro de caución, contrato digital, pagos y mediación en un solo lugar.',
+  title: 'habitta — Donde tu hogar, encuentra todo',
+  description: 'Alquilá fácil. Viví tranquilo. Seguro de caución, contrato digital, pagos y servicios del hogar en un solo lugar.',
   manifest: '/manifest.json',
-  applicationName: 'SuperApp Hogar',
+  applicationName: 'habitta',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'SuperApp Hogar',
+    title: 'habitta',
   },
   icons: {
     icon: [
@@ -33,7 +33,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#1a56db',
+  themeColor: '#C98E5B',  // habitta-terra
   // Soporta safe-area de iPhone X+ (notch)
   viewportFit: 'cover',
 };

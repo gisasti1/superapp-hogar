@@ -159,7 +159,7 @@ export class ReceiptsService {
     const dash  = '·'.repeat(60);
     const txt   = [
       sep,
-      '        SUPERAPP HOGAR — COMPROBANTE DE PAGO',
+      '        HABITTA — COMPROBANTE DE PAGO',
       sep,
       '',
       `N° de recibo:   ${r.number}`,
@@ -188,11 +188,11 @@ export class ReceiptsService {
       ] : []),
       dash,
       `Hash sha256:    ${r.payloadHash}`,
-      `Verificación:   https://superapp-hogar/verify/${r.payloadHash}`,
+      `Verificación:   https://habitta/verify/${r.payloadHash}`,
       dash,
       '',
       'Este comprobante es un recibo NO fiscal emitido por la plataforma',
-      'SuperApp Hogar y vale como prueba civil del pago entre las partes.',
+      'habitta y vale como prueba civil del pago entre las partes.',
       'No reemplaza factura AFIP si la ley lo exige.',
       '',
       sep,

@@ -69,7 +69,7 @@ export class EmailService {
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: msg.to }] }],
-          from: { email: this.fromEmail, name: 'SuperApp Hogar' },
+          from: { email: this.fromEmail, name: 'habitta' },
           subject: msg.subject,
           content: [
             { type: 'text/plain', value: msg.text },

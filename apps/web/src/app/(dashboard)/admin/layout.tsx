@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="space-y-4">
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-4">
         <p className="text-xs uppercase tracking-wide opacity-80">Panel de administración</p>
-        <p className="text-lg font-bold">SuperApp Hogar — Admin</p>
+        <p className="text-lg font-bold">habitta — Admin</p>
       </div>
 
       {/* Tabs admin */}

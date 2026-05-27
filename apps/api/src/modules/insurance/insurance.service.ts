@@ -103,7 +103,7 @@ export class InsuranceService {
     if (policy.userId !== userId) throw new ForbiddenException('Sin acceso a esta póliza.');
 
     const lines = [
-      'SUPERAPP HOGAR - PÓLIZA DE SEGURO DE GARANTÍA',
+      'HABITTA - PÓLIZA DE SEGURO DE GARANTÍA',
       '='.repeat(50),
       `Número de póliza: ${policy.policyNumber}`,
       `Estado: ${policy.status}`,
@@ -112,7 +112,7 @@ export class InsuranceService {
       `Vigencia: ${policy.startDate.toISOString().split('T')[0]} al ${policy.endDate.toISOString().split('T')[0]}`,
       `Proveedor ID: ${policy.providerId}`,
       '',
-      'Generado automáticamente por SuperApp Hogar.',
+      'Generado automáticamente por habitta.',
     ];
 
     return Buffer.from(lines.join('\n'), 'utf-8');

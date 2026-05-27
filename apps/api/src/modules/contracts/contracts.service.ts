@@ -209,7 +209,7 @@ export class ContractsService {
 
   async generatePdf(contract: Contract): Promise<Buffer> {
     const lines = [
-      'SUPERAPP HOGAR - CONTRATO DE LOCACIÓN',
+      'HABITTA - CONTRATO DE LOCACIÓN',
       '='.repeat(50),
       `ID de Contrato: ${contract.id}`,
       `Propiedad ID: ${contract.propertyId}`,
