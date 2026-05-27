@@ -1,40 +1,23 @@
 'use client';
 
 /**
- * Error boundary GLOBAL.
+ * Error boundary GLOBAL. Atrapa cualquier excepción que se escape
+ * de los layouts y páginas.
  *
- * Política revisada:
- *  - NO mostramos pantalla de error por cualquier excepción.
- *  - Auto-reset silencioso 2 veces antes de mostrar nada al usuario.
- *  - Filtramos errores conocidos que no son problemas reales:
- *      · NEXT_REDIRECT (es Next haciendo un redirect)
- *      · NEXT_NOT_FOUND (es Next mostrando 404)
- *      · errores de cancelación de fetch (componente desmontado)
- *      · errores de red 401/403 (los maneja el interceptor)
- *  - Sólo si después de auto-reset el error PERSISTE mostramos el modal.
- *  - Nunca tocamos el auth store.
+ * Política:
+ *  - Si el usuario tiene sesión activa → lo llevamos al inicio (dashboard)
+ *    y NO le tocamos el auth store. Su sesión sigue válida.
+ *  - Si no tiene sesión → lo llevamos a la landing pública.
+ *  - En ningún caso forzamos un logout. Errores de carga / fetch / runtime
+ *    no significan que la sesión se invalidó.
+ *
+ * Los errores 401 los maneja el interceptor de axios (sí redirige a /login
+ * porque ahí la sesión sí está rota).
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
-
-// Errores que Next.js o el navegador tiran pero NO son fallas reales
-const KNOWN_TRANSIENT = [
-  'NEXT_REDIRECT',
-  'NEXT_NOT_FOUND',
-  'AbortError',
-  'The user aborted a request',
-  'cancelled',
-  'Component unmounted',
-];
-
-function isTransient(err?: Error & { digest?: string }) {
-  if (!err) return true;
-  const msg = String(err.message ?? '');
-  const digest = String(err.digest ?? '');
-  return KNOWN_TRANSIENT.some(k => msg.includes(k) || digest.includes(k));
-}
 
 export default function GlobalError({
   error,
@@ -45,50 +28,40 @@ export default function GlobalError({
 }) {
   const router = useRouter();
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
-  const [showUI, setShowUI] = useState(false);
-  const retried = useRef(0);
 
   useEffect(() => {
-    // Log mínimo a consola (no es bug crítico salvo que se vea en producción)
+    // log para debugging
     // eslint-disable-next-line no-console
-    console.warn('[GlobalError]', error?.message, error?.digest);
+    console.error('[GlobalError]', error?.message, error?.digest);
+  }, [error]);
 
-    // Caso 1: error transitorio conocido → reset silencioso
-    if (isTransient(error)) {
-      reset();
-      return;
+  const handleGoHome = () => {
+    if (isAuthenticated) {
+      // Volver al dashboard sin tocar el auth store
+      router.push('/dashboard');
+    } else {
+      router.push('/');
     }
-
-    // Caso 2: intentar 2 auto-resets antes de mostrar la pantalla
-    if (retried.current < 2) {
-      retried.current += 1;
-      const t = setTimeout(() => reset(), 400);
-      return () => clearTimeout(t);
-    }
-
-    // Caso 3: ya intentamos 2 veces y sigue fallando → mostrar al usuario
-    setShowUI(true);
-  }, [error, reset]);
-
-  if (!showUI) return null;
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-habitta-cream px-4 py-12">
-      <div className="bg-white rounded-2xl shadow-sm border border-habitta-sand p-8 max-w-md w-full text-center space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full text-center space-y-4">
         <div className="text-5xl">😵‍💫</div>
-        <h1 className="text-xl font-extrabold text-habitta-deep">Algo no salió bien</h1>
-        <p className="text-sm text-habitta-charcoal/80">
-          Tuvimos un problema cargando esta página. Tu sesión sigue activa.
+        <h1 className="text-xl font-extrabold text-gray-900">Algo no salió bien</h1>
+        <p className="text-sm text-gray-500">
+          Tuvimos un problema cargando esta página. Tu sesión sigue activa y
+          podemos volver al inicio sin perder nada.
         </p>
         <div className="flex gap-2 justify-center pt-2">
           <button
-            onClick={() => { retried.current = 0; setShowUI(false); reset(); }}
-            className="text-sm font-medium text-habitta-deep border border-habitta-olive/40 px-4 py-2 rounded-lg hover:bg-habitta-sand transition-colors"
+            onClick={() => reset()}
+            className="text-sm font-medium text-gray-600 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
             🔄 Reintentar
           </button>
           <button
-            onClick={() => router.push(isAuthenticated ? '/dashboard' : '/')}
+            onClick={handleGoHome}
             className="text-sm font-semibold bg-habitta-terra hover:bg-habitta-earth text-white px-4 py-2 rounded-lg transition-colors"
           >
             {isAuthenticated ? '🏠 Ir al inicio' : '👋 Volver al inicio'}

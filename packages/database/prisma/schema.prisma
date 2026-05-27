@@ -380,10 +380,6 @@ model Property {
   rentalRequests RentalRequest[]
   visits    PropertyVisit[]
 
-  // Índices para los queries más calientes (búsqueda + listings + dashboard)
-  @@index([isActive, city])
-  @@index([isActive, monthlyRent])
-  @@index([ownerId, isActive])
   @@map("properties")
 }
 
@@ -410,8 +406,6 @@ model Listing {
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  // Index para el listado público — el most-hit query del marketplace
-  @@index([isPublished, createdAt])
   @@map("listings")
 }
 
@@ -792,8 +786,6 @@ model Provider {
   @@index([kycStatus])
   @@index([licenseStatus])
   @@index([isVerified, isActive])
-  // Para filtros del marketplace de servicios (categoría + verificados)
-  @@index([category, isActive])
   @@map("providers")
 }
 
