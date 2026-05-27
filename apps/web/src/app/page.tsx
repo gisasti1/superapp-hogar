@@ -93,7 +93,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-habitta-cream/80 mb-8 max-w-xl mx-auto">
             Creá tu cuenta en 2 minutos y accedé a seguro de caución, contrato digital,
-            comprobantes y todo el resto.
+            comprobantes y todo lo que tu hogar necesita.
           </p>
           <Link href="/register" className="inline-flex items-center bg-habitta-terra hover:bg-habitta-earth text-habitta-cream font-bold px-8 py-3 rounded-full transition-colors shadow-sm">
             Crear cuenta gratis
