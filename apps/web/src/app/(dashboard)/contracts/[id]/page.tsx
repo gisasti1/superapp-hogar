@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ContractReviews } from '@/components/ContractReviews';
 import { ChatButton } from '@/components/ChatButton';
 import { RentAdjuster } from '@/components/RentAdjuster';
+import { ContractCoSigners } from '@/components/ContractCoSigners';
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Borrador',
@@ -252,6 +253,11 @@ export default function ContractDetailPage() {
               </Link>
             </div>
           )}
+
+          <ContractCoSigners
+            contractId={contract.id}
+            locked={['SIGNED', 'ACTIVE', 'TERMINATED', 'EXPIRED'].includes(contract.status)}
+          />
 
           <ContractReviews contractId={contract.id} contractStatus={contract.status} />
 

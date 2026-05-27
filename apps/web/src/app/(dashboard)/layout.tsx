@@ -21,6 +21,7 @@ const NAV_BASE = [
 
 const NAV_TENANT_LANDLORD = [
   { href: '/rental-requests',     k: 'nav.rentalRequests', icon: '📨' },
+  { href: '/visits',              k: 'nav.visits',         icon: '📅' },
   { href: '/contracts',           k: 'nav.contracts',      icon: '📄' },
   { href: '/contracts/templates', k: 'nav.templates',      icon: '📋' },
   { href: '/payments',            k: 'nav.payments',       icon: '💳' },

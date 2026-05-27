@@ -270,7 +270,7 @@ export const favoritesApi = {
 export const rentalRequestsApi = {
   list: () => apiClient.get('/rental-requests').then(r => r.data),
   get: (id: string) => apiClient.get(`/rental-requests/${id}`).then(r => r.data),
-  create: (propertyId: string, dto: { message: string; proposedStartDate?: string; proposedMonths?: number }) =>
+  create: (propertyId: string, dto: { message: string; proposedStartDate?: string; proposedMonths?: number; proposedMonthlyAmount?: number }) =>
     apiClient.post(`/rental-requests/property/${propertyId}`, dto).then(r => r.data),
   approve: (id: string, response?: string) =>
     apiClient.post(`/rental-requests/${id}/approve`, { response }).then(r => r.data),
@@ -278,6 +278,39 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/reject`, { response }).then(r => r.data),
   cancel: (id: string) =>
     apiClient.post(`/rental-requests/${id}/cancel`).then(r => r.data),
+  counter: (id: string, dto: { amount?: number; months?: number; startDate?: string; message?: string }) =>
+    apiClient.post(`/rental-requests/${id}/counter`, dto).then(r => r.data),
+};
+
+// ─── Visitas a propiedades ─────────────────────────────────────────────────
+export const visitsApi = {
+  list: () => apiClient.get('/visits').then(r => r.data),
+  slotsForProperty: (propertyId: string) =>
+    apiClient.get(`/visits/property/${propertyId}/slots`).then(r => r.data),
+  create: (dto: { propertyId: string; proposedDate: string; message?: string }) =>
+    apiClient.post('/visits', dto).then(r => r.data),
+  counter: (id: string, dto: { proposedDate: string; message?: string }) =>
+    apiClient.post(`/visits/${id}/counter`, dto).then(r => r.data),
+  confirm: (id: string) =>
+    apiClient.post(`/visits/${id}/confirm`).then(r => r.data),
+  reject: (id: string, reason?: string) =>
+    apiClient.post(`/visits/${id}/reject`, { reason }).then(r => r.data),
+  cancel: (id: string, reason?: string) =>
+    apiClient.post(`/visits/${id}/cancel`, { reason }).then(r => r.data),
+};
+
+// ─── Co-firmantes de contrato ──────────────────────────────────────────────
+export const contractPartiesApi = {
+  list: (contractId: string) =>
+    apiClient.get(`/contracts/${contractId}/parties`).then(r => r.data),
+  invite: (contractId: string, dto: { email: string; side: 'TENANT' | 'LANDLORD' }) =>
+    apiClient.post(`/contracts/${contractId}/parties/invite`, dto).then(r => r.data),
+  accept: (contractId: string, token: string) =>
+    apiClient.post(`/contracts/${contractId}/parties/accept/${token}`).then(r => r.data),
+  decline: (contractId: string, token: string) =>
+    apiClient.post(`/contracts/${contractId}/parties/decline/${token}`).then(r => r.data),
+  remove: (contractId: string, partyId: string) =>
+    apiClient.delete(`/contracts/${contractId}/parties/${partyId}`).then(r => r.data),
 };
 
 // ─── Admin (role=ADMIN only) ───────────────────────────────────────────────

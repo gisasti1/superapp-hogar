@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { listingsApi, favoritesApi, rentalRequestsApi } from '@/lib/api';
+import { listingsApi, favoritesApi, rentalRequestsApi, visitsApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PropertyMap } from '@/components/PropertyMap';
 import { useAuthStore } from '@/stores/auth.store';
@@ -287,6 +287,8 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                 )}
+                <RequestVisitButton propertyId={property.id} />
+
                 <a
                   href={`mailto:?subject=Consulta por inmueble en ${property.address}`}
                   className="btn-secondary w-full text-center block text-sm"
@@ -363,6 +365,72 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     <div className="text-center p-3 bg-gray-50 rounded-lg">
       <p className="text-xl font-bold text-gray-900">{value}</p>
       <p className="text-xs text-gray-500 mt-1">{label}</p>
+    </div>
+  );
+}
+
+/* ─── Pedir visita ─── */
+function RequestVisitButton({ propertyId }: { propertyId: string }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState('');
+  const [message, setMessage] = useState('');
+  const [sent, setSent] = useState(false);
+  const minDate = (() => {
+    const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset() + 60);
+    return d.toISOString().slice(0,16);
+  })();
+
+  const mut = useMutation({
+    mutationFn: () => visitsApi.create({
+      propertyId,
+      proposedDate: new Date(date).toISOString(),
+      message,
+    }),
+    onSuccess: () => setSent(true),
+    onError:   (e: any) => alert(e?.response?.data?.message ?? 'Error al pedir la visita'),
+  });
+
+  if (sent) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg p-3 text-center space-y-1">
+        ✓ Visita propuesta. Esperá la confirmación.
+        <Link href="/visits" className="block underline">Ver mis visitas →</Link>
+      </div>
+    );
+  }
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="btn-secondary w-full text-sm">
+        📅 Pedir visita
+      </button>
+    );
+  }
+  return (
+    <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 space-y-2">
+      <p className="text-xs font-bold text-indigo-700">Proponé fecha y hora</p>
+      <input
+        type="datetime-local"
+        className="input"
+        value={date}
+        min={minDate}
+        onChange={e => setDate(e.target.value)}
+      />
+      <textarea
+        className="input min-h-[60px] text-sm"
+        placeholder="Mensaje opcional (ej: ¿podemos ir con la pareja?)"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={() => mut.mutate()}
+          disabled={!date || mut.isPending}
+          className="btn-primary flex-1 text-sm"
+        >
+          {mut.isPending ? 'Enviando…' : 'Enviar propuesta'}
+        </button>
+        <button onClick={() => setOpen(false)} className="btn-secondary text-sm">Cancelar</button>
+      </div>
     </div>
   );
 }
