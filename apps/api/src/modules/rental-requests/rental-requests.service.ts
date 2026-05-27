@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateRentalRequestDto, RespondRentalRequestDto } from './dto/create-rental-request.dto';
 
 @Injectable()
 export class RentalRequestsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * El inquilino postula a una propiedad publicada. No queremos:
@@ -146,7 +150,7 @@ export class RentalRequestsService {
     if (hasAmount && dto.amount! <= 0) throw new BadRequestException('El monto debe ser > 0');
     if (hasMonths && dto.months! < 1)  throw new BadRequestException('La duración debe ser >= 1 mes');
 
-    return this.prisma.rentalRequest.update({
+    const updated = await this.prisma.rentalRequest.update({
       where: { id },
       data:  {
         counterAmount:    hasAmount ? dto.amount : req.counterAmount,
@@ -159,6 +163,15 @@ export class RentalRequestsService {
         status:           'COUNTER_OFFERED',
       },
     });
+
+    const toUserId = userId === req.tenantId ? req.landlordId : req.tenantId;
+    const me = await this.prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+    this.notifications.notifyRentalCounter(
+      toUserId, id,
+      `${me?.firstName ?? ''} ${me?.lastName ?? ''}`.trim() || 'La otra parte',
+      hasAmount ? dto.amount : undefined,
+    ).catch(() => {});
+    return updated;
   }
 
   private async respond(
@@ -176,7 +189,7 @@ export class RentalRequestsService {
     if (!['PENDING', 'COUNTER_OFFERED'].includes(req.status)) {
       throw new BadRequestException('Sólo se pueden responder solicitudes activas.');
     }
-    return this.prisma.rentalRequest.update({
+    const updated = await this.prisma.rentalRequest.update({
       where: { id },
       data: {
         status,
@@ -184,6 +197,13 @@ export class RentalRequestsService {
         respondedAt: new Date(),
       },
     });
+    const prop = await this.prisma.property.findUnique({ where: { id: req.propertyId }, select: { address: true } });
+    if (status === 'APPROVED') {
+      this.notifications.notifyRentalApproved(req.tenantId, id, prop?.address ?? '').catch(() => {});
+    } else {
+      this.notifications.notifyRentalRejected(req.tenantId, id, prop?.address ?? '', response).catch(() => {});
+    }
+    return updated;
   }
 
   private includeForList() {

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface InviteCoSignerDto {
   email: string;
@@ -8,7 +9,10 @@ export interface InviteCoSignerDto {
 
 @Injectable()
 export class ContractPartiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /** Devuelve a primary + cosigners de cada lado, indicando quién soy yo. */
   async listForContract(userId: string, contractId: string) {
@@ -85,7 +89,7 @@ export class ContractPartiesService {
       throw new BadRequestException('Esa persona ya es el propietario del contrato');
     }
 
-    return this.prisma.contractParty.create({
+    const party = await this.prisma.contractParty.create({
       data: {
         contractId,
         userId:       existingUser?.id ?? null,
@@ -96,6 +100,17 @@ export class ContractPartiesService {
         status:       'INVITED',
       },
     });
+
+    // Notif al usuario invitado (sólo si tiene cuenta — si no, le llega por email cuando implementemos)
+    if (existingUser?.id) {
+      const me = await this.prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+      this.notifications.notifyCoSignerInvited(
+        existingUser.id, contractId, party.id,
+        `${me?.firstName ?? ''} ${me?.lastName ?? ''}`.trim() || 'Alguien',
+        dto.side,
+      ).catch(() => {});
+    }
+    return party;
   }
 
   /** Aceptar invitación con token (usuario logueado o vía link público). */
@@ -115,20 +130,31 @@ export class ContractPartiesService {
       throw new ForbiddenException('Esta invitación fue para otro usuario');
     }
 
-    return this.prisma.contractParty.update({
+    const updated = await this.prisma.contractParty.update({
       where: { id: party.id },
       data:  { userId, status: 'ACCEPTED', acceptedAt: new Date() },
     });
+    this.notifications.notifyCoSignerAccepted(
+      party.invitedById, contractId,
+      `${me.firstName ?? ''} ${me.lastName ?? ''}`.trim() || 'El co-firmante',
+    ).catch(() => {});
+    return updated;
   }
 
   async decline(userId: string, contractId: string, token: string) {
     const party = await this.prisma.contractParty.findUnique({ where: { inviteToken: token } });
     if (!party || party.contractId !== contractId) throw new NotFoundException('Invitación no válida');
     if (party.status !== 'INVITED') throw new BadRequestException(`La invitación está en estado ${party.status}`);
-    return this.prisma.contractParty.update({
+    const updated = await this.prisma.contractParty.update({
       where: { id: party.id },
       data:  { status: 'DECLINED', declinedAt: new Date() },
     });
+    const me = await this.prisma.user.findUnique({ where: { id: userId }, select: { firstName: true, lastName: true } });
+    this.notifications.notifyCoSignerDeclined(
+      party.invitedById, contractId,
+      `${me?.firstName ?? ''} ${me?.lastName ?? ''}`.trim() || party.invitedEmail || 'La persona invitada',
+    ).catch(() => {});
+    return updated;
   }
 
   /** El primary del lado puede quitar un co-firmante invitado o ACCEPTED. */

@@ -44,7 +44,8 @@ export default function VisitsPage() {
     queryKey: ['visits'],
     queryFn:  () => visitsApi.list(),
   });
-  const [tab, setTab] = useState<'all' | 'active' | 'done'>('active');
+  const [tab, setTab]   = useState<'all' | 'active' | 'done'>('active');
+  const [view, setView] = useState<'list' | 'calendar'>('list');
 
   if (isLoading) return <div className="flex justify-center py-16"><LoadingSpinner /></div>;
 
@@ -66,19 +67,32 @@ export default function VisitsPage() {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        {(['active','done','all'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`text-sm font-medium px-4 py-1.5 rounded-full transition-colors ${
-              tab === t ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
-            }`}
-          >
-            {t === 'active' ? 'Activas' : t === 'done' ? 'Finalizadas' : 'Todas'}
-          </button>
-        ))}
+      {/* Tabs + view toggle */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex gap-2">
+          {(['active','done','all'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`text-sm font-medium px-4 py-1.5 rounded-full transition-colors ${
+                tab === t ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-300'
+              }`}
+            >
+              {t === 'active' ? 'Activas' : t === 'done' ? 'Finalizadas' : 'Todas'}
+            </button>
+          ))}
+        </div>
+        <div className="bg-gray-100 rounded-xl p-0.5 inline-flex">
+          {(['list','calendar'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${view === v ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              {v === 'list' ? '☰ Lista' : '📆 Calendario'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -87,12 +101,14 @@ export default function VisitsPage() {
           <p className="text-sm">No tenés visitas {tab === 'active' ? 'activas' : tab === 'done' ? 'finalizadas' : ''} por ahora.</p>
           <p className="text-xs mt-1">Las podés pedir desde el detalle de cada propiedad.</p>
         </div>
-      ) : (
+      ) : view === 'list' ? (
         <ul className="space-y-3">
           {filtered.map((v: any) => (
             <VisitCard key={v.id} visit={v} meId={me?.id ?? ''} />
           ))}
         </ul>
+      ) : (
+        <CalendarView visits={filtered} meId={me?.id ?? ''} />
       )}
     </div>
   );
@@ -225,5 +241,99 @@ function VisitCard({ visit, meId }: { visit: any; meId: string }) {
         </div>
       </div>
     </li>
+  );
+}
+
+/* ─── Vista calendario (mensual) ───────────────────────────────────── */
+function CalendarView({ visits, meId }: { visits: any[]; meId: string }) {
+  const [month, setMonth] = useState(() => {
+    const d = new Date();
+    return { y: d.getFullYear(), m: d.getMonth() };
+  });
+
+  // Agrupar visitas por día (YYYY-MM-DD)
+  const byDay = new Map<string, any[]>();
+  for (const v of visits) {
+    const d = new Date(v.proposedDate);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!byDay.has(k)) byDay.set(k, []);
+    byDay.get(k)!.push(v);
+  }
+
+  const first    = new Date(month.y, month.m, 1);
+  const startDow = (first.getDay() + 6) % 7; // lunes=0
+  const daysIn   = new Date(month.y, month.m + 1, 0).getDate();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysIn; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const monthName = new Date(month.y, month.m, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  const today = new Date();
+
+  const [openDay, setOpenDay] = useState<string | null>(null);
+  const openDayVisits = openDay ? (byDay.get(openDay) ?? []) : [];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <button onClick={() => setMonth(m => m.m === 0 ? { y: m.y - 1, m: 11 } : { y: m.y, m: m.m - 1 })}
+          className="text-gray-500 hover:text-gray-900 text-lg w-8 h-8 rounded-lg hover:bg-gray-100">‹</button>
+        <p className="font-bold text-gray-900 capitalize">{monthName}</p>
+        <button onClick={() => setMonth(m => m.m === 11 ? { y: m.y + 1, m: 0 } : { y: m.y, m: m.m + 1 })}
+          className="text-gray-500 hover:text-gray-900 text-lg w-8 h-8 rounded-lg hover:bg-gray-100">›</button>
+      </div>
+
+      {/* DOW headers */}
+      <div className="grid grid-cols-7 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100">
+        {['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d => (
+          <div key={d} className="px-2 py-2 text-center">{d}</div>
+        ))}
+      </div>
+
+      {/* Cells */}
+      <div className="grid grid-cols-7">
+        {cells.map((d, i) => {
+          if (!d) return <div key={i} className="border-b border-r border-gray-100 min-h-[70px] bg-gray-50/50" />;
+          const k = `${month.y}-${String(month.m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const dayVisits = byDay.get(k) ?? [];
+          const isToday = today.getFullYear() === month.y && today.getMonth() === month.m && today.getDate() === d;
+          return (
+            <button
+              key={i}
+              onClick={() => dayVisits.length > 0 && setOpenDay(openDay === k ? null : k)}
+              className={`border-b border-r border-gray-100 min-h-[70px] p-1.5 text-left transition-colors ${
+                dayVisits.length > 0 ? 'hover:bg-indigo-50 cursor-pointer' : 'cursor-default'
+              } ${openDay === k ? 'bg-indigo-50' : ''}`}
+            >
+              <p className={`text-xs font-bold ${isToday ? 'inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white' : 'text-gray-700'}`}>{d}</p>
+              <div className="mt-1 space-y-0.5">
+                {dayVisits.slice(0, 2).map(v => (
+                  <p key={v.id} className={`text-[9px] truncate px-1 py-0.5 rounded ${STATUS_COLOR[v.status]}`}>
+                    {new Date(v.proposedDate).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                ))}
+                {dayVisits.length > 2 && (
+                  <p className="text-[9px] text-gray-500">+{dayVisits.length - 2} más</p>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Detalle del día seleccionado */}
+      {openDay && openDayVisits.length > 0 && (
+        <div className="border-t border-gray-100 p-4 space-y-2 bg-gray-50/40">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
+            Visitas del {new Date(openDay).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          {openDayVisits.map(v => (
+            <VisitCard key={v.id} visit={v} meId={meId} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
