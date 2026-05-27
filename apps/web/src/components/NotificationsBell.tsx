@@ -43,15 +43,12 @@ export function NotificationsBell() {
     return () => window.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // Poll cada 2 min para nuevas notificaciones (antes eran 30s — demasiado
-  // agresivo, generaba 120 requests/hora por usuario aunque no use la app).
-  // Si el dropdown está abierto, se refresca también al abrirlo.
+  // Poll cada 30s para nuevas notificaciones
   const { data } = useQuery<NotificationsResponse>({
     queryKey: ['notifications'],
     queryFn: () => apiClient.get('/notifications').then(r => r.data),
-    refetchInterval: 2 * 60 * 1000,
+    refetchInterval: 30_000,
     refetchIntervalInBackground: false,
-    staleTime: 60 * 1000,
   });
 
   const { mutate: markRead } = useMutation({

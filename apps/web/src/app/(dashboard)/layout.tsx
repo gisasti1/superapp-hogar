@@ -7,7 +7,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import { NotificationsBell } from '@/components/NotificationsBell';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { HabittaLogo } from '@/components/HabittaLogo';
-import { GlobalSearch } from '@/components/GlobalSearch';
 import { useT } from '@/i18n';
 import { clsx } from 'clsx';
 
@@ -74,26 +73,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const clearAuth = useAuthStore(s => s.clearAuth);
   const user = useAuthStore(s => s.user);
-  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const t = useT();
   const isAdmin    = user?.role === 'ADMIN';
   const isProvider = user?.role === 'PROVIDER';
   const isRealtor  = user?.role === 'REALTOR';
   const isSelfTenant = user?.selfManagedRental === true;
-
-  // ─── Guard: si no hay sesión, redirigir a /login con el path original ───
-  // Así si el usuario abre un link directo a una pantalla privada (ej:
-  // /listings/abc o /contracts/xyz) y no está logueado, lo mandamos a
-  // /login?next=<ruta> y al loguearse vuelve directo a esa pantalla.
-  useEffect(() => {
-    if (!isAuthenticated) {
-      const next = encodeURIComponent(pathname || '/dashboard');
-      router.replace(`/login?next=${next}`);
-    }
-  }, [isAuthenticated, pathname, router]);
-
-  // Mientras se hace el redirect, no renderizamos nada del dashboard
-  if (!isAuthenticated) return null;
 
   // NAV completo según rol
   const NAV = isProvider ? [
@@ -242,7 +226,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <HabittaLogo variant="wordmark" size={20} href="/dashboard" accentColor="#C98E5B" />
           </span>
           <div className="flex items-center gap-2">
-            <GlobalSearch />
             <LanguageSwitcher />
             <NotificationsBell />
           </div>
