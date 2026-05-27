@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 export const BILL_CATEGORIES = [
   'RENT', 'EXPENSES', 'ELECTRIC', 'GAS', 'WATER',
@@ -42,7 +43,10 @@ export interface PayMonthDto {
 
 @Injectable()
 export class BillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly receipts: ReceiptsService,
+  ) {}
 
   /* ─── Items recurrentes ─────────────────────────────────────────────── */
 
@@ -253,7 +257,7 @@ export class BillsService {
       throw new BadRequestException('El total del mes es 0 — activá al menos un concepto con monto');
     }
 
-    return this.prisma.monthlyPayment.create({
+    const payment = await this.prisma.monthlyPayment.create({
       data: {
         userId,
         period:    dto.period,
@@ -265,6 +269,21 @@ export class BillsService {
         note:      dto.note?.trim() || null,
       },
     });
+
+    // Recibo del Particular (auto-emitido sin contraparte ya que no hay
+    // un receiver registrado en este flujo; queda como "constancia personal")
+    this.receipts.emit({
+      payerId:      userId,
+      sourceType:   'BILLS_MONTHLY',
+      sourceId:     payment.id,
+      amount:       total,
+      currency:     payment.currency,
+      paidAt:       payment.paidAt,
+      method:       (payment.method as any) ?? 'TRANSFER',
+      description:  `Presupuesto mensual ${dto.period}`,
+      breakdown:    items,
+    }).catch(() => {});
+    return payment;
   }
 
   async deleteMonthlyPayment(userId: string, id: string) {

@@ -34,6 +34,7 @@ import { MyRentalModule } from './modules/my-rental/my-rental.module';
 import { BillsModule } from './modules/bills/bills.module';
 import { VisitsModule } from './modules/visits/visits.module';
 import { ContractPartiesModule } from './modules/contract-parties/contract-parties.module';
+import { ReceiptsModule } from './modules/receipts/receipts.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -93,6 +94,7 @@ import { validateEnv } from './config/env.validation';
     BillsModule,
     VisitsModule,
     ContractPartiesModule,
+    ReceiptsModule,
   ],
 })
 export class AppModule {}

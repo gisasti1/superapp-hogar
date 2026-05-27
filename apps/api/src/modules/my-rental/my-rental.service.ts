@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 export interface UpsertExternalRentalDto {
   landlordName:   string;
@@ -30,7 +31,10 @@ export interface RegisterPaymentDto {
 
 @Injectable()
 export class MyRentalService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly receipts: ReceiptsService,
+  ) {}
 
   /* ── Contrato externo ─────────────────────────────────────────────── */
 
@@ -145,7 +149,7 @@ export class MyRentalService {
       throw new ConflictException(`Ya hay un pago registrado para ${dto.period}`);
     }
 
-    return this.prisma.externalPayment.create({
+    const payment = await this.prisma.externalPayment.create({
       data: {
         rentalId:   rental.id,
         period:     dto.period,
@@ -157,6 +161,30 @@ export class MyRentalService {
         note:       dto.note?.trim() || null,
       },
     });
+
+    // Emitir recibo. La contraparte (landlord externo) NO tiene cuenta —
+    // queda como receptor "fantasma" con su nombre del contrato externo.
+    const full = await this.prisma.externalRental.findUnique({
+      where:   { userId },
+      include: { user: { select: { firstName: true, lastName: true, dni: true } } },
+    });
+    if (full) {
+      this.receipts.emit({
+        payerId:      userId,
+        payerName:    `${full.user.firstName} ${full.user.lastName}`,
+        payerDni:     full.user.dni,
+        receiverId:   null,
+        receiverName: full.landlordName,
+        sourceType:   'EXTERNAL_PAYMENT',
+        sourceId:     payment.id,
+        amount:       Number(payment.amount),
+        currency:     payment.currency,
+        paidAt:       payment.paidAt,
+        method:       (payment.method as any) ?? 'TRANSFER',
+        description:  `Alquiler ${dto.period} — ${full.address}`,
+      }).catch(() => { /* no falla el pago si la emisión falla */ });
+    }
+    return payment;
   }
 
   async deletePayment(userId: string, paymentId: string) {

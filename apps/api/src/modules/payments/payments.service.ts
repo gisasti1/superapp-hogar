@@ -8,6 +8,7 @@ import {
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MercadoPagoService } from '../../common/services/mercadopago.service';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 @Injectable()
 export class PaymentsService {
@@ -16,6 +17,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mercadoPago: MercadoPagoService,
+    private readonly receipts: ReceiptsService,
   ) {}
 
   async listByUser(userId: string) {
@@ -104,7 +106,32 @@ export class PaymentsService {
       },
     });
 
+    if (newStatus === 'PAID') {
+      this.emitReceiptFor(paymentId, 'MERCADOPAGO').catch(err =>
+        this.logger.warn(`No se pudo emitir recibo para payment ${paymentId}: ${err.message}`),
+      );
+    }
     return { received: true };
+  }
+
+  /** Emite un recibo a partir del Payment ya marcado como PAID. Idempotente. */
+  private async emitReceiptFor(paymentId: string, method: 'MERCADOPAGO' | 'TRANSFER' | 'CASH' | 'OTHER' = 'MERCADOPAGO') {
+    const p = await this.prisma.payment.findUnique({
+      where:   { id: paymentId },
+      include: { payer: true, receiver: true },
+    });
+    if (!p) return;
+    return this.receipts.emit({
+      payerId:     p.payerId,
+      receiverId:  p.receiverId,
+      sourceType:  'CONTRACT_PAYMENT',
+      sourceId:    p.id,
+      amount:      Number(p.amount),
+      currency:    p.currency,
+      paidAt:      p.paidAt ?? new Date(),
+      method,
+      description: p.receiptNote ?? `Pago de ${p.type ?? 'concepto'}`,
+    });
   }
 
   @Cron('0 9 5 * *')
@@ -200,7 +227,7 @@ export class PaymentsService {
       throw new ForbiddenException('Sólo el propietario receptor puede aprobar el comprobante.');
     }
 
-    return this.prisma.payment.update({
+    const updated = await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
         status: 'PAID',
@@ -209,6 +236,11 @@ export class PaymentsService {
         approvedAt: new Date(),
       },
     });
+    // Emitir recibo (manual: el inquilino había subido comprobante, el dueño aprobó)
+    this.emitReceiptFor(paymentId, 'TRANSFER').catch(err =>
+      this.logger.warn(`No se pudo emitir recibo para payment ${paymentId}: ${err.message}`),
+    );
+    return updated;
   }
 
   async rejectReceipt(reviewerId: string, paymentId: string, reason: string) {

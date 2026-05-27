@@ -282,6 +282,21 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/counter`, dto).then(r => r.data),
 };
 
+// ─── Comprobantes de pago (recibo NO fiscal) ───────────────────────────────
+export const receiptsApi = {
+  list: () => apiClient.get('/receipts').then(r => r.data),
+  get:  (id: string) => apiClient.get(`/receipts/${id}`).then(r => r.data),
+  verify: (hash: string) =>
+    apiClient.get(`/receipts/verify/${hash}`).then(r => r.data),
+  download: async (id: string, number: string) => {
+    const res = await apiClient.get(`/receipts/${id}/download`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `comprobante-${number}.txt`; a.click();
+    window.URL.revokeObjectURL(url);
+  },
+};
+
 // ─── Visitas a propiedades ─────────────────────────────────────────────────
 export const visitsApi = {
   list: () => apiClient.get('/visits').then(r => r.data),

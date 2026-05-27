@@ -305,6 +305,10 @@ model User {
   contractParties   ContractParty[]  @relation("ContractPartyUser")
   contractInvites   ContractParty[]  @relation("ContractPartyInviter")
 
+  // ─── Recibos de pago ───────────────────────────────────────────────
+  receiptsAsPayer    PaymentReceipt[] @relation("ReceiptsAsPayer")
+  receiptsAsReceiver PaymentReceipt[] @relation("ReceiptsAsReceiver")
+
   @@map("users")
 }
 
@@ -1356,4 +1360,49 @@ model ContractParty {
   @@index([contractId, side])
   @@index([userId])
   @@map("contract_parties")
+}
+
+// ─── Comprobantes de pago (recibo NO fiscal) ──────────────────────────────
+// Se emite automáticamente cada vez que se confirma un pago en la app,
+// independiente del flujo (MP, registro manual, bills mensuales).
+// NO va a AFIP — es un recibo civil entre partes con hash sha256 y QR de
+// verificación. Vale como prueba del pago.
+model PaymentReceipt {
+  id           String   @id @default(uuid())
+  // Número correlativo legible. Formato: R-YYYYMM-XXXXXXXX
+  number       String   @unique
+
+  // Partes — userId si la persona tiene cuenta, snapshot del nombre/DNI siempre
+  payerId      String?
+  receiverId   String?
+  payerName    String
+  receiverName String
+  payerDni     String?
+  receiverDni  String?
+
+  // Origen del pago para trazar al registro original
+  // 'CONTRACT_PAYMENT' | 'EXTERNAL_PAYMENT' | 'BILLS_MONTHLY' | 'OTHER'
+  sourceType   String
+  sourceId     String?
+
+  // Datos del pago
+  amount       Decimal  @db.Decimal(12, 2)
+  currency     String   @default("ARS")
+  paidAt       DateTime
+  method       String?  // 'CASH' | 'TRANSFER' | 'MERCADOPAGO' | 'CARD' | 'AUTO_DEBIT' | 'OTHER'
+  description  String?
+  // Para bills con desglose por categoría
+  breakdown    Json?
+
+  // Integridad — sha256 del payload canónico (para verificación pública)
+  payloadHash  String   @unique
+  emittedAt    DateTime @default(now())
+
+  payer    User? @relation("ReceiptsAsPayer",    fields: [payerId],    references: [id])
+  receiver User? @relation("ReceiptsAsReceiver", fields: [receiverId], references: [id])
+
+  @@index([payerId,    emittedAt])
+  @@index([receiverId, emittedAt])
+  @@index([sourceType, sourceId])
+  @@map("payment_receipts")
 }
