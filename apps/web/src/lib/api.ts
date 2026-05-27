@@ -21,6 +21,9 @@ if (typeof window !== 'undefined') {
     return config;
   });
 
+  // Flag global para evitar redirects duplicados durante el unload de la página
+  let redirecting = false;
+
   // 401 = token expirado/inválido → único caso donde forzamos navegación
   // a /login. Para cualquier otro error (5xx, red, timeout) NO desloguemos
   // ni redirigimos: dejamos que la página o el error boundary lo manejen.
@@ -31,13 +34,18 @@ if (typeof window !== 'undefined') {
       if (status === 401) {
         // No estamos ya en una pantalla pública? Si sí, no rebotar en loop.
         const path = typeof window !== 'undefined' ? window.location.pathname : '';
-        const isPublic = ['/', '/login', '/register', '/forgot-password', '/reset-password'].some(p =>
+        const isPublic = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify'].some(p =>
           path === p || path.startsWith(p + '/'),
         );
-        if (!isPublic) {
+        if (!isPublic && !redirecting) {
+          redirecting = true;
           // Preservamos la ruta + querystring para volver acá después del login
           const next = encodeURIComponent(path + (window.location.search || ''));
-          window.location.href = `/login?next=${next}`;
+          window.location.replace(`/login?next=${next}`);
+          // Devolvemos una promesa pendiente para que las queries en vuelo NO
+          // vean el rejection (que dispararía un re-render con error visible
+          // mientras la página se está descargando).
+          return new Promise(() => {});
         }
       }
       return Promise.reject(err);
