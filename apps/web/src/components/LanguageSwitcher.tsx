@@ -40,12 +40,12 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
               key={l.code}
               onClick={() => { setLocale(l.code as Locale); setOpen(false); }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 text-left ${
-                l.code === locale ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-gray-700'
+                l.code === locale ? 'bg-habitta-sand text-habitta-earth font-semibold' : 'text-gray-700'
               }`}
             >
               <span className="text-lg">{l.flag}</span>
               <span className="flex-1">{l.label}</span>
-              {l.code === locale && <span className="text-brand-600">✓</span>}
+              {l.code === locale && <span className="text-habitta-terra">✓</span>}
             </button>
           ))}
         </div>

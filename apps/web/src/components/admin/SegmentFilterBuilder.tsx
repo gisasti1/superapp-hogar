@@ -128,23 +128,23 @@ export function SegmentFilterBuilder({
   return (
     <div className="space-y-6">
       {/* Preview en vivo */}
-      <div className="card bg-brand-50 border-brand-200 sticky top-0 z-10">
+      <div className="card bg-habitta-sand border-habitta-olive/30 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-wide text-brand-700 font-semibold">
+            <p className="text-xs uppercase tracking-wide text-habitta-earth font-semibold">
               Usuarios que coinciden
             </p>
-            <p className="text-3xl font-bold text-brand-900 mt-1 tabular-nums">
+            <p className="text-3xl font-bold text-habitta-deep mt-1 tabular-nums">
               {isFetching ? '…' : (preview?.count ?? 0).toLocaleString('es-AR')}
             </p>
-            <p className="text-xs text-brand-700 mt-0.5">
+            <p className="text-xs text-habitta-earth mt-0.5">
               {activeFiltersCount === 0
                 ? 'Sin filtros = todos los usuarios activos'
                 : `${activeFiltersCount} filtro${activeFiltersCount === 1 ? '' : 's'} aplicado${activeFiltersCount === 1 ? '' : 's'}`}
             </p>
           </div>
           {isFetching && (
-            <span className="text-xs text-brand-700">Calculando...</span>
+            <span className="text-xs text-habitta-earth">Calculando...</span>
           )}
         </div>
       </div>

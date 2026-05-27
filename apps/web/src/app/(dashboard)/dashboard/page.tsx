@@ -123,10 +123,10 @@ function CTACard({ icon, title, description, href, ctaLabel, color }: {
   color: 'brand' | 'indigo';
 }) {
   const colorClasses = color === 'brand'
-    ? 'border-brand-200 bg-brand-50 hover:bg-brand-100'
+    ? 'border-habitta-olive/30 bg-habitta-sand hover:bg-habitta-beige/40'
     : 'border-indigo-200 bg-indigo-50 hover:bg-indigo-100';
   const btnClasses = color === 'brand'
-    ? 'bg-brand-600 hover:bg-brand-700 text-white'
+    ? 'bg-habitta-terra hover:bg-habitta-earth text-white'
     : 'bg-indigo-600 hover:bg-indigo-700 text-white';
 
   return (

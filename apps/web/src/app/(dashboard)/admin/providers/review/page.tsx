@@ -87,8 +87,8 @@ export default function AdminProviderReviewPage() {
             onClick={() => setFilter(f)}
             className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
               filter === f
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                ? 'bg-habitta-terra text-white border-habitta-terra'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra'
             }`}
           >
             {f === 'ALL' ? 'Todos' : f === 'KYC' ? 'Sólo identidad' : 'Sólo matrícula'}

@@ -73,7 +73,7 @@ export default function AdminPropertiesPage() {
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   {p.listing && (
-                    <Link href={`/listings/${p.listing.id}`} className="text-xs text-brand-600 hover:underline text-right">
+                    <Link href={`/listings/${p.listing.id}`} className="text-xs text-habitta-terra hover:underline text-right">
                       Ver detalle →
                     </Link>
                   )}

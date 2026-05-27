@@ -71,14 +71,14 @@ export default function AdminSegmentsPage() {
               </div>
 
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <p className="text-2xl font-bold text-brand-600 tabular-nums">
+                <p className="text-2xl font-bold text-habitta-terra tabular-nums">
                   {(s.lastCount ?? 0).toLocaleString('es-AR')}
                 </p>
                 <p className="text-xs text-gray-400">
                   usuarios {s.lastCountAt && `(al ${new Date(s.lastCountAt).toLocaleDateString('es-AR')})`}
                 </p>
                 <div className="flex gap-2 mt-2">
-                  <Link href={`/admin/segments/${s.id}`} className="text-xs text-brand-600 hover:underline">
+                  <Link href={`/admin/segments/${s.id}`} className="text-xs text-habitta-terra hover:underline">
                     Editar
                   </Link>
                   <button

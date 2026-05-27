@@ -119,7 +119,7 @@ function RegularPaymentsView() {
             className={clsx(
               'px-6 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
               tab === t
-                ? 'border-brand-600 text-brand-600'
+                ? 'border-habitta-terra text-habitta-terra'
                 : 'border-transparent text-gray-500 hover:text-gray-700',
             )}
           >
@@ -217,7 +217,7 @@ function RegularPaymentsView() {
                         href={fileUrl(p.receiptUrl)}
                         target="_blank"
                         rel="noopener"
-                        className="text-sm text-brand-600 hover:underline flex items-center gap-1"
+                        className="text-sm text-habitta-terra hover:underline flex items-center gap-1"
                       >
                         📎 Ver comprobante
                       </a>
@@ -257,7 +257,7 @@ function RegularPaymentsView() {
                           href={fileUrl(p.receiptUrl)}
                           target="_blank"
                           rel="noopener"
-                          className="text-xs text-brand-600 hover:underline mt-1 inline-block"
+                          className="text-xs text-habitta-terra hover:underline mt-1 inline-block"
                         >
                           Ver mi comprobante →
                         </a>

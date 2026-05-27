@@ -45,7 +45,7 @@ export default function PrivacyPage() {
         <li>Portabilidad de tus datos a otra plataforma</li>
       </ul>
       <p>
-        Para ejercer estos derechos, escribinos a <a href="mailto:privacidad@superapphogar.com" className="text-brand-600">privacidad@superapphogar.com</a>.
+        Para ejercer estos derechos, escribinos a <a href="mailto:privacidad@superapphogar.com" className="text-habitta-terra">privacidad@superapphogar.com</a>.
       </p>
 
       <h2>5. Seguridad</h2>
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
       <h2>7. Contacto</h2>
       <p>
         Si tenés dudas sobre esta política, contactanos a
-        <a href="mailto:hola@superapphogar.com" className="text-brand-600"> hola@superapphogar.com</a>.
+        <a href="mailto:hola@superapphogar.com" className="text-habitta-terra"> hola@superapphogar.com</a>.
       </p>
 
       <p className="text-xs text-gray-400 mt-8 italic">

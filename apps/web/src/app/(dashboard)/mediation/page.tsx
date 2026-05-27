@@ -127,7 +127,7 @@ export default function MediationPage() {
                   {new Date(c.createdAt).toLocaleDateString('es-AR')}
                 </p>
               </div>
-              <span className="text-brand-600 text-sm font-medium shrink-0">Ver →</span>
+              <span className="text-habitta-terra text-sm font-medium shrink-0">Ver →</span>
             </Link>
           ))}
         </div>

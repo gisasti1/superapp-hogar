@@ -51,7 +51,7 @@ export default function MessagesPage() {
               className="block px-4 py-3 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 font-semibold flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-habitta-beige/40 text-habitta-earth font-semibold flex items-center justify-center flex-shrink-0">
                   {c.other.firstName?.[0]}{c.other.lastName?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ export default function MessagesPage() {
                     </span>
                   </div>
                   {c.contract?.property?.address && (
-                    <p className="text-[10px] text-brand-600 mb-0.5">
+                    <p className="text-[10px] text-habitta-terra mb-0.5">
                       📄 {c.contract.property.address}
                     </p>
                   )}
@@ -73,7 +73,7 @@ export default function MessagesPage() {
                       {c.lastMessagePreview ?? 'Sin mensajes todavía'}
                     </p>
                     {c.unreadCount > 0 && (
-                      <span className="bg-brand-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">
+                      <span className="bg-habitta-sand0 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">
                         {c.unreadCount > 9 ? '9+' : c.unreadCount}
                       </span>
                     )}

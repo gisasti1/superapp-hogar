@@ -92,14 +92,14 @@ export default function PremiumPage() {
         </div>
 
         {/* PREMIUM */}
-        <div className="card border-2 border-brand-600 relative">
+        <div className="card border-2 border-habitta-terra relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span className="bg-brand-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+            <span className="bg-habitta-terra text-white text-xs font-bold px-3 py-1 rounded-full">
               RECOMENDADO
             </span>
           </div>
           <div className="mb-4">
-            <p className="text-sm font-semibold text-brand-600 uppercase tracking-wide">Premium</p>
+            <p className="text-sm font-semibold text-habitta-terra uppercase tracking-wide">Premium</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">USD 5</p>
             <p className="text-sm text-gray-500">por mes</p>
           </div>

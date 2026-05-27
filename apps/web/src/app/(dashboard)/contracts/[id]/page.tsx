@@ -152,7 +152,7 @@ export default function ContractDetailPage() {
               <div className="space-y-3">
                 {contract.signatures.map((sig: any) => (
                   <div key={sig.userId} className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-sm">
+                    <div className="h-9 w-9 rounded-full bg-habitta-beige/40 flex items-center justify-center text-habitta-terra font-bold text-sm">
                       {sig.firstName?.[0]}{sig.lastName?.[0]}
                     </div>
                     <div>

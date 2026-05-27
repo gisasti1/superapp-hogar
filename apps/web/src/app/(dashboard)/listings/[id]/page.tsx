@@ -10,17 +10,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import Link from 'next/link';
 import { useState } from 'react';
 
-const AMENITY_LABELS: Record<string, string> = {
-  pool: '🏊 Pileta',
-  gym: '🏋️ Gimnasio',
-  bbq: '🍖 Parrilla',
-  parking: '🚗 Cochera',
-  doorman: '👔 Portería',
-  laundry: '🧺 Lavadero',
-  balcony: '🌅 Balcón',
-  garden: '🌿 Jardín',
-  elevator: '🛗 Ascensor',
-};
+import { AMENITY_LABELS } from '@/lib/amenities';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -148,7 +138,7 @@ export default function ListingDetailPage() {
               </div>
             ))
           ) : (
-            <div className="h-52 w-full bg-gradient-to-br from-brand-100 to-brand-200 rounded-xl flex items-center justify-center">
+            <div className="h-52 w-full bg-gradient-to-br from-habitta-beige/40 to-habitta-eucalyptus/30 rounded-xl flex items-center justify-center">
               <span className="text-6xl">🏠</span>
             </div>
           )}
@@ -202,7 +192,7 @@ export default function ListingDetailPage() {
               <h2 className="font-bold text-gray-900 mb-3">Amenities</h2>
               <div className="flex flex-wrap gap-2">
                 {property.petsAllowed && (
-                  <span className="bg-brand-50 text-brand-700 text-sm font-medium px-3 py-1 rounded-full">
+                  <span className="bg-habitta-sand text-habitta-earth text-sm font-medium px-3 py-1 rounded-full">
                     🐾 Acepta mascotas
                   </span>
                 )}
@@ -231,7 +221,7 @@ export default function ListingDetailPage() {
         {/* Sidebar */}
         <div className="space-y-4">
           <div className="card">
-            <p className="text-2xl font-bold text-brand-600">
+            <p className="text-2xl font-bold text-habitta-terra">
               ${Number(property.monthlyRent).toLocaleString('es-AR')}
               <span className="text-sm font-normal text-gray-500"> {property.currency}/mes</span>
             </p>

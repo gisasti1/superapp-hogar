@@ -95,7 +95,7 @@ export default function RentalRequestsPage() {
                     className="w-full sm:w-32 h-32 sm:h-24 object-cover rounded-lg flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-full sm:w-32 h-32 sm:h-24 bg-gradient-to-br from-brand-100 to-brand-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-full sm:w-32 h-32 sm:h-24 bg-gradient-to-br from-habitta-beige/40 to-habitta-eucalyptus/30 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-3xl">🏠</span>
                   </div>
                 )}
@@ -187,7 +187,7 @@ export default function RentalRequestsPage() {
                         otherUserId={isLandlord ? r.tenant.id : r.landlord.id}
                         rentalRequestId={r.id}
                         label="💬 Chatear"
-                        className="text-xs text-brand-600 hover:underline"
+                        className="text-xs text-habitta-terra hover:underline"
                       />
                     </div>
                   )}

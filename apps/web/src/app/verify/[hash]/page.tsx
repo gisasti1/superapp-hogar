@@ -34,7 +34,7 @@ export default function VerifyReceiptPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-2xl shadow-lg mb-3">🏡</div>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-habitta-terra text-white text-2xl shadow-lg mb-3">🏡</div>
           <h1 className="text-xl font-extrabold text-gray-900">habitta</h1>
           <p className="text-xs text-gray-500">Verificación pública de recibo</p>
         </div>
@@ -111,7 +111,7 @@ export default function VerifyReceiptPage() {
 
         <p className="text-center text-xs text-gray-400">
           ¿Querés ver más?{' '}
-          <Link href="/" className="text-brand-600 font-semibold hover:underline">Conocé habitta</Link>
+          <Link href="/" className="text-habitta-terra font-semibold hover:underline">Conocé habitta</Link>
         </p>
       </div>
     </div>

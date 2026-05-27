@@ -139,7 +139,7 @@ export default function MediationCaseDetailPage() {
                 <div key={step.key} className="flex items-center flex-1 last:flex-none">
                   <div className="flex flex-col items-center">
                     <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      done ? 'bg-green-500 text-white' : active ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-gray-100 text-gray-400'
+                      done ? 'bg-green-500 text-white' : active ? 'bg-habitta-terra text-white ring-4 ring-habitta-terra/20' : 'bg-gray-100 text-gray-400'
                     }`}>
                       {done ? '✓' : i + 1}
                     </div>
@@ -178,8 +178,8 @@ export default function MediationCaseDetailPage() {
         <h2 className="font-bold text-gray-900">Declaraciones</h2>
 
         {myStatement ? (
-          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
-            <p className="text-xs font-medium text-brand-600 mb-1">Tu declaración</p>
+          <div className="bg-habitta-sand border border-habitta-olive/30 rounded-lg p-4">
+            <p className="text-xs font-medium text-habitta-terra mb-1">Tu declaración</p>
             <p className="text-sm text-gray-700">{myStatement.statement}</p>
             <p className="text-xs text-gray-400 mt-2">
               {new Date(myStatement.createdAt).toLocaleDateString('es-AR')}
@@ -226,7 +226,7 @@ export default function MediationCaseDetailPage() {
 
       {/* AI Proposal */}
       {hasProposal && (
-        <div className="card space-y-4 border-brand-200 bg-gradient-to-br from-white to-brand-50">
+        <div className="card space-y-4 border-habitta-olive/30 bg-gradient-to-br from-white to-habitta-cream">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🤖</span>
             <h2 className="font-bold text-gray-900">Propuesta de la IA</h2>
@@ -297,13 +297,13 @@ export default function MediationCaseDetailPage() {
               return (
                 <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs rounded-xl px-4 py-2.5 text-sm ${
-                    isMe ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-800'
+                    isMe ? 'bg-habitta-terra text-white' : 'bg-gray-100 text-gray-800'
                   }`}>
                     {!isMe && (
                       <p className="text-xs font-medium mb-1 opacity-60">{msg.senderName}</p>
                     )}
                     <p>{msg.content}</p>
-                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-100' : 'text-gray-400'}`}>
+                    <p className={`text-xs mt-1 ${isMe ? 'text-habitta-sand' : 'text-gray-400'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>

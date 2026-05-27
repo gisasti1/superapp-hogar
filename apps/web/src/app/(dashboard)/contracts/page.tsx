@@ -113,7 +113,7 @@ export default function ContractsPage() {
                       {new Date(c.endDate).toLocaleDateString('es-AR')}
                     </p>
                   </div>
-                  <span className="text-brand-600 font-medium text-sm">Ver →</span>
+                  <span className="text-habitta-terra font-medium text-sm">Ver →</span>
                 </div>
               </Link>
             ))}
@@ -162,7 +162,7 @@ export default function ContractsPage() {
                       {new Date(c.endDate).toLocaleDateString('es-AR')}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-brand-600 font-medium text-xs">Ver →</span>
+                      <span className="text-habitta-terra font-medium text-xs">Ver →</span>
                     </td>
                   </tr>
                 ))}

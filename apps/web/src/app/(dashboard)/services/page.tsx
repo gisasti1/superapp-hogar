@@ -6,27 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { servicesApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS } from '@/lib/serviceCategories';
 
-const CATEGORIES = [
-  { id: '', label: 'Todos' },
-  { id: 'PLUMBER', label: '🚰 Plomero' },
-  { id: 'ELECTRICIAN', label: '⚡ Electricista' },
-  { id: 'GAS', label: '🔥 Gasista' },
-  { id: 'PAINTER', label: '🎨 Pintor' },
-  { id: 'CARPENTER', label: '🪚 Carpintero' },
-  { id: 'LOCKSMITH', label: '🔑 Cerrajero' },
-  { id: 'AC_TECHNICIAN', label: '❄️ Aire' },
-  { id: 'CLEANER', label: '🧹 Limpieza' },
-  { id: 'GARDENER', label: '🌿 Jardín' },
-  { id: 'MOVER', label: '📦 Mudanzas' },
-  { id: 'PEST_CONTROL', label: '🪳 Plagas' },
-  { id: 'APPLIANCE_REPAIR', label: '🔌 Reparaciones' },
-  { id: 'GENERAL', label: '🛠 Generales' },
-];
-
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  CATEGORIES.filter(c => c.id).map(c => [c.id, c.label]),
-);
+const CATEGORIES = [{ id: '', label: 'Todos' }, ...SERVICE_CATEGORIES];
+const CATEGORY_LABELS = SERVICE_CATEGORY_LABELS;
 
 export default function ServicesMarketplacePage() {
   const [category, setCategory] = useState('');
@@ -84,8 +67,8 @@ export default function ServicesMarketplacePage() {
                 onClick={() => setCategory(c.id)}
                 className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                   category === c.id
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                    ? 'bg-habitta-terra text-white border-habitta-terra'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra'
                 }`}
               >
                 {c.label}

@@ -86,7 +86,7 @@ export default function EditSegmentPage() {
         <button
           onClick={() => setTab('filters')}
           className={`text-sm px-3 py-1.5 rounded-lg font-medium ${
-            tab === 'filters' ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+            tab === 'filters' ? 'bg-habitta-beige/40 text-habitta-earth' : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           ⚙️ Filtros
@@ -94,7 +94,7 @@ export default function EditSegmentPage() {
         <button
           onClick={() => setTab('users')}
           className={`text-sm px-3 py-1.5 rounded-lg font-medium ${
-            tab === 'users' ? 'bg-brand-100 text-brand-700' : 'text-gray-600 hover:bg-gray-100'
+            tab === 'users' ? 'bg-habitta-beige/40 text-habitta-earth' : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           👥 Ver usuarios

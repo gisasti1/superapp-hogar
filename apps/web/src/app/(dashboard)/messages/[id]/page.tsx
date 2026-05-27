@@ -56,13 +56,13 @@ export default function ChatPage() {
       {/* Header del chat */}
       <div className="card p-3 mb-3 flex items-center gap-3">
         <Link href="/messages" className="text-sm text-gray-500 hover:text-gray-700 px-1">←</Link>
-        <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 font-semibold flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-habitta-beige/40 text-habitta-earth font-semibold flex items-center justify-center flex-shrink-0">
           {convo.other.firstName?.[0]}{convo.other.lastName?.[0]}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-900">{convo.other.firstName} {convo.other.lastName}</p>
           {convo.contract?.property?.address && (
-            <Link href={`/contracts/${convo.contract.id}`} className="text-xs text-brand-600 hover:underline">
+            <Link href={`/contracts/${convo.contract.id}`} className="text-xs text-habitta-terra hover:underline">
               📄 {convo.contract.property.address}
             </Link>
           )}
@@ -85,12 +85,12 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                     mine
-                      ? 'bg-brand-600 text-white rounded-br-sm'
+                      ? 'bg-habitta-terra text-white rounded-br-sm'
                       : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p className={`text-[10px] mt-1 ${mine ? 'text-brand-100' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] mt-1 ${mine ? 'text-habitta-sand' : 'text-gray-400'}`}>
                     {new Date(m.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                     {mine && m.readAt && ' ✓✓'}
                   </p>

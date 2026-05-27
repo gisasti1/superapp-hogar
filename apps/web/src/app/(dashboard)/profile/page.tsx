@@ -137,7 +137,7 @@ export default function ProfilePage() {
                     <button
                       onClick={() => saveNickname.mutate(nicknameDraft.trim())}
                       disabled={saveNickname.isPending}
-                      className="text-xs text-brand-600 font-medium"
+                      className="text-xs text-habitta-terra font-medium"
                     >
                       ✓ Guardar
                     </button>
@@ -154,7 +154,7 @@ export default function ProfilePage() {
                       setNicknameDraft(profile?.nickname ?? '');
                       setEditingNickname(true);
                     }}
-                    className="text-sm text-gray-600 hover:text-brand-600 mt-0.5 inline-flex items-center gap-1"
+                    className="text-sm text-gray-600 hover:text-habitta-terra mt-0.5 inline-flex items-center gap-1"
                   >
                     {profile?.nickname ? (
                       <>👤 <span className="italic">"{profile.nickname}"</span> <span className="text-xs text-gray-400">(editar)</span></>
@@ -246,7 +246,7 @@ export default function ProfilePage() {
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-gray-900">Datos personales</h2>
-              <Link href="/profile/edit" className="text-sm text-brand-600 font-medium hover:underline">
+              <Link href="/profile/edit" className="text-sm text-habitta-terra font-medium hover:underline">
                 Editar →
               </Link>
             </div>

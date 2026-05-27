@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { listingsApi } from '@/lib/api';
+import { AMENITY_GROUPS } from '@/lib/amenities';
 
 export default function NewPropertyPage() {
   const router = useRouter();
@@ -285,30 +286,32 @@ export default function NewPropertyPage() {
 
         <div>
           <label className="label">Amenities</label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {[
-              { id: 'pool', label: '🏊 Pileta' },
-              { id: 'gym', label: '🏋️ Gimnasio' },
-              { id: 'bbq', label: '🍖 Parrilla' },
-              { id: 'parking', label: '🚗 Cochera' },
-              { id: 'doorman', label: '👔 Portería' },
-              { id: 'laundry', label: '🧺 Lavadero' },
-              { id: 'balcony', label: '🌅 Balcón' },
-              { id: 'garden', label: '🌿 Jardín' },
-              { id: 'elevator', label: '🛗 Ascensor' },
-            ].map(a => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => toggleAmenity(a.id)}
-                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-                  form.amenities.includes(a.id)
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-                }`}
-              >
-                {a.label}
-              </button>
+          <p className="text-xs text-habitta-stone -mt-1 mb-3">
+            Marcá todo lo que tenga el inmueble — agrupado por categoría.
+          </p>
+          <div className="space-y-3">
+            {AMENITY_GROUPS.map(group => (
+              <div key={group.title}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-habitta-stone mb-1.5">
+                  {group.title}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map(a => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => toggleAmenity(a.id)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                        form.amenities.includes(a.id)
+                          ? 'bg-habitta-terra text-white border-habitta-terra shadow-sm'
+                          : 'bg-white text-habitta-deep border-habitta-olive/40 hover:border-habitta-terra hover:bg-habitta-sand'
+                      }`}
+                    >
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

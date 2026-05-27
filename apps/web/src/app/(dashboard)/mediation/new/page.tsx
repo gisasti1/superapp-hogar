@@ -179,7 +179,7 @@ export default function NewMediationCasePage() {
                   className={clsx(
                     'flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 text-center transition-colors',
                     watchedCategory === cat.value
-                      ? 'border-brand-500 bg-brand-50'
+                      ? 'border-habitta-terra bg-habitta-sand'
                       : 'border-gray-200 hover:border-gray-300',
                   )}
                 >

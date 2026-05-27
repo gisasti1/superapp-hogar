@@ -75,14 +75,14 @@ export default function FavoritesPage() {
                       className="h-40 w-full object-cover rounded-lg mb-3"
                     />
                   ) : (
-                    <div className="h-40 bg-gradient-to-br from-brand-100 to-brand-200 rounded-lg mb-3 flex items-center justify-center">
+                    <div className="h-40 bg-gradient-to-br from-habitta-beige/40 to-habitta-eucalyptus/30 rounded-lg mb-3 flex items-center justify-center">
                       <span className="text-5xl">🏠</span>
                     </div>
                   )}
                   <p className="font-semibold text-gray-900 line-clamp-1">{p.address}</p>
                   <p className="text-sm text-gray-500 mt-0.5">{p.city}</p>
                   <div className="flex items-center justify-between mt-3">
-                    <p className="font-bold text-brand-600">
+                    <p className="font-bold text-habitta-terra">
                       ${Number(p.monthlyRent).toLocaleString('es-AR')}
                       <span className="text-xs font-normal text-gray-500"> {p.currency}/mes</span>
                     </p>

@@ -86,7 +86,7 @@ export function NotificationsBell() {
             {unreadCount > 0 && (
               <button
                 onClick={() => markAllRead()}
-                className="text-xs text-brand-600 hover:underline"
+                className="text-xs text-habitta-terra hover:underline"
               >
                 Marcar todas como leídas
               </button>
@@ -111,7 +111,7 @@ export function NotificationsBell() {
                   >
                     <div className="flex items-start gap-2">
                       {!n.isRead && (
-                        <span className="w-2 h-2 bg-brand-500 rounded-full mt-1.5 flex-shrink-0" />
+                        <span className="w-2 h-2 bg-habitta-sand0 rounded-full mt-1.5 flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm ${!n.isRead ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>

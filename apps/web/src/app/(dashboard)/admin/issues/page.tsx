@@ -65,7 +65,7 @@ export default function AdminIssuesPage() {
                   <p className="text-sm text-gray-600 mt-2 line-clamp-2">{i.description}</p>
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
-                  <Link href={`/issues/${i.id}`} className="text-xs text-brand-600 hover:underline text-right">
+                  <Link href={`/issues/${i.id}`} className="text-xs text-habitta-terra hover:underline text-right">
                     Ver detalle →
                   </Link>
                   {i.status !== 'CLOSED' && (

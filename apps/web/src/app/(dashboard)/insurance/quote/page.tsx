@@ -172,11 +172,11 @@ export default function InsuranceQuotePage() {
               <div
                 key={q.providerId ?? i}
                 className={`card flex flex-col gap-4 transition-shadow ${
-                  i === 0 ? 'border-brand-400 shadow-brand-100 shadow-md' : ''
+                  i === 0 ? 'border-habitta-terra shadow-brand-100 shadow-md' : ''
                 }`}
               >
                 {i === 0 && (
-                  <span className="inline-flex self-start bg-brand-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  <span className="inline-flex self-start bg-habitta-terra text-white text-xs font-bold px-2 py-0.5 rounded-full">
                     Recomendado
                   </span>
                 )}

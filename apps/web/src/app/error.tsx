@@ -62,7 +62,7 @@ export default function GlobalError({
           </button>
           <button
             onClick={handleGoHome}
-            className="text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-semibold bg-habitta-terra hover:bg-habitta-earth text-white px-4 py-2 rounded-lg transition-colors"
           >
             {isAuthenticated ? '🏠 Ir al inicio' : '👋 Volver al inicio'}
           </button>

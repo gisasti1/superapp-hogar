@@ -43,11 +43,11 @@ export default function InsurancePage() {
       </div>
 
       {/* Info banner */}
-      <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex items-start gap-3">
+      <div className="bg-habitta-sand border border-habitta-olive/30 rounded-xl p-4 flex items-start gap-3">
         <span className="text-2xl">🛡️</span>
         <div>
-          <p className="font-semibold text-brand-800">¿Qué es el seguro de caución?</p>
-          <p className="text-sm text-brand-700 mt-1">
+          <p className="font-semibold text-habitta-deep">¿Qué es el seguro de caución?</p>
+          <p className="text-sm text-habitta-earth mt-1">
             Reemplaza la fianza en efectivo o garantía propietaria. El inquilino paga una prima mensual
             y la aseguradora garantiza el alquiler al propietario en caso de incumplimiento.
           </p>

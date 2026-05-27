@@ -5,7 +5,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-white">
       <nav className="border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-brand-600">habitta</Link>
+          <Link href="/" className="text-xl font-bold text-habitta-terra">habitta</Link>
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">Volver al login</Link>
         </div>
       </nav>

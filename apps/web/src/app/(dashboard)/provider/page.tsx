@@ -6,21 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { servicesApi, providerAccountApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-const CATEGORIES = [
-  { id: 'PLUMBER', label: '🚰 Plomero' },
-  { id: 'ELECTRICIAN', label: '⚡ Electricista' },
-  { id: 'GAS', label: '🔥 Gasista' },
-  { id: 'PAINTER', label: '🎨 Pintor' },
-  { id: 'CARPENTER', label: '🪚 Carpintero' },
-  { id: 'LOCKSMITH', label: '🔑 Cerrajero' },
-  { id: 'AC_TECHNICIAN', label: '❄️ Aire / refrigeración' },
-  { id: 'CLEANER', label: '🧹 Limpieza' },
-  { id: 'GARDENER', label: '🌿 Jardinería' },
-  { id: 'MOVER', label: '📦 Mudanzas' },
-  { id: 'PEST_CONTROL', label: '🪳 Control de plagas' },
-  { id: 'APPLIANCE_REPAIR', label: '🔌 Reparación electrodomésticos' },
-  { id: 'GENERAL', label: '🛠 Servicios generales' },
-];
+import { SERVICE_CATEGORIES as CATEGORIES, SERVICE_CATEGORY_GROUPS, OTHER_CATEGORY } from '@/lib/serviceCategories';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   NOT_STARTED:   { label: 'No iniciado',  color: 'bg-gray-100 text-gray-700' },
@@ -129,7 +115,7 @@ function OnboardingProgress({ onboarding }: { onboarding: any }) {
       </div>
       <div className="w-full h-2 bg-white rounded-full overflow-hidden mb-3">
         <div
-          className="h-full bg-brand-600 transition-all"
+          className="h-full bg-habitta-terra transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -227,25 +213,42 @@ function BasicProfileForm({
 
       <div>
         <label className="label">Categoría *</label>
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setForm(f => ({ ...f, category: c.id }))}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                form.category === c.id
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-              }`}
-            >
-              {c.label}
-            </button>
+        <p className="text-xs text-habitta-stone -mt-1 mb-3">
+          Si no encontrás lo tuyo, elegí <strong>"Otro"</strong> al final y describilo abajo.
+        </p>
+        <div className="space-y-3">
+          {SERVICE_CATEGORY_GROUPS.map(group => (
+            <div key={group.title}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-habitta-stone mb-1.5">
+                {group.title}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {group.items.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, category: c.id }))}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      form.category === c.id
+                        ? 'bg-habitta-terra text-white border-habitta-terra shadow-sm'
+                        : 'bg-white text-habitta-deep border-habitta-olive/40 hover:border-habitta-terra hover:bg-habitta-sand'
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
         {['GAS', 'ELECTRICIAN', 'AC_TECHNICIAN'].includes(form.category) && (
-          <p className="text-xs text-amber-700 mt-2 bg-amber-50 border border-amber-200 rounded p-2">
+          <p className="text-xs text-amber-700 mt-3 bg-amber-50 border border-amber-200 rounded p-2">
             ⚠️ Esta categoría requiere matrícula profesional. La vas a cargar más abajo.
+          </p>
+        )}
+        {form.category === OTHER_CATEGORY && (
+          <p className="text-xs text-habitta-charcoal mt-3 bg-habitta-sand border border-habitta-olive/30 rounded p-2">
+            💡 Como elegiste <strong>"Otro"</strong>, asegurate de describir bien <strong>qué servicio ofrecés</strong> en el campo "Descripción" más abajo. Así te van a encontrar quienes te buscan.
           </p>
         )}
       </div>
@@ -507,8 +510,8 @@ function PayoutAccountSection({ provider, done }: { provider: any; done: boolean
                 onClick={() => setForm(f => ({ ...f, payoutMethod: o.v }))}
                 className={`text-sm px-3 py-2 rounded-lg border transition-colors ${
                   form.payoutMethod === o.v
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                    ? 'bg-habitta-terra text-white border-habitta-terra'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra'
                 }`}
               >
                 {o.l}
@@ -629,7 +632,7 @@ function FileUploadField({
       {url ? (
         <div className="flex items-center justify-between">
           <span className="text-xs text-green-700">✓ Cargado</span>
-          <a href={url} target="_blank" rel="noopener" className="text-xs text-brand-600 underline">
+          <a href={url} target="_blank" rel="noopener" className="text-xs text-habitta-terra underline">
             Ver
           </a>
         </div>
@@ -640,7 +643,7 @@ function FileUploadField({
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,application/pdf"
-          className="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100"
+          className="block w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-habitta-sand file:text-habitta-earth hover:file:bg-habitta-beige/40"
           disabled={uploading}
           onChange={async e => {
             const f = e.target.files?.[0];
@@ -1010,7 +1013,7 @@ function InsuranceSection({ provider }: { provider: any }) {
         </label>
 
         {form.hasInsurance && (
-          <div className="space-y-3 pl-6 border-l-2 border-brand-100">
+          <div className="space-y-3 pl-6 border-l-2 border-habitta-sand">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Aseguradora</label>

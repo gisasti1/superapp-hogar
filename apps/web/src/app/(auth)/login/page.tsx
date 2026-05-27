@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
+import { HabittaLogo } from '@/components/HabittaLogo';
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
@@ -38,11 +39,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-habitta-cream px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-brand-600">habitta</h1>
-          <p className="text-gray-500 mt-2">Iniciá sesión en tu cuenta</p>
+        <div className="text-center mb-8 flex flex-col items-center gap-2">
+          <HabittaLogo size={44} color="#C98E5B" accentColor="#7E9081" />
+          <p className="text-habitta-charcoal/70 mt-1 text-sm">Iniciá sesión en tu cuenta</p>
         </div>
 
         <div className="card">
@@ -104,7 +105,7 @@ export default function LoginPage() {
             </button>
 
             <p className="text-center text-sm">
-              <Link href="/forgot-password" className="text-gray-500 hover:text-brand-600 hover:underline">
+              <Link href="/forgot-password" className="text-gray-500 hover:text-habitta-terra hover:underline">
                 ¿Olvidaste tu contraseña?
               </Link>
             </p>
@@ -112,7 +113,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             ¿No tenés cuenta?{' '}
-            <Link href="/register" className="text-brand-600 font-medium hover:underline">
+            <Link href="/register" className="text-habitta-terra font-medium hover:underline">
               Registrate
             </Link>
           </p>

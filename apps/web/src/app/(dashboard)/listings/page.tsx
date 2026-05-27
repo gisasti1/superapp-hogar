@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { listingsApi, externalListingsApi } from '@/lib/api';
+import { AMENITY_GROUPS, AMENITIES } from '@/lib/amenities';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuthStore } from '@/stores/auth.store';
@@ -173,31 +174,36 @@ export default function ListingsPage() {
 
         <div className="mt-4 pt-4 border-t border-gray-100">
           <label className="label">Amenities</label>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'pool', label: '🏊 Pileta' },
-              { id: 'gym', label: '🏋️ Gimnasio' },
-              { id: 'bbq', label: '🍖 Parrilla' },
-              { id: 'parking', label: '🚗 Cochera' },
-              { id: 'doorman', label: '👔 Portería' },
-              { id: 'laundry', label: '🧺 Lavadero' },
-              { id: 'balcony', label: '🌅 Balcón' },
-              { id: 'garden', label: '🌿 Jardín' },
-            ].map(a => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => toggleAmenity(a.id)}
-                className={`text-sm px-3 py-1 rounded-full border transition-colors ${
-                  filters.amenities.includes(a.id)
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
-                }`}
-              >
-                {a.label}
-              </button>
-            ))}
-          </div>
+          <details className="mt-1">
+            <summary className="text-xs text-habitta-stone cursor-pointer hover:text-habitta-terra select-none">
+              Ver {AMENITIES.length} opciones {filters.amenities.length > 0 && <span className="text-habitta-terra font-bold">({filters.amenities.length} seleccionadas)</span>}
+            </summary>
+            <div className="space-y-3 mt-3">
+              {AMENITY_GROUPS.map(group => (
+                <div key={group.title}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-habitta-stone mb-1.5">
+                    {group.title}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map(a => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => toggleAmenity(a.id)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                          filters.amenities.includes(a.id)
+                            ? 'bg-habitta-terra text-white border-habitta-terra shadow-sm'
+                            : 'bg-white text-habitta-deep border-habitta-olive/40 hover:border-habitta-terra hover:bg-habitta-sand'
+                        }`}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
       </div>
 
@@ -207,8 +213,8 @@ export default function ListingsPage() {
           onClick={() => setViewMode('list')}
           className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
             viewMode === 'list'
-              ? 'bg-brand-600 text-white border-brand-600'
-              : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+              ? 'bg-habitta-terra text-white border-habitta-terra'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra'
           }`}
         >
           📋 Lista{listings.length > 0 ? ` (${listings.length})` : ''}
@@ -218,8 +224,8 @@ export default function ListingsPage() {
           disabled={listingsWithCoords.length === 0}
           className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
             viewMode === 'map'
-              ? 'bg-brand-600 text-white border-brand-600'
-              : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed'
+              ? 'bg-habitta-terra text-white border-habitta-terra'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra disabled:opacity-50 disabled:cursor-not-allowed'
           }`}
           title={listingsWithCoords.length === 0 ? 'Ninguna propiedad tiene ubicación cargada' : ''}
         >
@@ -283,12 +289,12 @@ export default function ListingsPage() {
                       <span className="text-5xl">🏠</span>
                     </div>
                   )}
-                  <p className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-2 text-sm">
+                  <p className="font-bold text-gray-900 group-hover:text-habitta-terra transition-colors line-clamp-2 text-sm">
                     {r.title}
                   </p>
                   {r.city && <p className="text-xs text-gray-500 mt-1">{r.city}</p>}
                   <div className="flex items-center justify-between mt-3">
-                    <p className="text-base font-bold text-brand-600">
+                    <p className="text-base font-bold text-habitta-terra">
                       ${Number(r.price).toLocaleString('es-AR')}{' '}
                       <span className="text-[10px] font-normal text-gray-500">{r.currency}</span>
                     </p>
@@ -319,15 +325,15 @@ export default function ListingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((p: any) => (
             <Link key={p.id} href={`/listings/${p.id}`} className="card hover:shadow-md transition-shadow group">
-              <div className="h-40 bg-gradient-to-br from-brand-100 to-brand-200 rounded-lg mb-4 flex items-center justify-center">
+              <div className="h-40 bg-gradient-to-br from-habitta-beige/40 to-habitta-eucalyptus/30 rounded-lg mb-4 flex items-center justify-center">
                 <span className="text-5xl">🏠</span>
               </div>
-              <p className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              <p className="font-bold text-gray-900 group-hover:text-habitta-terra transition-colors" style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {p.address}
               </p>
               <p className="text-sm text-gray-500 mt-1">{p.city}</p>
               <div className="flex items-center justify-between mt-3">
-                <p className="text-lg font-bold text-brand-600">
+                <p className="text-lg font-bold text-habitta-terra">
                   ${Number(p.monthlyRent).toLocaleString('es-AR')} {p.currency}/mes
                 </p>
                 <div className="flex gap-3 text-xs text-gray-500">

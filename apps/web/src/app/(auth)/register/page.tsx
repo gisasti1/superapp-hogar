@@ -11,6 +11,7 @@ import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { useT } from '@/i18n';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { HabittaLogo } from '@/components/HabittaLogo';
 import { UserRole } from '@superapp/shared';
 
 /* ─── Account types ──────────────────────────────────────────────────────── */
@@ -188,7 +189,7 @@ export default function RegisterPage() {
   /* ── Step 1: elegir tipo de cuenta ─────────────────────────────────── */
   if (step === 1) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-habitta-cream px-4 py-12">
         <div className="w-full max-w-lg">
 
           {/* Language switcher top-right */}
@@ -197,10 +198,9 @@ export default function RegisterPage() {
           </div>
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-2xl shadow-lg mb-4">🏡</div>
-            <h1 className="text-2xl font-extrabold text-gray-900">{t('auth.register.title')}</h1>
-            <p className="text-gray-500 mt-1">{t('auth.register.subtitle')}</p>
+          <div className="text-center mb-8 flex flex-col items-center gap-2">
+            <HabittaLogo size={44} color="#C98E5B" accentColor="#7E9081" />
+            <p className="text-habitta-charcoal/70 text-sm">{t('auth.register.subtitle')}</p>
           </div>
 
           {/* Type cards */}
@@ -289,7 +289,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-gray-500 mt-4">
             {t('auth.register.alreadyHaveAccount')}{' '}
-            <Link href="/login" className="text-brand-600 font-semibold hover:underline">{t('auth.register.login')}</Link>
+            <Link href="/login" className="text-habitta-terra font-semibold hover:underline">{t('auth.register.login')}</Link>
           </p>
         </div>
       </div>
@@ -301,7 +301,7 @@ export default function RegisterPage() {
   const cfgTitle = t(`auth.register.types.${cfg.id}.title`);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-habitta-cream px-4 py-12">
       <div className="w-full max-w-md">
 
         {/* Header */}
@@ -325,7 +325,7 @@ export default function RegisterPage() {
         {/* Progress */}
         <div className="flex items-center gap-2 mb-6">
           <div className="flex-1 h-1.5 rounded-full bg-emerald-400" />
-          <div className="flex-1 h-1.5 rounded-full bg-brand-500" />
+          <div className="flex-1 h-1.5 rounded-full bg-habitta-sand0" />
           <span className="text-xs text-gray-400 font-medium">Paso 2 de 2</span>
         </div>
 
@@ -497,7 +497,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-gray-500 mt-4">
           ¿Ya tenés cuenta?{' '}
-          <Link href="/login" className="text-brand-600 font-semibold hover:underline">Iniciá sesión</Link>
+          <Link href="/login" className="text-habitta-terra font-semibold hover:underline">Iniciá sesión</Link>
         </p>
       </div>
     </div>

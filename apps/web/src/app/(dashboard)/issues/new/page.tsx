@@ -138,8 +138,8 @@ function NewIssueForm() {
                 onClick={() => setForm(f => ({ ...f, category: c.id }))}
                 className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                   form.category === c.id
-                    ? 'bg-brand-600 text-white border-brand-600'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-brand-400'
+                    ? 'bg-habitta-terra text-white border-habitta-terra'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-habitta-terra'
                 }`}
               >
                 {c.label}
@@ -158,7 +158,7 @@ function NewIssueForm() {
                 onClick={() => setForm(f => ({ ...f, priority: p.id }))}
                 className={`text-left p-2 rounded-lg border transition-colors ${
                   form.priority === p.id
-                    ? 'border-brand-500 bg-brand-50'
+                    ? 'border-habitta-terra bg-habitta-sand'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >

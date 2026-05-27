@@ -58,7 +58,7 @@ export function Avatar({
 
   return (
     <div
-      className={`${SIZE_CLASS[size]} rounded-full bg-brand-600 text-white font-bold flex items-center justify-center shrink-0 ${className}`}
+      className={`${SIZE_CLASS[size]} rounded-full bg-habitta-terra text-white font-bold flex items-center justify-center shrink-0 ${className}`}
     >
       {initials}
     </div>
