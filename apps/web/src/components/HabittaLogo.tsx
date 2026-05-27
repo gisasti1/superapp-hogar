@@ -1,31 +1,42 @@
 'use client';
 
+import Link from 'next/link';
+
 /**
  * Logo Habitta — casita estilizada con dos ventanitas + wordmark.
- * Inspirado en el moodboard del rebrand.
  *
- * Uso:
- *   <HabittaLogo />                          // logo + wordmark default
- *   <HabittaLogo variant="mark" size={48} /> // solo el ícono
- *   <HabittaLogo color="#fff" />             // sobre fondos oscuros
+ * Props:
+ *  - variant: 'full' (default) | 'mark' | 'wordmark'
+ *  - size: px del ícono (texto escala 0.85x). Default 40.
+ *  - color:     color del ÍCONO (casita). Default tierra.
+ *  - textColor: color del WORDMARK "habitta". Default marrón profundo.
+ *  - accentColor: color del PUNTO acento (después de la 2da "t"). Default terracota.
+ *  - tagline: muestra "Donde tu hogar, encuentra todo."
+ *  - href: si está, el logo se vuelve clickeable y navega ahí.
+ *          Default: '/' (inicio).
+ *  - noLink: pasá true para forzar que NO sea clickeable (útil dentro de otros links).
  */
 export function HabittaLogo({
-  variant = 'full',
-  size    = 40,
-  color   = '#8C6B4E',
-  textColor,
-  tagline = false,
+  variant     = 'full',
+  size        = 40,
+  color       = '#8C6B4E',
+  textColor   = '#4B3F35',
+  accentColor = '#C98E5B',
+  tagline     = false,
+  href        = '/',
+  noLink      = false,
 }: {
-  variant?: 'full' | 'mark' | 'wordmark';
-  size?:    number;
-  color?:   string;
-  textColor?: string;
-  tagline?: boolean;
+  variant?:     'full' | 'mark' | 'wordmark';
+  size?:        number;
+  color?:       string;
+  textColor?:   string;
+  accentColor?: string;
+  tagline?:     boolean;
+  href?:        string;
+  noLink?:      boolean;
 }) {
-  const txt = textColor ?? '#4B3F35';
-
-  return (
-    <div className="inline-flex items-center gap-3">
+  const content = (
+    <div className="inline-flex items-center gap-3 group">
       {variant !== 'wordmark' && (
         <svg
           width={size}
@@ -34,6 +45,7 @@ export function HabittaLogo({
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           aria-label="Habitta"
+          className="transition-transform group-hover:scale-105"
         >
           {/* Techo + paredes — trazo continuo redondeado */}
           <path
@@ -44,7 +56,7 @@ export function HabittaLogo({
             strokeLinejoin="round"
             fill="none"
           />
-          {/* Ventanitas — dos cuadrados pequeños */}
+          {/* Ventanitas */}
           <rect x="22" y="34" width="8" height="8" rx="1.5" stroke={color} strokeWidth="2.6" fill="none" />
           <rect x="34" y="34" width="8" height="8" rx="1.5" stroke={color} strokeWidth="2.6" fill="none" />
         </svg>
@@ -53,21 +65,34 @@ export function HabittaLogo({
       {variant !== 'mark' && (
         <div className="flex flex-col leading-none">
           <span
-            className="font-extrabold tracking-tight"
-            style={{ color: txt, fontSize: size * 0.85 }}
+            className="font-extrabold tracking-tight inline-flex items-baseline"
+            style={{ color: textColor, fontSize: size * 0.85 }}
           >
             habitta
+            {/* Punto-acento estilo "casa habitada" */}
+            <span
+              className="ml-0.5"
+              style={{ color: accentColor, fontSize: size * 0.85 }}
+              aria-hidden="true"
+            >.</span>
           </span>
           {tagline && (
             <span
-              className="text-[0.55em] font-medium mt-1.5"
-              style={{ color: txt, fontSize: size * 0.27 }}
+              className="font-medium mt-1.5"
+              style={{ color: textColor, fontSize: size * 0.27 }}
             >
-              Donde tu hogar, <span style={{ color: '#C98E5B' }}>encuentra todo.</span>
+              Donde tu hogar, <span style={{ color: accentColor }}>encuentra todo.</span>
             </span>
           )}
         </div>
       )}
     </div>
+  );
+
+  if (noLink) return content;
+  return (
+    <Link href={href} className="inline-block focus:outline-none focus:ring-2 focus:ring-habitta-terra/40 focus:ring-offset-2 focus:ring-offset-habitta-cream rounded-lg" aria-label="Inicio Habitta">
+      {content}
+    </Link>
   );
 }

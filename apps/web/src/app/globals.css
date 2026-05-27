@@ -29,12 +29,24 @@
     @apply inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-habitta-cream text-habitta-deep font-semibold text-sm border border-habitta-olive/40 hover:bg-habitta-sand focus:outline-none focus:ring-2 focus:ring-habitta-terra focus:ring-offset-2 focus:ring-offset-habitta-cream transition-colors;
   }
 
+  /* Input: blanco puro sobre fondo cream → fuerte contraste, borde tierra visible,
+     texto en marrón profundo, focus terracota con ring grueso */
   .input {
-    @apply block w-full rounded-xl border border-habitta-olive/30 bg-habitta-cream px-4 py-2.5 text-habitta-deep placeholder-habitta-stone focus:border-habitta-terra focus:outline-none focus:ring-1 focus:ring-habitta-terra sm:text-sm transition-colors;
+    @apply block w-full rounded-xl border-2 border-habitta-olive/50 bg-white px-4 py-2.5 text-habitta-deep font-medium placeholder-habitta-stone/70 focus:border-habitta-terra focus:outline-none focus:ring-2 focus:ring-habitta-terra/30 sm:text-sm transition-all shadow-sm;
   }
 
+  /* Label: deep en vez de stone → mucho más legible. Acento terracota
+     opcional cuando hay required */
   .label {
-    @apply block text-xs font-bold uppercase tracking-wider text-habitta-stone mb-1;
+    @apply block text-xs font-bold uppercase tracking-wider text-habitta-deep mb-1.5;
+  }
+  .label-optional {
+    @apply text-habitta-stone font-medium normal-case tracking-normal;
+  }
+
+  /* Para form fields con error */
+  .input-error {
+    @apply border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-400/30;
   }
 
   .card {

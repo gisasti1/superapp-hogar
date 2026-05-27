@@ -117,7 +117,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebarContent = (
     <>
       <div className="h-16 flex items-center px-6 border-b border-habitta-deep/20">
-        <HabittaLogo size={28} color="#E2C9A6" textColor="#F7F3EE" />
+        <HabittaLogo
+          size={28}
+          color="#E2C9A6"
+          textColor="#F7F3EE"
+          accentColor="#C98E5B"
+          href="/dashboard"
+        />
       </div>
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {NAV.map(item => (
@@ -210,8 +216,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
-          {/* Logo mobile centrado */}
-          <span className="lg:hidden"><HabittaLogo variant="wordmark" size={20} /></span>
+          {/* Logo mobile centrado — navega a /dashboard */}
+          <span className="lg:hidden">
+            <HabittaLogo variant="wordmark" size={20} href="/dashboard" accentColor="#C98E5B" />
+          </span>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <NotificationsBell />
