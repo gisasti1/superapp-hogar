@@ -35,6 +35,7 @@ import { BillsModule } from './modules/bills/bills.module';
 import { VisitsModule } from './modules/visits/visits.module';
 import { ContractPartiesModule } from './modules/contract-parties/contract-parties.module';
 import { ReceiptsModule } from './modules/receipts/receipts.module';
+import { SupportModule } from './modules/support/support.module';
 import appConfig from './config/app.config';
 import { validateEnv } from './config/env.validation';
 
@@ -95,6 +96,7 @@ import { validateEnv } from './config/env.validation';
     VisitsModule,
     ContractPartiesModule,
     ReceiptsModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

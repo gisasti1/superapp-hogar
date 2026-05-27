@@ -272,8 +272,9 @@ export default function RegisterPage() {
             )}
             {accountType === 'SELF_TENANT' && (
               <ul className="space-y-1.5 text-sm text-habitta-charcoal">
-                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Cargá los datos de tu contrato (propietario, monto, vencimiento)</li>
-                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Registrá cada pago mensual y guardá comprobantes</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> <strong>Si alquilás</strong>: cargás los datos del propietario, monto, vencimiento</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> <strong>Si sos dueño</strong>: registrás al inquilino y llevás los cobros que entran</li>
+                <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Comprobantes automáticos para vos y para la otra parte</li>
                 <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Pedí servicios del hogar a prestadores verificados</li>
                 <li className="flex items-center gap-2"><span className="text-rose-500">✓</span> Recordatorios automáticos antes del vencimiento</li>
               </ul>

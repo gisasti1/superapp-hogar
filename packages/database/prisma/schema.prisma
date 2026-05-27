@@ -309,6 +309,11 @@ model User {
   receiptsAsPayer    PaymentReceipt[] @relation("ReceiptsAsPayer")
   receiptsAsReceiver PaymentReceipt[] @relation("ReceiptsAsReceiver")
 
+  // ─── Soporte / tickets ─────────────────────────────────────────────
+  supportTickets         SupportTicket[]  @relation("SupportTicketUser")
+  assignedSupportTickets SupportTicket[]  @relation("SupportTicketAssignee")
+  supportMessages        SupportMessage[] @relation("SupportMessageAuthor")
+
   @@map("users")
 }
 
@@ -1405,4 +1410,75 @@ model PaymentReceipt {
   @@index([receiverId, emittedAt])
   @@index([sourceType, sourceId])
   @@map("payment_receipts")
+}
+
+// ─── Soporte / consultas / quejas a la administración ─────────────────────
+// Cualquier usuario puede abrir un ticket. El admin lee, contesta y resuelve.
+// Es un hilo: cada respuesta es un SupportMessage.
+enum SupportTicketStatus {
+  OPEN            // recién abierto, sin asignar
+  IN_PROGRESS     // admin lo tomó, está respondiendo
+  WAITING_USER    // admin contestó y espera datos del usuario
+  RESOLVED        // se resolvió (el user puede reabrir si no le sirvió)
+  CLOSED          // cerrado definitivo (>30 días sin respuesta o admin cerró)
+}
+
+enum SupportTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id           String                @id @default(uuid())
+  userId       String
+  // Categoría principal: 'ACCOUNT' | 'PAYMENTS' | 'CONTRACTS' | 'LISTINGS' |
+  //                      'SERVICES' | 'TECHNICAL' | 'SUGGESTION' | 'OTHER'
+  category     String
+  // Sub-tema dentro de la categoría (ver lib/supportTopics en frontend)
+  subCategory  String?
+  subject      String
+  body         String                @db.Text
+  status       SupportTicketStatus   @default(OPEN)
+  priority     SupportTicketPriority @default(NORMAL)
+  // Quién del admin está a cargo (asignación)
+  assignedToId String?
+  // Notas internas del admin (no las ve el usuario)
+  internalNote String?               @db.Text
+  // Cuando el admin marca como resuelto
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  user       User             @relation("SupportTicketUser",       fields: [userId],       references: [id])
+  assignedTo User?            @relation("SupportTicketAssignee",   fields: [assignedToId], references: [id])
+  messages   SupportMessage[]
+
+  @@index([userId, createdAt])
+  @@index([status, priority])
+  @@index([assignedToId, status])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id         String   @id @default(uuid())
+  ticketId   String
+  authorId   String
+  // 'USER' | 'ADMIN' — denormalizado para mostrar fácil quién escribió
+  authorRole String
+  body       String   @db.Text
+  // Adjuntos opcionales (URLs)
+  attachments String[] @default([])
+  // Si es del admin, hasta que el user no lo lea queda unread
+  readByUser Boolean  @default(false)
+  readByAdmin Boolean @default(false)
+  createdAt  DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User          @relation("SupportMessageAuthor", fields: [authorId], references: [id])
+
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
 }

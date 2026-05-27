@@ -17,6 +17,7 @@ const NAV_BASE = [
   { href: '/listings',   k: 'nav.listings',  icon: '🏘️' },
   { href: '/favorites',  k: 'nav.favorites', icon: '❤️' },
   { href: '/messages',   k: 'nav.messages',  icon: '💬' },
+  { href: '/support',    k: 'nav.support',   icon: '✉️' },
   { href: '/profile',    k: 'nav.profile',   icon: '👤' },
 ];
 
@@ -58,11 +59,13 @@ const NAV_SELF_TENANT = [
   { href: '/services',  k: 'nav.services',  icon: '🔧' },
   { href: '/issues',    k: 'nav.issues',    icon: '🛠' },
   { href: '/messages',  k: 'nav.messages',  icon: '💬' },
+  { href: '/support',   k: 'nav.support',   icon: '✉️' },
   { href: '/profile',   k: 'nav.profile',   icon: '👤' },
 ];
 
 const ADMIN_NAV = [
-  { href: '/admin', k: 'nav.adminPanel', icon: '🛡️' },
+  { href: '/admin',         k: 'nav.adminPanel', icon: '🛡️' },
+  { href: '/admin/support', k: 'nav.support',    icon: '✉️' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -81,11 +84,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard', k: 'nav.home',     icon: '🏠' },
     ...NAV_PROVIDER,
     { href: '/messages',  k: 'nav.messages', icon: '💬' },
+    { href: '/support',   k: 'nav.support',  icon: '✉️' },
     { href: '/profile',   k: 'nav.profile',  icon: '👤' },
   ] : isRealtor ? [
     { href: '/dashboard', k: 'nav.home',     icon: '🏠' },
     ...NAV_REALTOR,
     { href: '/messages',  k: 'nav.messages', icon: '💬' },
+    { href: '/support',   k: 'nav.support',  icon: '✉️' },
     { href: '/profile',   k: 'nav.profile',  icon: '👤' },
   ] : isSelfTenant ? NAV_SELF_TENANT : [
     ...NAV_BASE,

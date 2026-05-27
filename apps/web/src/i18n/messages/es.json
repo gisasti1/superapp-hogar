@@ -26,6 +26,7 @@
   "nav.listings": "Inmuebles",
   "nav.favorites": "Favoritos",
   "nav.messages": "Mensajes",
+  "nav.support": "Soporte",
   "nav.profile": "Perfil",
   "nav.rentalRequests": "Solicitudes",
   "nav.visits": "Visitas",
@@ -64,8 +65,8 @@
   "auth.register.types.realtor.subtitle": "Gestiono alquileres de terceros",
   "auth.register.types.realtor.badge": "Gestora",
   "auth.register.types.self.title": "Particular",
-  "auth.register.types.self.subtitle": "Ya alquilo y quiero servicios + llevar mis pagos",
-  "auth.register.types.self.badge": "Solo servicios",
+  "auth.register.types.self.subtitle": "Ya alquilo o soy dueño — uso la app para servicios y llevar mis pagos / cobros",
+  "auth.register.types.self.badge": "Sin contratos en la app",
 
   "myRental.header.eyebrow": "Mi alquiler",
   "myRental.header.title": "Contrato externo y pagos",

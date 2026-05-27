@@ -26,6 +26,7 @@
   "nav.listings": "Listings",
   "nav.favorites": "Favorites",
   "nav.messages": "Messages",
+  "nav.support": "Support",
   "nav.profile": "Profile",
   "nav.rentalRequests": "Requests",
   "nav.visits": "Visits",
@@ -64,8 +65,8 @@
   "auth.register.types.realtor.subtitle": "I manage rentals for third parties",
   "auth.register.types.realtor.badge": "Manager",
   "auth.register.types.self.title": "Individual",
-  "auth.register.types.self.subtitle": "I already rent and want services + payment tracking",
-  "auth.register.types.self.badge": "Services only",
+  "auth.register.types.self.subtitle": "I rent or I'm a landlord — use the app for services & payment tracking",
+  "auth.register.types.self.badge": "No contracts in the app",
 
   "myRental.header.eyebrow": "My rental",
   "myRental.header.title": "External contract & payments",

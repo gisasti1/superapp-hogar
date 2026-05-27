@@ -282,6 +282,27 @@ export const rentalRequestsApi = {
     apiClient.post(`/rental-requests/${id}/counter`, dto).then(r => r.data),
 };
 
+// ─── Soporte / consultas a la admin ────────────────────────────────────────
+export const supportApi = {
+  listMine: () => apiClient.get('/support/tickets/mine').then(r => r.data),
+  get:      (id: string) => apiClient.get(`/support/tickets/${id}`).then(r => r.data),
+  create:   (dto: { category: string; subCategory?: string; subject: string; body: string }) =>
+    apiClient.post('/support/tickets', dto).then(r => r.data),
+  reply:    (id: string, body: string) =>
+    apiClient.post(`/support/tickets/${id}/messages`, { body }).then(r => r.data),
+};
+
+export const adminSupportApi = {
+  list: (params: { status?: string; category?: string; priority?: string; search?: string } = {}) =>
+    apiClient.get('/admin/support/tickets', { params }).then(r => r.data),
+  get: (id: string) => apiClient.get(`/admin/support/tickets/${id}`).then(r => r.data),
+  update: (id: string, dto: {
+    status?: string; priority?: string; assignedToId?: string | null; internalNote?: string | null;
+  }) => apiClient.patch(`/admin/support/tickets/${id}`, dto).then(r => r.data),
+  reply: (id: string, body: string) =>
+    apiClient.post(`/admin/support/tickets/${id}/messages`, { body }).then(r => r.data),
+};
+
 // ─── Comprobantes de pago (recibo NO fiscal) ───────────────────────────────
 export const receiptsApi = {
   list: () => apiClient.get('/receipts').then(r => r.data),
