@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { servicesApi, providerAccountApi } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-import { SERVICE_CATEGORIES as CATEGORIES, SERVICE_CATEGORY_GROUPS, OTHER_CATEGORY } from '@/lib/serviceCategories';
+import { SERVICE_CATEGORIES as CATEGORIES, SERVICE_CATEGORY_GROUPS, OTHER_CATEGORY, CATEGORY_TO_GROUP } from '@/lib/serviceCategories';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   NOT_STARTED:   { label: 'No iniciado',  color: 'bg-gray-100 text-gray-700' },
@@ -212,35 +212,14 @@ function BasicProfileForm({
       </div>
 
       <div>
-        <label className="label">Categoría *</label>
+        <label className="label">¿En qué rubro trabajás? *</label>
         <p className="text-xs text-habitta-stone -mt-1 mb-3">
-          Si no encontrás lo tuyo, elegí <strong>"Otro"</strong> al final y describilo abajo.
+          Tocá la <strong>familia</strong> y después elegí tu rubro específico. Si no encontrás lo tuyo, usá <strong>"Otro"</strong>.
         </p>
-        <div className="space-y-3">
-          {SERVICE_CATEGORY_GROUPS.map(group => (
-            <div key={group.title}>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-habitta-stone mb-1.5">
-                {group.title}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {group.items.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, category: c.id }))}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      form.category === c.id
-                        ? 'bg-habitta-terra text-white border-habitta-terra shadow-sm'
-                        : 'bg-white text-habitta-deep border-habitta-olive/40 hover:border-habitta-terra hover:bg-habitta-sand'
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CategoryAccordion
+          value={form.category}
+          onChange={v => setForm(f => ({ ...f, category: v }))}
+        />
         {['GAS', 'ELECTRICIAN', 'AC_TECHNICIAN'].includes(form.category) && (
           <p className="text-xs text-amber-700 mt-3 bg-amber-50 border border-amber-200 rounded p-2">
             ⚠️ Esta categoría requiere matrícula profesional. La vas a cargar más abajo.
@@ -1107,5 +1086,78 @@ function PricingSection({ provider }: { provider: any }) {
         </button>
       </form>
     </details>
+  );
+}
+
+/* ─── Accordion de categorías agrupadas ────────────────────────────────
+ * UX mejorada: muestra los 7 grupos como filas colapsables.
+ * - Si no hay nada elegido: todos cerrados.
+ * - Si hay una categoría elegida: el grupo correspondiente abierto.
+ * - Click en otro grupo: lo expande y cierra los demás.
+ * - Click en una categoría: la selecciona y muestra check.
+ */
+function CategoryAccordion({
+  value, onChange,
+}: { value: string; onChange: (v: string) => void }) {
+  const initial = value ? CATEGORY_TO_GROUP[value] ?? null : null;
+  const [openId, setOpenId] = useState<string | null>(initial);
+
+  return (
+    <div className="space-y-2">
+      {SERVICE_CATEGORY_GROUPS.map(g => {
+        const isOpen = openId === g.id;
+        const selectedInThisGroup = g.items.find(it => it.id === value);
+        return (
+          <div
+            key={g.id}
+            className={`rounded-2xl border overflow-hidden transition-colors ${
+              selectedInThisGroup
+                ? 'border-habitta-terra bg-habitta-sand/40'
+                : 'border-habitta-olive/30 bg-white'
+            }`}
+          >
+            {/* Header del grupo */}
+            <button
+              type="button"
+              onClick={() => setOpenId(isOpen ? null : g.id)}
+              className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-habitta-sand/40 transition-colors"
+            >
+              <span className="text-2xl">{g.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-habitta-deep text-sm leading-tight">{g.title}</p>
+                {selectedInThisGroup ? (
+                  <p className="text-xs text-habitta-terra font-medium mt-0.5">
+                    ✓ {selectedInThisGroup.label}
+                  </p>
+                ) : (
+                  <p className="text-xs text-habitta-stone leading-snug mt-0.5">{g.description}</p>
+                )}
+              </div>
+              <span className={`text-habitta-stone transition-transform ${isOpen ? 'rotate-180' : ''}`}>▾</span>
+            </button>
+
+            {/* Contenido expandible */}
+            {isOpen && (
+              <div className="px-4 pb-3 pt-1 flex flex-wrap gap-2 border-t border-habitta-sand">
+                {g.items.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => onChange(c.id)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      value === c.id
+                        ? 'bg-habitta-terra text-habitta-cream border-habitta-terra shadow-sm'
+                        : 'bg-white text-habitta-deep border-habitta-olive/40 hover:border-habitta-terra hover:bg-habitta-sand'
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }

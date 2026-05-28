@@ -7,10 +7,22 @@
  */
 
 export type ServiceCategory = { id: string; label: string };
+export type ServiceGroup = {
+  id:          string;
+  title:       string;
+  icon:        string;
+  description: string;
+  color:       string;   // tailwind bg + border accent
+  items:       ServiceCategory[];
+};
 
-export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] }[] = [
+export const SERVICE_CATEGORY_GROUPS: ServiceGroup[] = [
   {
+    id: 'fix',
     title: 'Instalaciones y arreglos',
+    icon: '🔧',
+    description: 'Plomería, gas, luz, aires, electrodomésticos.',
+    color: 'from-rose-50 to-orange-50 border-rose-200',
     items: [
       { id: 'PLUMBER',          label: '🚰 Plomero' },
       { id: 'ELECTRICIAN',      label: '⚡ Electricista' },
@@ -22,7 +34,11 @@ export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] 
     ],
   },
   {
+    id: 'build',
     title: 'Construcción y reformas',
+    icon: '🏗️',
+    description: 'Pintura, carpintería, albañilería, techos.',
+    color: 'from-amber-50 to-yellow-50 border-amber-200',
     items: [
       { id: 'PAINTER',     label: '🎨 Pintor' },
       { id: 'CARPENTER',   label: '🪚 Carpintero' },
@@ -36,7 +52,11 @@ export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] 
     ],
   },
   {
+    id: 'clean',
     title: 'Limpieza y mantenimiento',
+    icon: '🧹',
+    description: 'Casa, jardín, piletas, plagas.',
+    color: 'from-emerald-50 to-teal-50 border-emerald-200',
     items: [
       { id: 'CLEANER',     label: '🧹 Limpieza' },
       { id: 'GARDENER',    label: '🌿 Jardinería' },
@@ -46,15 +66,23 @@ export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] 
     ],
   },
   {
+    id: 'move',
     title: 'Mudanzas y traslados',
+    icon: '📦',
+    description: 'Mudanzas, fletes, armado de muebles.',
+    color: 'from-blue-50 to-sky-50 border-blue-200',
     items: [
-      { id: 'MOVER',          label: '📦 Mudanzas' },
-      { id: 'DRIVER',         label: '🚚 Fletes / cargas chicas' },
-      { id: 'ASSEMBLY',       label: '🪛 Armado de muebles' },
+      { id: 'MOVER',    label: '📦 Mudanzas' },
+      { id: 'DRIVER',   label: '🚚 Fletes / cargas chicas' },
+      { id: 'ASSEMBLY', label: '🪛 Armado de muebles' },
     ],
   },
   {
+    id: 'tech',
     title: 'Seguridad y conectividad',
+    icon: '📡',
+    description: 'Alarmas, cámaras, internet, TV, domótica.',
+    color: 'from-indigo-50 to-violet-50 border-indigo-200',
     items: [
       { id: 'SECURITY_INSTALL', label: '🚨 Alarmas y cámaras' },
       { id: 'INTERNET_TECH',    label: '📡 Internet / WiFi / redes' },
@@ -63,7 +91,11 @@ export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] 
     ],
   },
   {
+    id: 'design',
     title: 'Diseño y profesionales',
+    icon: '📐',
+    description: 'Arquitectos, diseñadores, fotógrafos.',
+    color: 'from-purple-50 to-fuchsia-50 border-purple-200',
     items: [
       { id: 'ARCHITECT',         label: '📐 Arquitecto' },
       { id: 'INTERIOR_DESIGNER', label: '🛋️ Diseñador de interiores' },
@@ -73,12 +105,25 @@ export const SERVICE_CATEGORY_GROUPS: { title: string; items: ServiceCategory[] 
     ],
   },
   {
+    id: 'other',
     title: 'Otros',
+    icon: '✨',
+    description: '¿No encontrás lo tuyo? Describilo.',
+    color: 'from-gray-50 to-slate-50 border-gray-200',
     items: [
-      { id: 'OTHER',             label: '✨ Otro (describilo)' },
+      { id: 'OTHER', label: '✨ Otro (describilo)' },
     ],
   },
 ];
+
+// Lookup rápido para saber a qué grupo pertenece una categoría
+export const CATEGORY_TO_GROUP: Record<string, string> = SERVICE_CATEGORY_GROUPS.flatMap(
+  g => g.items.map(it => [it.id, g.id] as [string, string]),
+).reduce((acc, [cat, grp]) => { acc[cat] = grp; return acc; }, {} as Record<string, string>);
+
+export const GROUP_BY_ID: Record<string, ServiceGroup> = SERVICE_CATEGORY_GROUPS.reduce(
+  (acc, g) => { acc[g.id] = g; return acc; }, {} as Record<string, ServiceGroup>,
+);
 
 /** Lista plana para iterar / filtrar. */
 export const SERVICE_CATEGORIES: ServiceCategory[] = SERVICE_CATEGORY_GROUPS.flatMap(g => g.items);
